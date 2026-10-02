@@ -1,0 +1,336 @@
+/*
+ * tokens.css — NomadCare design tokens (colors, type, radius, shadow, spacing, motion, z-index).
+ * Owner: P1 shell. Token NAMES are part of the architecture contract (§6) — never rename.
+ * Themes: light = :root / [data-theme="light"]; dark = [data-theme="dark"] and system dark when
+ * html[data-theme] is not "light". Extra tokens below the contract block are shell additions.
+ * Contrast (WCAG 2.1 AA, verified with axe-core on every screen): text tokens ≥ 4.5:1 on every surface of their
+ * theme; --c-on-primary / --c-on-accent / --c-on-danger ≥ 4.5:1 on their fill and gradient (light: deep fills +
+ * white text; dark: bright fills + dark text); --c-focus ≥ 3:1.
+ */
+
+/* ===================================================================== */
+/* LIGHT (default)                                                        */
+/* ===================================================================== */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* --- Surfaces & text --- */
+  --c-bg: #F3F7F7;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #EAF3F2;
+  --c-surface-3: #DDEBEA;
+  --c-border: #D8E5E4;
+  --c-text: #0F1F1E;
+  --c-text-2: #405654;
+  --c-muted: #576866;          /* AA: ≥ 4.7:1 on every light surface (was #728785 = 3.8:1) */
+
+  /* --- Brand --- */
+  --c-primary: #0B7A6E;        /* AA: white on primary 5.2:1, primary text on white 5.2:1 */
+  --c-primary-strong: #08665C;
+  --c-primary-soft: #E3F5F2;
+  --c-on-primary: #FFFFFF;
+  --c-accent: #C2410C;         /* AA: white on accent 5.2:1 */
+  --c-accent-soft: #FFF0E8;
+
+  /* --- Semantic --- */
+  --c-danger: #C93338;         /* AA: white on danger 5.2:1, danger text on white 5.2:1 */
+  --c-danger-soft: #FDECEC;
+  --c-warning: #F2A20C;
+  --c-warning-soft: #FFF6E0;
+  --c-success: #107A49;
+  --c-success-soft: #E4F7EE;
+  --c-info: #1A6FD0;
+  --c-info-soft: #E8F2FF;
+
+  /* --- Signal levels (MOD.02 / MOD.04) --- */
+  --sig-likely: var(--c-success);
+  --sig-uncertain: var(--c-warning);
+  --sig-lost: var(--c-danger);
+
+  /* --- Gradients --- */
+  --grad-hero: linear-gradient(135deg, #0A6B61 0%, #0B7A6E 55%, #0C6A87 120%);
+  --grad-accent: linear-gradient(135deg, #B93F0C, #C84812);
+  --grad-danger: linear-gradient(135deg, #C62F35, #D13B40);
+
+  /* --- Shadows --- */
+  /* round 2: calmer — lower spread/opacity (cards rely on the 1px border first) */
+  --sh-1: 0 1px 2px rgba(15, 31, 30, .05);
+  --sh-2: 0 4px 14px rgba(15, 31, 30, .07);
+  --sh-3: 0 12px 32px rgba(15, 31, 30, .12);
+
+  /* ---------- Shell additions (not in contract, safe to use) ---------- */
+  --c-border-strong: #C3D6D4;
+  --c-card-border: rgba(15, 31, 30, .08);
+  --c-on-accent: #FFFFFF;
+  --c-on-danger: #FFFFFF;
+  --c-on-hero: #FFFFFF;
+  --c-on-hero-2: rgba(255, 255, 255, .92);
+  --c-hero-glass: rgba(255, 255, 255, .16);
+  --c-hero-glass-border: rgba(255, 255, 255, .28);
+  --c-danger-strong: #B02A2F;
+  --c-warning-strong: #8A5A00;
+  --c-success-strong: #0B6B3F;
+  --c-info-strong: #1459AB;
+  --c-accent-strong: #A8390A;
+  --c-topbar: rgba(243, 247, 247, .84);
+  --c-tabbar: rgba(255, 255, 255, .94);
+  --c-overlay: rgba(8, 22, 21, .46);
+  --c-focus: rgba(11, 122, 110, .8);   /* ≥ 3:1 focus indicator */
+  --c-hover: rgba(15, 31, 30, .045);
+  --c-press: rgba(15, 31, 30, .08);
+  --c-skeleton-a: #E6EFEE;
+  --c-skeleton-b: #F4F9F8;
+  --c-scrollbar: rgba(15, 31, 30, .18);
+  --c-toast-bg: #132624;
+  --c-toast-fg: #F1F7F6;
+  --c-toast-action: #7DE3D3;
+  --c-toast-ok: #4ADE9A;
+  --c-toast-warn: #F7B84B;
+  --grad-primary: linear-gradient(135deg, #0A7266, #0B7F71);
+  --grad-page:
+    radial-gradient(1100px 520px at -10% -12%, rgba(20, 184, 166, .11), transparent 62%),
+    radial-gradient(900px 480px at 110% -8%, rgba(56, 189, 248, .08), transparent 60%);
+  --sh-primary: 0 3px 10px rgba(11, 122, 110, .18);
+  --sh-accent: 0 3px 10px rgba(194, 65, 12, .18);
+  --sh-danger: 0 6px 18px rgba(201, 51, 56, .30);
+  --sh-up: 0 -2px 12px rgba(15, 31, 30, .05);
+  /* Data-URI glyphs (colors allowed here only) */
+  --glyph-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  --glyph-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23576866' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* ===================================================================== */
+/* DARK — explicit choice                                                 */
+/* ===================================================================== */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --c-bg: #0D1515;
+  --c-surface: #142020;
+  --c-surface-2: #1A2A2A;
+  --c-surface-3: #223534;
+  --c-border: #263A39;
+  --c-text: #E4EFEE;
+  --c-text-2: #A9BDBB;
+  --c-muted: #95AAA9;          /* AA on every dark surface incl. primary-soft */
+  --c-primary: #2CC5B2;
+  --c-primary-strong: #5FD8C8;
+  --c-primary-soft: #133B37;
+  --c-on-primary: #03201C;
+  --c-accent: #FF8A50;
+  --c-accent-soft: #3A2419;
+  --c-danger: #FF6369;
+  --c-danger-soft: #3B1C1E;
+  --c-warning: #F7B84B;
+  --c-warning-soft: #3A2E14;
+  --c-success: #3CCB86;
+  --c-success-soft: #16372A;
+  --c-info: #5AA9FF;
+  --c-info-soft: #182C45;
+  --grad-hero: linear-gradient(135deg, #0B5E55, #0E7C70 60%, #155E75);
+  --grad-accent: linear-gradient(135deg, #FF8A50, #FFA066);
+  --grad-danger: linear-gradient(135deg, #FF6369, #FF7A7F);
+  --sh-1: 0 1px 2px rgba(0, 0, 0, .35);
+  --sh-2: 0 6px 18px rgba(0, 0, 0, .32);
+  --sh-3: 0 14px 36px rgba(0, 0, 0, .48);
+
+  --c-border-strong: #33504E;
+  --c-card-border: rgba(228, 239, 238, .08);
+  --c-on-accent: #2A1206;      /* dark theme: bright fills carry dark text (like --c-on-primary) */
+  --c-on-danger: #2B0A0C;
+  --c-on-hero: #FFFFFF;
+  --c-on-hero-2: rgba(255, 255, 255, .88);
+  --c-hero-glass: rgba(255, 255, 255, .12);
+  --c-hero-glass-border: rgba(255, 255, 255, .18);
+  --c-danger-strong: #FF8A8F;
+  --c-warning-strong: #F7C66F;
+  --c-success-strong: #6FDDA7;
+  --c-info-strong: #8CC3FF;
+  --c-accent-strong: #FFA676;
+  --c-topbar: rgba(13, 21, 21, .82);
+  --c-tabbar: rgba(20, 32, 32, .94);
+  --c-overlay: rgba(0, 0, 0, .62);
+  --c-focus: rgba(44, 197, 178, .7);
+  --c-hover: rgba(228, 239, 238, .05);
+  --c-press: rgba(228, 239, 238, .09);
+  --c-skeleton-a: #1A2A2A;
+  --c-skeleton-b: #223534;
+  --c-scrollbar: rgba(228, 239, 238, .18);
+  --c-toast-bg: #26403E;
+  --c-toast-fg: #E4EFEE;
+  --c-toast-action: #5FD8C8;
+  --c-toast-ok: #6FDDA7;
+  --c-toast-warn: #F7C66F;
+  --grad-primary: linear-gradient(135deg, #0A7266, #0B7F71);   /* carries --c-on-hero (white) */
+  --grad-page:
+    radial-gradient(1100px 520px at -10% -12%, rgba(20, 184, 166, .10), transparent 62%),
+    radial-gradient(900px 480px at 110% -8%, rgba(56, 189, 248, .06), transparent 60%);
+  --sh-primary: 0 3px 10px rgba(44, 197, 178, .14);
+  --sh-accent: 0 3px 10px rgba(255, 138, 80, .16);
+  --sh-danger: 0 8px 24px rgba(255, 99, 105, .30);
+  --sh-up: 0 -2px 12px rgba(0, 0, 0, .30);
+  --glyph-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2303201C' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  --glyph-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2395AAA9' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* ===================================================================== */
+/* DARK — follow the system when the user has not forced "light"          */
+/* (identical values to [data-theme="dark"]; keep both blocks in sync)    */
+/* ===================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --c-bg: #0D1515;
+    --c-surface: #142020;
+    --c-surface-2: #1A2A2A;
+    --c-surface-3: #223534;
+    --c-border: #263A39;
+    --c-text: #E4EFEE;
+    --c-text-2: #A9BDBB;
+    --c-muted: #95AAA9;          /* AA on every dark surface incl. primary-soft */
+    --c-primary: #2CC5B2;
+    --c-primary-strong: #5FD8C8;
+    --c-primary-soft: #133B37;
+    --c-on-primary: #03201C;
+    --c-accent: #FF8A50;
+    --c-accent-soft: #3A2419;
+    --c-danger: #FF6369;
+    --c-danger-soft: #3B1C1E;
+    --c-warning: #F7B84B;
+    --c-warning-soft: #3A2E14;
+    --c-success: #3CCB86;
+    --c-success-soft: #16372A;
+    --c-info: #5AA9FF;
+    --c-info-soft: #182C45;
+    --grad-hero: linear-gradient(135deg, #0B5E55, #0E7C70 60%, #155E75);
+    --grad-accent: linear-gradient(135deg, #FF8A50, #FFA066);
+    --grad-danger: linear-gradient(135deg, #FF6369, #FF7A7F);
+    --sh-1: 0 1px 2px rgba(0, 0, 0, .35);
+    --sh-2: 0 6px 18px rgba(0, 0, 0, .32);
+    --sh-3: 0 14px 36px rgba(0, 0, 0, .48);
+
+    --c-border-strong: #33504E;
+    --c-card-border: rgba(228, 239, 238, .08);
+    --c-on-accent: #2A1206;      /* dark theme: bright fills carry dark text (like --c-on-primary) */
+    --c-on-danger: #2B0A0C;
+    --c-on-hero: #FFFFFF;
+    --c-on-hero-2: rgba(255, 255, 255, .88);
+    --c-hero-glass: rgba(255, 255, 255, .12);
+    --c-hero-glass-border: rgba(255, 255, 255, .18);
+    --c-danger-strong: #FF8A8F;
+    --c-warning-strong: #F7C66F;
+    --c-success-strong: #6FDDA7;
+    --c-info-strong: #8CC3FF;
+    --c-accent-strong: #FFA676;
+    --c-topbar: rgba(13, 21, 21, .82);
+    --c-tabbar: rgba(20, 32, 32, .94);
+    --c-overlay: rgba(0, 0, 0, .62);
+    --c-focus: rgba(44, 197, 178, .7);
+    --c-hover: rgba(228, 239, 238, .05);
+    --c-press: rgba(228, 239, 238, .09);
+    --c-skeleton-a: #1A2A2A;
+    --c-skeleton-b: #223534;
+    --c-scrollbar: rgba(228, 239, 238, .18);
+    --c-toast-bg: #26403E;
+    --c-toast-fg: #E4EFEE;
+    --c-toast-action: #5FD8C8;
+    --c-toast-ok: #6FDDA7;
+    --c-toast-warn: #F7C66F;
+    --grad-primary: linear-gradient(135deg, #0A7266, #0B7F71);   /* carries --c-on-hero (white) */
+    --grad-page:
+      radial-gradient(1100px 520px at -10% -12%, rgba(20, 184, 166, .10), transparent 62%),
+      radial-gradient(900px 480px at 110% -8%, rgba(56, 189, 248, .06), transparent 60%);
+    --sh-primary: 0 3px 10px rgba(44, 197, 178, .14);
+    --sh-accent: 0 3px 10px rgba(255, 138, 80, .16);
+    --sh-danger: 0 8px 24px rgba(255, 99, 105, .30);
+    --sh-up: 0 -2px 12px rgba(0, 0, 0, .30);
+    --glyph-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2303201C' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    --glyph-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2395AAA9' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+}
+
+/* ===================================================================== */
+/* THEME-INDEPENDENT TOKENS                                               */
+/* ===================================================================== */
+:root {
+  /* Overlays on saturated surfaces (hero, danger, accent) — same in both themes */
+  --c-glass-on-color: rgba(255, 255, 255, .22);
+  --c-glass-on-color-2: rgba(255, 255, 255, .30);
+  --c-toast-btn: rgba(127, 127, 127, .18);
+  --sh-topbar: 0 4px 18px rgba(0, 0, 0, .04);
+  /* Print (print.css) — ink-friendly, theme-independent */
+  --c-print-paper: #FFFFFF;
+  --c-print-ink: #000000;
+  --c-print-line: #BBBBBB;
+  --c-print-line-soft: #CCCCCC;
+  --c-print-line-strong: #999999;
+
+  /* Typography */
+  --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --fs-xs: 12px;
+  --fs-sm: 13.5px;
+  --fs-md: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 30px;
+  --fs-display: 40px;
+  --lh-tight: 1.25;
+  --lh-base: 1.55;
+
+  /* Radius */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* Shell metrics */
+  --topbar-h: 60px;
+  --tabbar-h: 68px;
+  --sidebar-w: 264px;
+  --rail-w: 88px;
+  --content-max: 1240px;
+  --view-pad: 16px;          /* horizontal gutter of #view (responsive.css widens it) */
+  --fab-size: 52px;          /* height of the 115 / emergency button in the phone tab bar (sits INSIDE the bar) */
+  /* C1 contract: bottom space currently taken by the phone nav — var(--tabbar-h) while the tab bar is shown; while
+     it is auto-hidden (html.nc-tabbar-hidden, below) the clearance of the always-visible 115 button, capped at the
+     shown height so it can never grow; 0px from 768px (responsive.css). The 115 button is vertically centred in the
+     bar, so its top edge is (bar + button) / 2 above the bottom; + 8px gap. Modules: var(--tabbar-cur-h,
+     var(--tabbar-h)) for bottom offsets. */
+  --tabbar-fab-clear: calc((var(--tabbar-h) + var(--fab-size)) / 2 + 8px);
+  --tabbar-cur-h: var(--tabbar-h);
+
+  /* Touch targets (≥ 44 px on phones / touch; responsive.css compacts them for a mouse on wide screens) */
+  --tap: 44px;
+  --tap-sm: 44px;           /* .btn--sm */
+  --tap-topbar: 44px;       /* topbar icon buttons */
+  --chip-h: 44px;
+  --pill-h: 44px;
+  --seg-h: 44px;
+  --tap-call: 48px;         /* any call-115 style button */
+
+  /* Motion */
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --dur-1: .15s;
+  --dur-2: .25s;
+  --dur-3: .4s;
+
+  /* Layers */
+  --z-topbar: 30;
+  --z-tabbar: 40;
+  --z-sheet: 60;
+  --z-toast: 70;
+}
+html.nc-tabbar-hidden { --tabbar-cur-h: min(var(--tabbar-h), var(--tabbar-fab-clear)); }

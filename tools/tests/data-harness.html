@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NomadCare – Data harness</title>
+  <meta name="description" content="Browser assertion suite for the NomadCare data layer (local backend). Resets local demo data.">
+  <link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="../../assets/css/tokens.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="data-harness.css">
+</head>
+<body>
+  <main class="dh">
+    <header class="dh__head">
+      <h1>NomadCare · data layer harness</h1>
+      <p class="dh__warn">Chạy bộ kiểm thử sẽ <strong>xoá dữ liệu demo cục bộ</strong> (hồ sơ, Buddy, hàng đợi, máy chủ mô phỏng) của origin này.
+        Mở với <code>?run=1</code> để tự chạy.</p>
+      <div class="dh__bar">
+        <button type="button" id="dh-run">Chạy kiểm thử</button>
+        <span id="dh-summary" class="dh__summary" aria-live="polite">Chưa chạy</span>
+      </div>
+    </header>
+    <table class="dh__table">
+      <thead><tr><th scope="col">#</th><th scope="col">Kết quả</th><th scope="col">Kiểm thử</th><th scope="col">Chi tiết</th><th scope="col">ms</th></tr></thead>
+      <tbody id="dh-results"></tbody>
+    </table>
+    <section class="dh__viz">
+      <h2>Mapkit / viz smoke</h2>
+      <div id="dh-map" class="dh__map"></div>
+      <div id="dh-viz" class="dh__vizrow"></div>
+    </section>
+  </main>
+
+  <script defer src="../../assets/js/config.js"></script>
+  <script defer src="../../assets/vendor/supabase/supabase.min.js"></script>
+  <script defer src="../../assets/vendor/leaflet/leaflet.js"></script>
+  <script defer src="../../assets/js/core/util.js"></script>
+  <script defer src="../../assets/js/core/bus.js"></script>
+  <script defer src="../../assets/js/core/i18n.js"></script>
+  <script defer src="../../assets/js/core/icons.js"></script>
+  <script defer src="../../assets/js/core/store.js"></script>
+  <script defer src="../../assets/js/core/secure.js"></script>
+  <script defer src="../../assets/js/core/net.js"></script>
+  <script defer src="../../assets/js/core/ui.js"></script>
+  <script defer src="fixtures/mini-seed.js"></script>
+  <script defer src="../../assets/js/data/seed-core.js"></script>
+  <script defer src="../../assets/js/data/seed-admin.js"></script>
+  <script defer src="../../assets/js/services/routing.js"></script>
+  <script defer src="../../assets/js/services/profile.js"></script>
+  <script defer src="../../assets/js/services/backend-local.js"></script>
+  <script defer src="../../assets/js/services/backend-supabase.js"></script>
+  <script defer src="../../assets/js/services/dataservice.js"></script>
+  <script defer src="../../assets/js/services/mapkit.js"></script>
+  <script defer src="../../assets/js/app/viz.js"></script>
+  <script defer src="data-harness.js"></script>
+</body>
+</html>

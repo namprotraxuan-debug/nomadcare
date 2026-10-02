@@ -1,0 +1,52 @@
+# Supabase CLI configuration for NomadCare v2 (minimal).
+# Remote project:  supabase link --project-ref <ref>  →  supabase db push  →  supabase functions deploy deadman-alert
+# Local stack:     supabase start  (runs migrations/ + seed.sql automatically)
+# See supabase/README.md for the step-by-step guide (Vietnamese).
+project_id = "nomadcare"
+
+[api]
+enabled = true
+port = 54321
+# app_private is intentionally NOT exposed through the Data API
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:8099"
+additional_redirect_urls = ["http://127.0.0.1:8099"]
+# Admin accounts are created by hand (Dashboard / Studio); nobody else needs to sign up.
+enable_signup = false
+
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+
+[edge_runtime]
+enabled = true
+
+# Auth is verified inside the function (x-nc-cron-secret or an admin JWT),
+# so the gateway JWT check must be off for the pg_cron → pg_net call to work.
+[functions.deadman-alert]
+verify_jwt = false
+
+# push-dispatch (Web Push for trip reminders) is called the same way (pg_cron → pg_net, header x-nc-cron-secret).
+[functions.push-dispatch]
+verify_jwt = false

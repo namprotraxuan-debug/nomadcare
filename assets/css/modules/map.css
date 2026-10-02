@@ -1,0 +1,670 @@
+/*
+ * map.css — MOD.02 "Bản đồ & định tuyến offline" (prefix mp-). Owner: P2 mod02-map.
+ * Mobile-first base only: full-height map stage under the topbar + draggable bottom panel (peek/half/full) that
+ * slides behind the tab bar. Tablet side panel / desktop split live in responsive.css (@module:map block).
+ * Runtime CSS variables (set by mod02-map.js on #mp-root): --mp-panel-h, --mp-y (panel translate), --mp-occ (visible
+ * panel height → Leaflet bottom controls + legend), --mp-body-h, --mp-body-pad, --mp-top-h (floating controls height).
+ */
+
+/* ===================================================================== */
+/* SHELL: the map route is a non-scrolling, full-height stage             */
+/* ===================================================================== */
+.app-shell[data-route="map"] .main-col { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+.app-shell[data-route="map"] .view { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 0; }
+.app-shell[data-route="map"] .topbar { border-bottom-color: var(--c-border); }
+/* Compact offline banner on the map route (the map's own notice explains the basemap) */
+.app-shell[data-route="map"] .offline-banner { margin: 6px var(--view-pad); padding: 6px 8px 6px 12px; font-size: 12.5px; }
+.app-shell[data-route="map"] .offline-banner .offline-banner__sub { display: none; }
+
+#screen-map.is-active { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; max-width: none; margin: 0; }
+
+.mp {
+  --mp-gap: 12px;
+  --mp-occ: 0px;
+  --mp-top-h: 112px;
+  position: relative; flex: 1 1 auto; min-height: 0;
+  overflow: hidden; isolation: isolate;
+  background: var(--c-surface-2);
+}
+.mp-stage { position: absolute; inset: 0; }
+.mp-map { position: absolute; inset: 0; z-index: 0; outline: none; }
+.mp-map .empty-state { position: absolute; inset: 0; }
+
+/* Leaflet bottom controls (attribution/zoom) always sit just above the panel */
+.mp .leaflet-bottom { bottom: var(--mp-occ); transition: bottom var(--dur-3) var(--ease); }
+.mp .leaflet-control-zoom { display: none; } /* phones: pinch to zoom (shown from tablet up) */
+.mp .leaflet-control-attribution { font-size: var(--fs-xs); } /* © OpenStreetMap contributors stays visible and legible */
+.mp .mk-notice { top: auto; bottom: calc(var(--mp-occ) + 84px); max-width: calc(100% - 32px); transition: bottom var(--dur-3) var(--ease); } /* above the 2-row legend */
+.mp.is-dragging .leaflet-bottom, .mp.is-dragging .mp-legend { transition: none; }
+/* Side panel: nothing rides on a sheet, so these never animate — a rotation from a raised phone sheet must not leave
+   them gliding down for 0.4 s while the map re-frames around their (stale) position (R5.4). */
+.mp[data-snap="side"] .leaflet-bottom, .mp[data-snap="side"] .mp-legend, .mp[data-snap="side"] .mk-notice { transition: none; }
+.mp[data-snap="full"] .leaflet-bottom, .mp[data-snap="full"] .mp-legend, .mp[data-snap="full"] .mk-notice { opacity: 0; pointer-events: none; }
+
+/* ===================================================================== */
+/* FLOATING CONTROLS                                                     */
+/* ===================================================================== */
+.mp-top {
+  position: absolute; z-index: 1100; top: var(--mp-gap); left: var(--mp-gap); right: var(--mp-gap);
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+.mp-top__row { display: flex; align-items: center; gap: 8px; min-width: 0; pointer-events: none; }
+.mp-top__row > * { pointer-events: auto; }
+.mp-fchip {
+  min-height: 48px; padding: 0 14px 0 7px; gap: 9px;
+  background: var(--c-surface); border-color: var(--c-card-border); color: var(--c-text);
+  box-shadow: var(--sh-2);
+}
+button.mp-fchip:hover { border-color: var(--c-primary); }
+.mp-fchip--route { flex: 1 1 auto; min-width: 0; justify-content: flex-start; }
+.mp-fchip--carrier { padding: 0 14px; font-weight: 700; }
+.mp-fchip--carrier .icon { color: var(--c-primary); }
+.mp-fchip__icon.icon-tile { --tile: 34px; }
+.mp-fchip__text { display: flex; flex-direction: column; min-width: 0; text-align: left; line-height: 1.15; }
+.mp-fchip__text small { font-size: var(--fs-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--c-muted); }
+.mp-fchip__text b { font-size: var(--fs-sm); font-weight: 800; color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-fchip__chev { margin-left: auto; width: 18px; height: 18px; color: var(--c-muted); }
+
+/* "Lớp bản đồ" menu: one FAB (top of the FAB column) opens a small panel of toggle rows to its left */
+.mp-lbtn.has-off::after {
+  content: ""; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--c-accent); border: 2px solid var(--c-surface);
+}
+.mp-lpanel {
+  position: absolute; z-index: 1; top: 0; right: calc(100% + var(--sp-2));
+  width: min(272px, calc(100vw - 2 * var(--mp-gap) - 64px));
+  display: flex; flex-direction: column; gap: 2px; padding: var(--sp-2);
+  border-radius: var(--r-lg); background: var(--c-surface); border: 1px solid var(--c-border); box-shadow: var(--sh-2);
+}
+.mp-lpanel[hidden] { display: none; }
+.mp-lpanel__title { margin: 2px var(--sp-2) var(--sp-1); font-size: var(--fs-xs); font-weight: 700; color: var(--c-muted); }
+.mp-lopt {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) 20px; align-items: center; gap: var(--sp-2);
+  min-height: var(--tap, 44px); padding: 6px var(--sp-2); border: 0; border-radius: var(--r-md);
+  background: transparent; color: var(--c-text); text-align: left; font: inherit; cursor: pointer;
+}
+.mp-lopt[hidden] { display: none; }
+.mp-lopt:hover { background: var(--c-hover); }
+.mp-lopt:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--c-focus); }
+.mp-lopt__icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--r-sm);
+  background: var(--c-surface-2); color: var(--c-muted);
+}
+.mp-lopt__icon .icon { width: 18px; height: 18px; }
+.mp-lopt__text { display: flex; flex-direction: column; min-width: 0; font-size: var(--fs-sm); font-weight: 700; line-height: 1.25; }
+.mp-lopt__sub { font-size: var(--fs-xs); font-weight: 500; color: var(--c-muted); }
+.mp-lopt__check { display: inline-flex; color: var(--c-primary); visibility: hidden; }
+.mp-lopt__check .icon { width: 18px; height: 18px; }
+.mp-lopt[aria-pressed="true"] .mp-lopt__icon { background: var(--c-primary-soft); color: var(--c-primary-strong); }
+.mp-lopt[aria-pressed="true"] .mp-lopt__check { visibility: visible; }
+/* Map key (markers) at the end of the layers menu: the same icons as on the map, 22 px, plain rows (not controls) */
+.mp-lpanel { max-height: calc(100vh - var(--mp-top-h) - var(--mp-occ, 0px) - 96px); max-height: calc(100dvh - var(--mp-top-h) - var(--mp-occ, 0px) - 96px); overflow-y: auto; overscroll-behavior: contain; }
+.mp-lkey__title { margin-top: var(--sp-2); padding-top: var(--sp-2); border-top: 1px solid var(--c-border); }
+.mp-lkey { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0 var(--sp-2) var(--sp-1); list-style: none; }
+.mp-lkey__item { display: flex; align-items: center; gap: var(--sp-2); min-height: 26px; font-size: var(--fs-xs); font-weight: 600; line-height: 1.3; color: var(--c-text-2); }
+.mp-lkey__mk { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; }
+.mp-lkey__mk .mk-poi { width: 22px; height: 22px; }
+.mp-lkey__mk .mp-zone { width: 20px; height: 20px; }
+.mp-lkey__mk .mp-zone .icon { width: 11px; height: 11px; }
+
+.mp-fabs {
+  position: absolute; z-index: 1100; right: var(--mp-gap); top: calc(var(--mp-top-h) + 2px);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.mp-fab {
+  position: relative; width: 46px; height: 46px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--c-surface); color: var(--c-text-2);
+  border: 1px solid var(--c-card-border); box-shadow: var(--sh-2);
+  transition: color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.mp-fab:hover { color: var(--c-primary-strong); }
+.mp-fab:active { transform: scale(.94); }
+.mp-fab .icon { width: 21px; height: 21px; }
+.mp-fab.is-active { background: var(--c-primary); color: var(--c-on-primary); }
+.mp-fab.is-loading .icon { animation: nc-spin 1.1s linear infinite; }
+/* "Chú giải" FAB: only on short landscape screens, where the legend folds behind it (responsive.css @module:map) */
+.mp-fab.mp-legend-btn { display: none; }
+
+/* Legend: colour + non-colour cue (solid / dashed / dotted / dash-dot, same as the map lines). 4 levels: the grey
+   "no signal data" level marks stretches outside the pilot signal layer (defined here: tokens.css has no --sig-unknown). */
+.mp {
+  --mp-sig-unknown: var(--c-muted);
+}
+.mp-legend {
+  position: absolute; z-index: 1050; left: var(--mp-gap); bottom: calc(var(--mp-occ) + 30px);
+  /* clear of the FAB column (46 px + gap) on the right: in "half" snap on short phones the legend rises beside it */
+  max-width: calc(100% - 2 * var(--mp-gap) - 56px);
+  display: none; flex-wrap: wrap; align-items: center; gap: 2px 10px;
+  padding: 5px 12px; border-radius: var(--r-md);
+  background: var(--c-surface); border: 1px solid var(--c-border); box-shadow: var(--sh-1);
+  font-size: var(--fs-xs); font-weight: 600; line-height: 1.35; color: var(--c-text-2); white-space: nowrap;
+  transition: bottom var(--dur-3) var(--ease);
+}
+.mp.mp-sig-on .mp-legend { display: flex; }
+.mp-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+.mp-legend__sw { display: inline-block; width: 18px; height: 4px; border-radius: 2px; background: var(--sig-likely); }
+.mp-legend__sw--uncertain { background: repeating-linear-gradient(90deg, var(--sig-uncertain) 0 6px, transparent 6px 9px); }
+.mp-legend__sw--lost { height: 5px; background: repeating-linear-gradient(90deg, var(--sig-lost) 0 3px, transparent 3px 6px); }
+/* dash-dot like the map line (mapkit dashFor) — never plain dots, which the grey alternative route uses */
+.mp-legend__sw--unknown { background: repeating-linear-gradient(90deg, var(--mp-sig-unknown) 0 7px, transparent 7px 9px, var(--mp-sig-unknown) 9px 11px, transparent 11px 13px); }
+
+/* "Chọn trên bản đồ": floating hint while the next map tap picks the start point */
+.mp-pick {
+  position: absolute; z-index: 1060; left: var(--mp-gap); right: calc(var(--mp-gap) + 58px); top: var(--mp-top-h, 76px); /* clear of the FAB column */
+  display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; border-radius: var(--r-md);
+  background: var(--c-surface); border: 1.5px solid var(--c-primary); box-shadow: var(--sh-2);
+  font-size: var(--fs-sm); font-weight: 700; color: var(--c-text);
+}
+.mp-pick[hidden] { display: none; }
+.mp-pick > .icon { flex: none; width: 18px; height: 18px; color: var(--c-primary); }
+.mp-pick > span { flex: 1; min-width: 0; }
+.mp.mp-picking .mp-map, .mp.mp-picking .leaflet-container { cursor: crosshair; }
+
+/* Far-from-route banner */
+.mp-far {
+  position: absolute; z-index: 1150; left: var(--mp-gap); right: calc(var(--mp-gap) + 56px); top: var(--mp-top-h);
+  display: flex; align-items: flex-start; gap: 10px; padding: 12px; box-shadow: var(--sh-2);
+}
+.mp-far[hidden] { display: none; }
+.mp-far__body p { margin: 0 0 8px; font-size: var(--fs-sm); font-weight: 600; color: var(--c-text); line-height: 1.4; }
+
+/* ===================================================================== */
+/* MAP LAYERS (SVG renderer → CSS classes win over stroke attributes)    */
+/* ===================================================================== */
+.mp .mp-net-plain { stroke: var(--c-primary); }
+.mp .mp-net-casing { stroke: var(--c-surface); }
+.mp .mp-route-plain { stroke: var(--c-primary-strong); }
+.mp .mp-alt { stroke: var(--c-text-2); opacity: .75; cursor: pointer; }
+.mp .mp-alt-casing { stroke: var(--c-surface); opacity: .85; }
+.mp .mp-node { stroke: var(--c-text-2); fill: var(--c-surface); }
+.mp .mp-node--major { stroke: var(--c-primary-strong); }
+.mp .mp-node--pass { stroke: var(--c-accent-strong); }
+
+.mp .leaflet-tooltip.mp-label {
+  padding: 0 3px; border: 0; border-radius: 4px; background: transparent; box-shadow: none;
+  font-family: var(--font-sans); font-size: var(--fs-xs); font-weight: 700; line-height: 1.2; color: var(--c-text-2);
+  text-shadow: 0 0 2px var(--c-surface), 0 0 3px var(--c-surface), 0 0 4px var(--c-surface), 0 0 6px var(--c-surface);
+  white-space: nowrap; pointer-events: none;
+}
+.mp .leaflet-tooltip.mp-label::before { display: none; }
+.mp .leaflet-tooltip.mp-label--major { font-size: 12.5px; font-weight: 800; color: var(--c-text); }
+.mp.mp-z-low .leaflet-tooltip.mp-label--minor, .mp.mp-z-vlow .leaflet-tooltip.mp-label { display: none; }
+/* collision pass in mod02-map.js (declutterLabels): a lower-priority label that would overprint another one */
+.mp .leaflet-tooltip.mp-label--culled { visibility: hidden; }
+/* A marker or node dot under a floating control (chips, FABs, legend, sheet) hides until the map moves it clear. */
+.mp .leaflet-marker-icon.mp-under,
+.mp path.mp-under { visibility: hidden !important; pointer-events: none !important; }
+.mp .leaflet-tooltip.mp-tip { font-family: var(--font-sans); font-size: 12px; font-weight: 600; }
+
+.mp-pin-wrap, .mp-zone-wrap { background: none; border: 0; }
+.mp-zone-wrap--hit { display: flex; align-items: center; justify-content: center; }
+.mp-zone-wrap--hit .mp-zone { flex: none; }
+.mp-pin {
+  position: absolute; left: 3px; top: 2px; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  background: var(--c-accent); border: 3px solid var(--c-surface); box-shadow: var(--sh-2);
+}
+.mp-pin .icon { width: 13px; height: 13px; transform: rotate(45deg); color: var(--c-on-accent); stroke-width: 2.6; }
+.mp-pin--from { background: var(--c-primary); }
+.mp-pin--from i { width: 8px; height: 8px; border-radius: 50%; background: var(--c-surface); }
+.mp-zone {
+  display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--c-danger); color: var(--c-on-danger); border: 2px solid var(--c-surface); box-shadow: var(--sh-2);
+}
+.mp-zone .icon { width: 13px; height: 13px; stroke-width: 2.5; }
+
+/* Popups */
+.mp .mp-popup .leaflet-popup-content { margin: 12px 14px 14px; font-family: var(--font-sans); font-size: var(--fs-sm); line-height: 1.4; }
+.mp .mp-popup .leaflet-popup-close-button { top: 6px; right: 6px; color: var(--c-muted); }
+/* declutter the whole-route view: pharmacies appear from zoom 10.5 (still listed in the Stops / Care tabs) */
+.mp.mp-z-low .mk-poi-wrap--nha_thuoc { display: none; }
+.mp-pop__title { margin: 0 18px 0 0; font-size: var(--fs-md); font-weight: 800; color: var(--c-text); line-height: 1.3; }
+.mp-pop__meta { margin: 3px 0 10px; font-size: 12px; color: var(--c-muted); }
+.mp-pop__badges { display: flex; flex-wrap: wrap; gap: 4px; margin: -4px 0 10px; }
+.mp-pop__btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.mp-pop__btns--ctx .btn { flex: 1 1 auto; }
+.mp-pop__btns--ctx .btn--primary, .mp-pop__btns--ctx .btn--ghost { flex-basis: 100%; }
+.mp.mp-pop-open .mp-legend { opacity: 0; pointer-events: none; }
+
+/* On the route tab the route card / online state already shows the trip, so the header summary (route name, numbers,
+   strip) is not repeated above it (UX.7): always in the side panel (≥ 768 px, landscape phones); in the phone sheet
+   at 'full', where the card sits right under the tabs. At 'peek' the summary is all the sheet shows, and at 'half'
+   the planner fills the visible part of the sheet (the card starts below the tab bar), so it stays there.
+   metrics() (mod02-map.js) still measures the peek with the summary in (.mp-sum-measure lifts the fold for one
+   synchronous read): the snap points do not move. */
+.mp[data-snap="side"][data-tab="route"].mp-has-card .mp-summary,
+.mp[data-snap="full"][data-tab="route"].mp-has-card:not(.mp-sum-measure) .mp-summary { display: none; }
+.mp[data-snap="side"][data-tab="route"].mp-has-card .mp-tabs { padding-top: var(--sp-2); }
+/* the 44 px grip no longer has a summary to overlap: it keeps its own row instead of covering the tabs */
+.mp[data-snap="full"][data-tab="route"].mp-has-card:not(.mp-sum-measure) .mp-panel__grip { margin-bottom: 0; align-items: center; padding: 0; }
+
+/* ===================================================================== */
+/* BOTTOM PANEL (phones)                                                  */
+/* ===================================================================== */
+.mp-panel {
+  position: absolute; z-index: 1200; left: 0; right: 0; bottom: 0;
+  height: var(--mp-panel-h, 58%);
+  display: flex; flex-direction: column;
+  background: var(--c-bg);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--sh-up), var(--sh-3);
+  transform: translate3d(0, var(--mp-y, 0px), 0);
+  transition: transform var(--dur-3) var(--ease);
+  overflow: hidden;
+}
+.mp.is-dragging .mp-panel { transition: none; }
+.mp-panel__top {
+  flex: none; background: var(--c-surface);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: grab;
+}
+.mp.is-dragging .mp-panel__top { cursor: grabbing; }
+/* 44px tap/drag target; its lower half transparently overlaps the summary so the header keeps its height */
+.mp-panel__grip {
+  position: relative; z-index: 1; display: flex; justify-content: center; align-items: flex-start;
+  width: 100%; min-height: 44px; margin-bottom: -23px; padding: 10px 0 0; cursor: inherit;
+  background: transparent; touch-action: none;
+}
+.mp-panel__grip span { width: 44px; height: 5px; border-radius: 5px; background: var(--c-border-strong); }
+.mp-panel__grip:focus-visible { outline: none; }
+.mp-panel__grip:focus-visible span { box-shadow: 0 0 0 3px var(--c-focus); }
+
+.mp-summary { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 0 16px 10px; }
+.mp-summary__body { flex: 1; min-width: 0; }
+.mp-summary__title { margin: 0; font-size: var(--fs-md); font-weight: 800; line-height: 1.3; color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-arrow { color: var(--c-muted); font-weight: 600; }
+.mp-summary__meta {
+  margin: 2px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 7px;
+  font-size: 12.5px; color: var(--c-muted); line-height: 1.35;
+}
+.mp-summary__meta b { color: var(--c-text); font-weight: 800; }
+.mp-summary__strip { margin-top: 7px; }
+.mp-summary__meta--far { flex-wrap: nowrap; gap: 6px; color: var(--c-warning-strong); font-weight: 700; }
+.mp-summary__meta--far .icon { flex: none; width: 14px; height: 14px; }
+.mp-lostline { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--c-success-strong); }
+.mp-lostline.is-lost { color: var(--c-danger-strong); }
+.mp-lostline .signal-dot { width: 8px; height: 8px; }
+
+.mp-tabs {
+  flex: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+  padding: 0 6px; background: var(--c-surface); overflow: visible;
+  touch-action: none; -webkit-touch-callout: none; /* part of the sheet's drag handle (taps still select a tab) */
+}
+.mp-tabs .tab {
+  flex-direction: column; justify-content: center; gap: 3px; min-width: 0;
+  min-height: 56px; padding: 6px 2px 9px;
+  font-size: var(--fs-xs); line-height: 1.15; text-align: center; white-space: normal;
+}
+.mp-tabs .tab .icon { width: 20px; height: 20px; }
+.mp-tabs .tab::after { left: 22%; right: 22%; }
+
+.mp-panel__body {
+  position: relative; flex: none; height: var(--mp-body-h, auto); min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: 14px 14px calc(var(--mp-body-pad, 0px) + var(--tabbar-cur-h, var(--tabbar-h)) + env(safe-area-inset-bottom) + 44px);
+}
+.mp[data-snap="peek"]:not(.is-dragging) .mp-panel__body { opacity: 0; pointer-events: none; }
+.mp-panel__body { transition: opacity var(--dur-2) var(--ease); }
+.mp-pane { gap: 12px; }
+.mp-pane[hidden] { display: none; }
+
+/* ===================================================================== */
+/* ROUTE TAB — planner                                                    */
+/* ===================================================================== */
+.mp-plan { padding: 14px; }
+.mp-plan__grid {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 10px; align-items: center;
+}
+.mp-plan__dot {
+  position: relative; justify-self: center;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 3px solid var(--c-primary); background: var(--c-surface);
+}
+.mp-plan__dot--from::after {
+  content: ""; position: absolute; left: 50%; top: calc(100% + 4px); height: 30px; margin-left: -1px;
+  border-left: 2px dotted var(--c-border-strong);
+}
+.mp-plan__dot--to {
+  width: 22px; height: 22px; border: 0; background: var(--c-accent); color: var(--c-on-accent);
+  display: flex; align-items: center; justify-content: center;
+}
+.mp-plan__dot--to .icon { width: 12px; height: 12px; stroke-width: 2.6; }
+.mp-plan__field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mp-plan__lab { font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--c-muted); }
+.mp-plan__input.select, .mp-plan__input.input { min-height: 46px; font-weight: 600; }
+.mp-plan__swap { grid-column: 3; grid-row: 1 / span 2; align-self: center; --btn-h: var(--tap, 44px); border-radius: 50%; color: var(--c-text-2); }
+.mp-combo { position: relative; }
+.mp-combo .input { padding-right: calc(var(--tap-sm, 44px) + 4px); } /* room for the clear button (44 px on touch, 36 px with a mouse) */
+.mp-combo__clear { position: absolute; right: 2px; --btn-h: var(--tap-sm, 44px); }
+.mp-combo__clear[hidden] { display: none; }
+
+.mp-combo__list {
+  margin: 10px 0 0; padding: 6px; list-style: none;
+  max-height: 340px; overflow-y: auto; overscroll-behavior: contain;
+  border-radius: var(--r-md); background: var(--c-surface);
+  border: 1px solid var(--c-border); box-shadow: var(--sh-2);
+}
+.mp-combo__list[hidden] { display: none; }
+.mp-combo__group { padding: 10px 10px 4px; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--c-muted); }
+.mp-combo__empty { padding: 14px 10px; font-size: var(--fs-sm); color: var(--c-muted); }
+.mp-opt { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 6px 8px; border-radius: var(--r-sm); cursor: pointer; }
+.mp-opt:hover, .mp-opt.is-active { background: var(--c-hover); }
+.mp-opt.is-active { box-shadow: inset 0 0 0 2px var(--c-focus); }
+.mp-opt__body { display: flex; flex-direction: column; min-width: 0; }
+.mp-opt__label { font-size: var(--fs-sm); font-weight: 700; color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-opt__meta { font-size: 12px; color: var(--c-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-opt.is-disabled { cursor: default; opacity: .72; }
+.mp-opt.is-disabled:hover { background: none; }
+/* the one-line consent before the first online search: the text wraps, the row reads as an action */
+.mp-opt--consent { align-items: flex-start; padding-top: 10px; padding-bottom: 10px; background: var(--c-primary-soft); }
+.mp-opt--consent:hover, .mp-opt--consent.is-active { background: var(--c-primary-soft); }
+.mp-opt--consent .mp-opt__label { color: var(--c-primary-strong); }
+.mp-opt--consent .mp-opt__meta, .mp-opt--go .mp-opt__label { white-space: normal; overflow-wrap: anywhere; }
+.mp-opt--consent .mp-opt__meta { color: var(--c-text-2); line-height: 1.4; }
+.mp-opt--go .mp-opt__label { color: var(--c-primary-strong); }
+.mp-combo__info { display: flex; align-items: flex-start; gap: 8px; padding: 10px; font-size: var(--fs-xs); color: var(--c-text-2); line-height: 1.45; }
+.mp-combo__info .icon { flex: none; width: 15px; height: 15px; margin-top: 1px; color: var(--c-muted); }
+.mp-combo__info[aria-busy="true"] .icon { animation: nc-spin 1.1s linear infinite; }
+.mp-combo__info--attr { padding-top: 4px; color: var(--c-muted); }
+.mp-combo--from .input { font-weight: 600; }
+/* one line about the location under the planner (blocked / not yet allowed / demo rule) */
+.mp-plan__hint { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 10px 0 0; font-size: var(--fs-xs); color: var(--c-text-2); line-height: 1.45; }
+.mp-plan__hint[hidden] { display: none; }
+.mp-plan__hint > .icon { flex: none; width: 15px; height: 15px; color: var(--c-muted); }
+.mp-plan__hint > span { flex: 1 1 180px; min-width: 0; }
+
+.mp-plan__opts { display: flex; align-items: stretch; gap: 8px; margin-top: 12px; }
+.mp-plan__opts .segmented { flex: 1 1 auto; min-width: 0; }
+.mp-plan__opts .segmented__btn { padding: 0 8px; }
+.mp-plan__opts .mp-seg-icon { flex: none; }
+.mp-seg-icon .segmented__btn { flex: none; width: 46px; padding: 0; }
+.mp-seg-icon .segmented__btn .icon { width: 20px; height: 20px; }
+.mp-seg-strat .segmented__btn { font-size: 13px; white-space: normal; line-height: 1.15; text-align: center; }
+.mp-seg-strat .segmented__btn .icon { display: none; }
+.mp-presets { margin-top: 12px; }
+/* Presets never get cut off (a hidden-scrollbar row is unreachable with a mouse and clips the 2nd chip on narrow
+   panels): a grid of 1–2 columns; a chip may take two lines, breaking after the arrow, never inside a place name
+   unless the name alone is wider than the chip. Height stays ≥ --chip-h (44 px on touch screens). */
+.mp-presets.chip-group {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+  gap: 8px; overflow: visible; padding-bottom: 0;
+}
+.mp-preset { min-width: 0; min-height: var(--chip-h, 44px); padding: 5px 12px; font-size: 12.5px; line-height: 1.25; white-space: normal; text-align: left; }
+.mp-preset > .icon { flex: none; }
+.mp-preset > span { min-width: 0; }
+.mp-preset__n { display: inline-block; max-width: 100%; }
+.mp-preset--care { color: var(--c-danger-strong); background: var(--c-danger-soft); }
+.mp-preset--care:only-child { grid-column: 1 / -1; justify-self: start; } /* alone while a trip is shown: one line */
+.mp-preset--care .icon { color: var(--c-danger); }
+button.mp-preset--care:hover { border-color: var(--c-danger); color: var(--c-danger-strong); }
+
+/* ===================================================================== */
+/* ROUTE TAB — results                                                    */
+/* ===================================================================== */
+.mp-result { gap: 12px; }
+.mp-idle { display: flex; align-items: flex-start; gap: 14px; }
+.mp-idle__body { min-width: 0; }
+.mp-idle__legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+/* Route card (R1): headline, signal line, dead-zone summary, one primary CTA, details under "Xem thêm" */
+.mp-res { --mp-res-pad: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-3); }
+.mp .mp-res { padding: var(--mp-res-pad); } /* beats the responsive .card padding; .mp-more bleeds by the same amount */
+.mp-res__path { margin: 0; font-size: var(--fs-md); font-weight: 800; line-height: 1.35; color: var(--c-text); overflow-wrap: anywhere; }
+.mp-res__via { margin: -8px 0 0; font-size: var(--fs-xs); color: var(--c-muted); line-height: 1.4; }
+.mp-res__nums { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin: 0; color: var(--c-text-2); font-size: var(--fs-sm); font-weight: 700; }
+.mp-res__nums b { font-size: var(--fs-2xl); font-weight: 800; letter-spacing: -.02em; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.mp-res__eta, .mp-res__mode { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.mp-res__eta .icon, .mp-res__mode .icon { width: 16px; height: 16px; color: var(--c-muted); }
+.mp-res__strip { min-height: 30px; }
+.mp-res__lv { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: -4px 0 0; padding: 0; list-style: none; }
+.mp-res__lvi { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--c-text-2); white-space: nowrap; }
+.mp-res__lvi b { color: var(--c-text); font-weight: 800; font-variant-numeric: tabular-nums; }
+.mp-res__lvi--lost:not(.is-zero):not(.is-none) b { color: var(--c-danger-strong); }
+.mp-res__lvi.is-zero { color: var(--c-success-strong); font-weight: 700; }
+.mp-res__note { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: var(--fs-xs); color: var(--c-text-2); line-height: 1.45; }
+.mp-res__note .icon { flex: none; width: 14px; height: 14px; margin-top: 1px; color: var(--c-muted); }
+/* CTA row: side by side while the primary gets at least half the row and the secondary its whole label, otherwise
+   one per row. A button is never narrower than its label (min-width: max-content), so flex-wrap breaks the row
+   instead of clipping it. */
+.mp-res__cta { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.mp-res__cta .btn { flex: 1 1 0; width: auto; min-width: max-content; min-height: 48px; padding: 6px 14px; }
+.mp-res__cta .btn.mp-trip { flex: 1.4 1 50%; }
+.mp-trip.is-on { background: var(--c-surface); color: var(--c-primary-strong); border: 1.5px solid var(--c-primary); box-shadow: none; }
+.mp-res__hint { display: flex; align-items: flex-start; gap: 6px; margin: -4px 0 0; font-size: var(--fs-xs); color: var(--c-muted); line-height: 1.45; }
+.mp-res__hint .icon { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+.mp-res__src { display: flex; align-items: flex-start; gap: 6px; margin: -4px 0 0; font-size: var(--fs-xs); color: var(--c-muted); line-height: 1.45; }
+.mp-res__src .icon { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+
+/* signal dots (colour + shape: solid / ring / square / dash-dot) */
+.mp-dot { flex: none; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--sig-likely); }
+.mp-dot--uncertain { background: transparent; border: 2.5px solid var(--sig-uncertain); }
+.mp-dot--lost { border-radius: 2px; background: var(--sig-lost); }
+.mp-dot--unknown { width: 14px; height: 4px; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--mp-sig-unknown) 0 6px, transparent 6px 8px, var(--mp-sig-unknown) 8px 10px, transparent 10px 12px); }
+.mp-badge-unknown { gap: 6px; }
+
+/* "Xem thêm" inside the route card: the shared .disclosure (components.css), bleeding to the card edges */
+.mp-more { margin: 0 calc(-1 * var(--mp-res-pad)) calc(-1 * var(--sp-2)); border-top: 1px solid var(--c-border); }
+.mp-more > .mp-more__sum { min-height: 52px; padding: var(--sp-2) var(--mp-res-pad); }
+.mp-more > .mp-more__sum:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--c-focus); } /* the card clips an outer ring */
+.mp-more > .mp-more__body { gap: var(--sp-5); padding: var(--sp-1) var(--mp-res-pad) var(--sp-4); }
+.mp-sec__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+.mp-sec__title { margin: 0; font-size: var(--fs-sm); font-weight: 800; color: var(--c-text); }
+.mp-sec__sub { margin: 2px 0 0; font-size: var(--fs-xs); color: var(--c-muted); line-height: 1.4; }
+
+/* Online states (consent / loading / failed / no connection) and "choose a start point" */
+.mp-gate { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+.mp-gate--warning { border-color: var(--c-warning); }
+.mp-gate__main { min-width: 0; }
+.mp-gate__title { margin: 2px 0 0; font-size: var(--fs-md); font-weight: 800; line-height: 1.3; color: var(--c-text); }
+.mp-gate--warning .mp-gate__title { color: var(--c-warning-strong); }
+.mp-gate__path { margin: 4px 0 0; font-size: var(--fs-sm); font-weight: 700; color: var(--c-text-2); overflow-wrap: anywhere; }
+.mp-gate__text { margin: 6px 0 0; font-size: var(--fs-sm); color: var(--c-text-2); line-height: 1.5; }
+.mp-gate__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.mp-gate__bar { display: block; height: 4px; margin-top: 10px; border-radius: 2px; background: var(--c-primary-soft); overflow: hidden; position: relative; }
+.mp-gate__bar::after { content: ""; position: absolute; top: 0; bottom: 0; left: -40%; width: 40%; border-radius: 2px; background: var(--c-primary); animation: mp-slide 1.2s var(--ease) infinite; }
+@keyframes mp-slide { to { left: 100%; } }
+
+/* Dead-zone summary (inside the route card) */
+.mp-dz { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 12px; border-radius: var(--r-md); background: var(--c-warning-soft); }
+.mp-dz--danger { background: var(--c-danger-soft); }
+.mp-dz--ok { background: var(--c-success-soft); }
+.mp-dz__icon { display: inline-flex; margin-top: 2px; color: var(--c-warning-strong); }
+.mp-dz--danger .mp-dz__icon { color: var(--c-danger-strong); }
+.mp-dz--ok .mp-dz__icon { color: var(--c-success-strong); }
+.mp-dz__icon .icon { width: 18px; height: 18px; }
+.mp-dz__main { min-width: 0; }
+.mp-dz__title { margin: 0; font-size: var(--fs-sm); font-weight: 800; line-height: 1.35; color: var(--c-warning-strong); }
+.mp-dz--danger .mp-dz__title { color: var(--c-danger-strong); }
+.mp-dz--ok .mp-dz__title { color: var(--c-success-strong); }
+.mp-dz--unknown { background: var(--c-surface-2); }
+.mp-dz--unknown .mp-dz__icon { color: var(--c-muted); }
+.mp-dz--unknown .mp-dz__title { color: var(--c-text); }
+.mp-dz__soon { display: flex; align-items: center; gap: 6px; margin: 3px 0 0; font-size: var(--fs-xs); font-weight: 700; color: var(--c-danger-strong); }
+.mp-dz__soon .icon { width: 14px; height: 14px; }
+.mp-dz__text { margin: 3px 0 0; font-size: var(--fs-xs); color: var(--c-text-2); line-height: 1.45; }
+.mp-dz__show { margin: 4px 0 -6px -10px; color: var(--c-text); }
+
+/* Strategy comparison */
+.mp-cmp .card__header { margin-bottom: var(--sp-2); }
+.mp-cmp__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mp-cmp__opt {
+  position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 3px; min-width: 0;
+  padding: 12px; border-radius: var(--r-md); text-align: left;
+  border: 1.5px solid var(--c-border); background: var(--c-surface); color: var(--c-text);
+  transition: border-color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.mp-cmp__opt:hover { border-color: var(--c-primary); }
+.mp-cmp__opt:active { transform: scale(.985); }
+.mp-cmp__opt.is-selected { border-color: var(--c-primary); background: var(--c-primary-soft); }
+.mp-cmp__name { display: flex; align-items: center; gap: 6px; padding-right: 22px; font-size: 12px; font-weight: 800; color: var(--c-text-2); }
+.mp-cmp__name .icon { width: 15px; height: 15px; color: var(--c-primary-strong); }
+.mp-cmp__check { position: absolute; top: 10px; right: 10px; color: var(--c-primary); display: flex; }
+.mp-cmp__check .icon { width: 19px; height: 19px; }
+.mp-cmp__km { margin-top: 4px; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.mp-cmp__eta { font-size: 12px; color: var(--c-muted); }
+.mp-cmp__strip { display: block; margin: 8px 0 4px; }
+.mp-cmp__lost { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--c-danger-strong); }
+.mp-cmp__lost.is-ok { color: var(--c-success-strong); }
+.mp-cmp__lost .signal-dot { width: 8px; height: 8px; }
+.mp-cmp__via { font-size: var(--fs-xs); color: var(--c-muted); line-height: 1.3; }
+.mp-cmp__verdict {
+  display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 0; padding: 10px 12px;
+  border-radius: var(--r-sm); background: var(--c-surface-2); font-size: var(--fs-sm); color: var(--c-text); line-height: 1.45;
+}
+.mp-cmp__verdict .icon { flex: none; width: 17px; height: 17px; margin-top: 1px; color: var(--c-accent); }
+
+/* Parts */
+.mp-parts { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.mp-part {
+  display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; column-gap: 12px; align-items: center;
+  min-height: 46px; padding: 6px 0; border-bottom: 1px dashed var(--c-border);
+}
+.mp-part:last-child { border-bottom: 0; }
+.mp-part__bar { align-self: stretch; border-radius: 3px; background: var(--sig-likely); }
+.mp-part--uncertain .mp-part__bar { background: repeating-linear-gradient(180deg, var(--sig-uncertain) 0 7px, transparent 7px 10px); }
+.mp-part--lost .mp-part__bar { background: repeating-linear-gradient(180deg, var(--sig-lost) 0 4px, transparent 4px 7px); }
+.mp-part--unknown .mp-part__bar { background: repeating-linear-gradient(180deg, var(--mp-sig-unknown) 0 7px, transparent 7px 9px, var(--mp-sig-unknown) 9px 11px, transparent 11px 13px); }
+.mp-part__km { display: flex; flex-direction: column; font-size: var(--fs-sm); font-weight: 700; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.mp-part__km small { font-size: 12px; font-weight: 500; color: var(--c-muted); }
+.mp-parts__more { margin-top: 6px; }
+
+/* Stops (route tab + stops tab) */
+.mp-stops .list-item, .mp-group .list-item { min-height: 58px; }
+.mp-stop .list-item__title { font-size: var(--fs-sm); font-weight: 700; }
+.mp-stop .list-item__meta { font-size: 12px; gap: 2px 8px; }
+.mp-stop .list-item__trail { gap: 4px; }
+.mp-along .section-head__action, .mp-cmp .section-head__action { background: none; }
+/* 44px tap target without growing the header (negative margins absorb the extra height) */
+.mp-along .section-head__action { min-height: 44px; margin: -12px -6px -12px 0; padding: 0 6px; border-radius: var(--r-sm); }
+
+.mp-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.mp-actions .btn { flex: 1 1 auto; }
+
+.mp-note { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 12.5px; color: var(--c-muted); line-height: 1.45; }
+.mp-note .icon { flex: none; width: 16px; height: 16px; margin-top: 1px; color: var(--c-primary); }
+.mp-note--ok { padding: 10px 12px; border-radius: var(--r-md); background: var(--c-success-soft); color: var(--c-success-strong); font-weight: 600; }
+.mp-note--ok .icon { color: var(--c-success); }
+.mp-note--warn { padding: 10px 12px; border-radius: var(--r-md); background: var(--c-warning-soft); color: var(--c-warning-strong); font-weight: 600; }
+.mp-note--warn .icon { color: var(--c-warning-strong); }
+.mp-small { display: flex; align-items: flex-start; gap: 6px; margin: 10px 0 0; font-size: 12px; color: var(--c-muted); line-height: 1.4; }
+.mp-small .icon { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+.mp-sub { margin: 4px 0 8px; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--c-muted); }
+.mp-h { margin: 0; font-size: var(--fs-md); font-weight: 800; color: var(--c-text); }
+
+/* ===================================================================== */
+/* MEDICAL TAB                                                            */
+/* ===================================================================== */
+.mp-pos {
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px;
+  border-radius: var(--r-lg); background: var(--c-surface); border: 1px solid var(--c-card-border); box-shadow: var(--sh-1);
+}
+.mp-pos > .icon { flex: none; color: var(--c-muted); }
+.mp-pos--none { font-size: var(--fs-sm); color: var(--c-text-2); }
+.mp-pos--none > span { flex: 1; }
+.mp-pos__dot { flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--c-info); box-shadow: 0 0 0 4px var(--c-info-soft); }
+.mp-pos__text { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+.mp-pos__text small { flex-basis: 100%; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--c-muted); }
+.mp-pos__text b { font-size: var(--fs-sm); font-weight: 800; color: var(--c-text); }
+.mp-filter .chip { min-height: var(--chip-h, 44px); font-size: 12.5px; }
+
+.mp-med-list { gap: 12px; }
+.mp-fac { padding: 14px; }
+.mp-fac--first { border-color: var(--c-primary); box-shadow: 0 0 0 1px var(--c-primary), var(--sh-2); }
+.mp-fac--pick { border-color: var(--c-accent); box-shadow: 0 0 0 1px var(--c-accent), var(--sh-2); }
+.mp-fac__top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.mp-fac__id { min-width: 0; }
+.mp-fac__name { margin: 1px 0 0; font-size: var(--fs-md); font-weight: 800; line-height: 1.3; color: var(--c-text); }
+.mp-fac__type { margin: 3px 0 0; font-size: 12.5px; color: var(--c-muted); line-height: 1.35; }
+.mp-fac__dist { text-align: right; line-height: 1; color: var(--c-text); }
+.mp-fac__dist b { display: block; font-size: var(--fs-2xl); font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.mp-fac__dist small { display: block; margin-top: 4px; font-size: var(--fs-xs); font-weight: 600; color: var(--c-muted); white-space: nowrap; }
+.mp-fac__addr { display: flex; align-items: flex-start; gap: 6px; margin: 8px 0 0; font-size: 12.5px; color: var(--c-muted); line-height: 1.4; }
+.mp-fac__addr .icon { flex: none; width: 14px; height: 14px; margin-top: 2px; }
+.mp-fac__badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.mp-fac__line { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0 0; font-size: 12.5px; color: var(--c-text-2); line-height: 1.4; }
+.mp-fac__line > .icon { flex: none; width: 15px; height: 15px; margin-top: 1px; color: var(--c-muted); }
+.mp-fac__line > span:first-of-type { flex: 1 1 0; min-width: 0; }
+.mp-fac__line .mp-lostline { white-space: nowrap; }
+.mp-fac__line .text-success { color: var(--c-success); }
+.mp-fac__line--stale { padding: 8px 10px; border-radius: var(--r-sm); background: var(--c-warning-soft); color: var(--c-warning-strong); font-weight: 600; }
+.mp-fac__line--stale > .icon { color: var(--c-warning-strong); }
+.mp-fac__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.mp-fac__actions .btn--primary { flex: 1 1 auto; }
+
+/* Report / propose sheets */
+.mp-form__target { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--r-md); background: var(--c-surface-2); }
+.mp-form__target b { display: block; color: var(--c-text); font-size: var(--fs-sm); }
+.mp-form__target small { display: block; color: var(--c-muted); font-size: 12px; }
+.mp-form__set { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.mp-form__set legend { margin-bottom: 8px; padding: 0; }
+
+/* ===================================================================== */
+/* STOPS TAB                                                              */
+/* ===================================================================== */
+.mp-stops-head { display: flex; flex-direction: column; gap: 4px; }
+.mp-group .section-head { margin: 4px 0 8px; }
+.mp-group .section-head__title { display: flex; align-items: center; gap: 10px; font-size: var(--fs-md); }
+
+/* ===================================================================== */
+/* PACKS TAB                                                              */
+/* ===================================================================== */
+.mp-pk { padding: var(--sp-4); }
+.mp-pk__head { display: flex; align-items: center; gap: var(--sp-3); }
+.mp-pk__id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mp-pk__src { display: inline-flex; align-items: flex-start; gap: 6px; font-size: var(--fs-xs); font-weight: 600; line-height: 1.4; color: var(--c-muted); }
+.mp-pk__src .icon { flex: none; width: 15px; height: 15px; margin-top: 1px; color: var(--c-primary); }
+.mp-pk__lead { margin: var(--sp-3) 0; font-size: var(--fs-sm); line-height: 1.45; color: var(--c-text-2); }
+.mp-pk__kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); margin: 0 0 var(--sp-4); }
+.mp-pk__kv > div { padding: 9px 12px; border-radius: var(--r-md); background: var(--c-surface-2); }
+.mp-pk__kv dt { font-size: var(--fs-xs); font-weight: 600; color: var(--c-muted); }
+.mp-pk__kv dd { margin: 2px 0 0; font-size: var(--fs-md); font-weight: 800; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.mp-pk__dl:disabled { opacity: .72; }
+.mp-pk__offline { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 0; font-size: var(--fs-xs); line-height: 1.4; color: var(--c-muted); }
+.mp-pk__offline .icon { flex: none; width: 16px; height: 16px; margin-top: 1px; }
+/* Offline vector basemap card (one row per corridor) */
+.mp-bmrow.is-current .list-item__title { color: var(--c-primary-strong); }
+.mp-bmrow .list-item__trail { gap: 4px; }
+/* "Chi tiết kỹ thuật" (versions, accuracy, stored packs, storage): the shared .disclosure--card, folded by default.
+   Its body keeps normal block flow (the key/value grid and headings carry their own margins). */
+.mp-tech > .mp-tech__body { display: block; }
+.mp-tech__h { margin-bottom: var(--sp-1); font-size: var(--fs-sm); }
+.mp-tech__lead { margin: 0 0 var(--sp-3); }
+.mp-acc__grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; }
+.mp-acc__bars { min-width: 0; }
+.mp-pkrow.is-current .list-item__title { color: var(--c-primary-strong); }
+.mp-pkrow .list-item__trail { gap: 4px; }
+.mp-stored { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.mp-stored li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 8px;
+  padding: 8px 6px 8px 12px; border-radius: var(--r-md); background: var(--c-surface-2); font-size: var(--fs-sm);
+}
+.mp-stored li > span:first-child { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--c-text); }
+.mp-stored li > span:first-child .icon { width: 16px; height: 16px; color: var(--c-success); }
+.mp-stored li > span.muted { grid-row: 2; font-size: var(--fs-xs); }
+.mp-stored li > .btn { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.mp-logs .switch { width: 100%; align-items: flex-start; }
+.mp-logs .switch__label { flex: 1; }
+.mp-logs .switch__label b { display: block; font-weight: 800; color: var(--c-text); }
+.mp-logs .switch__label small { display: block; margin-top: 4px; font-size: var(--fs-xs); font-weight: 400; color: var(--c-muted); line-height: 1.45; }
+
+/* Route picker sheet */
+.mp-rsheet__item.is-selected .list-item__title { color: var(--c-primary-strong); }
+.mp-rsheet__item .list-item__trail .icon { width: 20px; height: 20px; }
+.mp-simsheet { display: flex; flex-direction: column; gap: 8px; }
+.mp-simsheet .mp-sub { margin-top: 12px; }
+.mp-simsheet .list-item { min-height: 54px; }
+/* "Chế độ demo" — demo tools (simulated position), always present at the end of the Route tab, collapsed: the shared
+   .disclosure--card.disclosure--demo (same look as MOD.04's) */
+.mp-demo > .mp-demo__body { gap: var(--sp-2); }
+.mp-demo__text { margin: 0; font-size: var(--fs-xs); line-height: 1.45; color: var(--c-muted); }
+.mp-demo__status { margin: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--c-primary-strong); }
+.mp-demo__status[hidden] { display: none; }
+.mp-demo__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* durations, not `none`: nothing may wait forever on transitionend (contract D.18) */
+  .mp-panel, .mp .leaflet-bottom, .mp-legend, .mp .mk-notice, .mp-panel__body { transition-duration: .01ms; }
+  .mp-fab.is-loading .icon, .mp-combo__info[aria-busy="true"] .icon { animation-duration: .01ms; animation-iteration-count: 1; }
+  .mp-gate__bar::after { animation-duration: .01ms; animation-iteration-count: 1; left: 30%; }
+}

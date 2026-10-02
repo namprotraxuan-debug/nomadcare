@@ -1,0 +1,39 @@
+/*
+ * print.css — print stylesheet (media="print"): prints only the active screen, ink-friendly.
+ * Owner: P1 shell. Used e.g. to print the MOD.03 QR card or a MOD.05 first-aid sheet.
+ * Helpers: .print-only (shown only when printing), .no-print (hidden when printing).
+ */
+@page { margin: 14mm; }
+
+html, body {
+  background: var(--c-print-paper) !important;
+  background-image: none !important;
+  color: var(--c-print-ink) !important;
+  font-size: 11.5pt;
+}
+.sidebar, .topbar, .tabbar, .offline-banner, .toast-root, #sheet-root, .sheet, .modal,
+.skip-link, .boot-splash, .no-print, .btn:not(.print-keep), .tabbar__fab {
+  display: none !important;
+}
+.print-only { display: block !important; }
+.app-shell, .main-col { display: block !important; min-height: 0 !important; }
+.view { padding: 0 !important; }
+.screen { display: none !important; max-width: none !important; animation: none !important; }
+.screen.is-active { display: block !important; }
+.onboarding { display: none !important; }
+
+*, *::before, *::after { box-shadow: none !important; text-shadow: none !important; animation: none !important; transition: none !important; }
+.card, .list--card, .disclaimer {
+  border: 1px solid var(--c-print-line) !important;
+  background: var(--c-print-paper) !important;
+  color: var(--c-print-ink) !important;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.card--hero { background: var(--c-print-paper) !important; color: var(--c-print-ink) !important; }
+.card--hero * { color: var(--c-print-ink) !important; }
+h1, h2, h3 { break-after: avoid; page-break-after: avoid; color: var(--c-print-ink) !important; }
+a { color: var(--c-print-ink) !important; text-decoration: underline; }
+a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 9pt; }
+img, svg, canvas { break-inside: avoid; }
+.badge, .chip, .pill { border: 1px solid var(--c-print-line-strong) !important; background: var(--c-print-paper) !important; color: var(--c-print-ink) !important; }
+.table th, .table td { border-bottom: 1px solid var(--c-print-line-soft) !important; }

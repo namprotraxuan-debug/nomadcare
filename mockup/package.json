@@ -1,0 +1,16 @@
+{
+  "name": "nomadcare-mockup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NomadCare v2 — bộ mockup giao diện (ảnh chụp thật + board PNG + trang showcase) cho vòng 2 AISC 2026, đội Stormbreakers.",
+  "scripts": {
+    "shots": "node build-mockup.js shots",
+    "boards": "node build-mockup.js boards",
+    "all": "node build-mockup.js all",
+    "placeholders": "node build-mockup.js placeholders",
+    "list": "node build-mockup.js list"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}

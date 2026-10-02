@@ -1,0 +1,1359 @@
+{
+  "$doc": [
+    "Danh sách trạng thái app cần chụp cho bộ mockup. Sửa file này rồi chạy: node build-mockup.js all",
+    "shot: id, device (phone|tablet|desktop), url (tính từ gốc dự án), theme (light|dark), lang (vi|en), offline (true = thêm ?offline=1),",
+    "      extends (kế thừa url + actions của shot khác; các bước 'tap' của shot cha được đổi thành 'click'), actions, wait, caption {vi,en}, module.",
+    "actions (chạy tuần tự, thêm \"optional\": true để lỗi chỉ là cảnh báo):",
+    "  {goto:'/index.html?...'} {hash:'#/map'} {go:'map', params:{...}} {click:'css'} {clickText:'Nặng|Severe', within:'#screen-translate', sel:'css ưu tiên', selector:'giới hạn loại phần tử', index:0, exact:false}",
+    "geo: mặc định script cấp quyền vị trí + thông báo và đặt vị trí defaults.geo (22.99, 104.98); \"geo\": false = không cấp (app hiện thẻ xin quyền vị trí), \"geo\": {latitude, longitude} = vị trí khác.",
+    "  {tap:'text' | {text, sel, within}} = ghi lại vị trí chạm (vẽ vòng tròn trên board luồng) mà KHÔNG bấm; {type:['css','text']} {press:'Enter'}",
+    "  {waitFor:'css'} {waitText:'text'} {wait:ms} {eval:'biểu thức JS (có thể async), có sẵn __mk.*'} {scrollTo:'text|css', within} {scroll:{selector, y}}",
+    "  {css:'...'} {offline:true|false} {idle:ms} {tiles:true} {macro:'tên macro'}",
+    "Trong eval dùng được: __mk.find(q), __mk.click(q), __mk.go(screen, params), __mk.waitFor(fn|css, ms), __mk.sleep(ms), __mk.ready(ms)."
+  ],
+  "version": 1,
+  "browserHost": "nomadcare.demo",
+  "devices": {
+    "phone": {
+      "label": "iPhone 390 × 844 @3x",
+      "width": 390,
+      "height": 844,
+      "scale": 3,
+      "mobile": true,
+      "touch": true,
+      "safeArea": {
+        "top": 47,
+        "bottom": 34
+      },
+      "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+    },
+    "tablet": {
+      "label": "iPad 834 × 1194 @2x",
+      "width": 834,
+      "height": 1194,
+      "scale": 2,
+      "mobile": true,
+      "touch": true,
+      "safeArea": {
+        "top": 24,
+        "bottom": 20
+      },
+      "ua": "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+    },
+    "desktop": {
+      "label": "Desktop 1440 × 900 @2x",
+      "width": 1440,
+      "height": 900,
+      "scale": 2,
+      "mobile": false,
+      "touch": false
+    }
+  },
+  "defaults": {
+    "wait": 1200,
+    "settleTimeout": 8000,
+    "navTimeout": 30000,
+    "timezone": "Asia/Ho_Chi_Minh",
+    "reducedMotion": true,
+    "parallel": 3,
+    "geo": {
+      "latitude": 22.99,
+      "longitude": 104.98,
+      "accuracy": 20
+    }
+  },
+  "macros": {
+    "buddyStart": [
+      {
+        "eval": "(async function(){ if (!(window.NC && NC.data && NC.data.buddy)) throw new Error('NC.data.buddy chưa có'); if (NC.data.init) await NC.data.init(); var cur = await NC.data.buddy.current(); if (!cur || cur.status === 'closed') { await NC.data.buddy.start({ traveler_name: 'Minh Anh', recipient: { name: 'Lê Hà', phone: '+84 000 000 001' }, interval_min: 60, grace_min: 30, route_id: 'ha-giang-loop', travel_mode: 'motorbike', share_public_medical: false, public_medical: null }); } var p = NC.settings.get('last_position'); try { await NC.data.buddy.checkin(p ? { kind: 'location', lat: p.lat, lng: p.lng, accuracy_m: 12 } : { kind: 'checkin' }); } catch (e) {} return 'buddy ' + ((await NC.data.buddy.current()) || {}).status; })()"
+      },
+      {
+        "wait": 600
+      }
+    ],
+    "packDownload": [
+      {
+        "eval": "(async function(){ await NC.data.init(); var r = NC.settings.get('route_id') || 'ha-giang-loop', c = NC.settings.get('carrier') || 'viettel'; var have = await NC.data.listDownloadedPacks(); if (!have.some(function (x) { return x.route_id === r && x.carrier === c; })) await NC.data.downloadPack(r, c); return 'pack ' + r + ':' + c + ' → ' + (await NC.data.listDownloadedPacks()).length; })()"
+      }
+    ],
+    "homePrep": [
+      {
+        "macro": "packDownload"
+      },
+      {
+        "macro": "buddyStart"
+      },
+      {
+        "go": "home"
+      },
+      {
+        "wait": 1400
+      }
+    ],
+    "adminEnterDemo": [
+      {
+        "waitFor": "#ad-demo",
+        "timeout": 10000
+      },
+      {
+        "click": "#ad-demo"
+      },
+      {
+        "wait": 1500
+      },
+      {
+        "waitFor": "#ad-page-overview",
+        "timeout": 8000,
+        "optional": true
+      }
+    ],
+    "translateLegs": [
+      {
+        "hash": "#/translate"
+      },
+      {
+        "click": "#screen-translate [data-tr-act='group'][data-id='legs']"
+      }
+    ],
+    "blurFocus": [
+      {
+        "eval": "(function(){ var a = document.activeElement; if (a && a !== document.body && a.blur) { a.blur(); return 'blur ' + a.tagName; } return 'no focus'; })()"
+      }
+    ],
+    "mapDismissBasemap": [
+      {
+        "eval": "(async function(){ try { await __mk.waitFor('.mk-bm-sug.is-open', 3500); } catch (e) { return 'no basemap sheet'; } var s = document.querySelector('.mk-bm-sug.is-open'); var b = Array.prototype.find.call(s.querySelectorAll('button'), function (x) { return /Để sau|Later|Not now/i.test(x.textContent); }); if (!b) throw new Error('nút Để sau không có'); b.click(); await __mk.sleep(600); return 'basemap sheet dismissed'; })()"
+      }
+    ],
+    "tabbarShow": [
+      {
+        "eval": "(async function(){ window.scrollBy(0, 24); await __mk.sleep(160); window.scrollBy(0, -24); await __mk.sleep(350); return document.documentElement.classList.contains('nc-tabbar-hidden') ? 'tab bar still hidden' : 'tab bar shown'; })()",
+        "optional": true
+      }
+    ]
+  },
+  "shots": [
+    {
+      "id": "p-onboarding",
+      "device": "phone",
+      "module": "Onboarding",
+      "url": "/index.html?reset=1",
+      "live": "/index.html?demo=1#/onboarding",
+      "actions": [
+        {
+          "goto": "/index.html"
+        },
+        {
+          "waitFor": "#ob-root .ob-step",
+          "timeout": 8000
+        },
+        {
+          "wait": 700
+        }
+      ],
+      "caption": {
+        "vi": "Chào mừng & chọn ngôn ngữ",
+        "en": "Welcome & language"
+      }
+    },
+    {
+      "id": "p-onboarding-consent",
+      "device": "phone",
+      "module": "Onboarding",
+      "extends": "p-onboarding",
+      "actions": [
+        {
+          "click": "#ob-next"
+        },
+        {
+          "wait": 700
+        },
+        {
+          "click": "#ob-next"
+        },
+        {
+          "wait": 800
+        }
+      ],
+      "caption": {
+        "vi": "Đồng ý riêng cho dữ liệu y tế (NĐ 356/2025)",
+        "en": "Separate consent for medical data"
+      }
+    },
+    {
+      "id": "p-geo-permission",
+      "device": "phone",
+      "module": "Trang chủ",
+      "geo": false,
+      "url": "/index.html?demo=1#/home",
+      "actions": [
+        {
+          "waitFor": ".geo-sheet.is-open",
+          "timeout": 8000
+        },
+        {
+          "wait": 700
+        },
+        {
+          "macro": "blurFocus"
+        }
+      ],
+      "caption": {
+        "vi": "Xin quyền vị trí: giải thích trước, chỉ hỏi khi bấm “Cho phép”",
+        "en": "Location permission: explained first, asked only on “Allow”"
+      }
+    },
+    {
+      "id": "p-home",
+      "device": "phone",
+      "module": "Trang chủ",
+      "url": "/index.html?demo=1#/settings",
+      "actions": [
+        {
+          "macro": "homePrep"
+        }
+      ],
+      "caption": {
+        "vi": "Trang chủ — sẵn sàng offline",
+        "en": "Home — offline-ready"
+      }
+    },
+    {
+      "id": "p-flow-home",
+      "device": "phone",
+      "module": "MOD.01",
+      "url": "/index.html?demo=1#/home",
+      "actions": [
+        {
+          "wait": 600
+        },
+        {
+          "tap": {
+            "sel": "#screen-home .hm-mods a[href='#/translate']"
+          }
+        }
+      ],
+      "caption": {
+        "vi": "Mở app — 1 chạm tới MOD.01",
+        "en": "Open the app — 1 tap to MOD.01"
+      }
+    },
+    {
+      "id": "p-tr-body",
+      "device": "phone",
+      "module": "MOD.01",
+      "url": "/index.html?demo=1#/translate",
+      "actions": [
+        {
+          "tap": {
+            "sel": "#screen-translate [data-tr-act='group'][data-id='chest']"
+          }
+        }
+      ],
+      "caption": {
+        "vi": "Chạm vào vùng trên hình cơ thể (6 nhóm)",
+        "en": "Tap the body figure (6 groups)"
+      }
+    },
+    {
+      "id": "p-tr-figure",
+      "device": "phone",
+      "module": "MOD.01",
+      "url": "/index.html?demo=1#/translate",
+      "actions": [
+        {
+          "waitFor": "#screen-translate [data-tr-act='group'][data-id='chest']",
+          "timeout": 8000
+        },
+        {
+          "eval": "(function(){ var b = document.querySelector(\"#screen-translate .tr-hot--chest\"); if (!b) throw new Error('.tr-hot--chest không có'); b.classList.add('is-hot', 'is-press'); return 'press chest'; })()"
+        },
+        {
+          "wait": 500
+        }
+      ],
+      "caption": {
+        "vi": "Bước 1 chỉ còn hình cơ thể — chạm hiện nhãn song ngữ",
+        "en": "Step 1 is just the body figure — bilingual label on touch"
+      }
+    },
+    {
+      "id": "p-tr-symptom",
+      "device": "phone",
+      "module": "MOD.01",
+      "extends": "p-tr-body",
+      "actions": [
+        {
+          "wait": 600
+        },
+        {
+          "tap": {
+            "sel": "#screen-translate [data-tr-act='symptom'][data-id='breathing']"
+          }
+        }
+      ],
+      "caption": {
+        "vi": "Chọn triệu chứng",
+        "en": "Pick a symptom"
+      }
+    },
+    {
+      "id": "p-tr-severity",
+      "device": "phone",
+      "module": "MOD.01",
+      "extends": "p-tr-symptom",
+      "actions": [
+        {
+          "wait": 600
+        },
+        {
+          "tap": {
+            "sel": "#screen-translate [data-tr-act='sev'][data-id='severe']"
+          }
+        }
+      ],
+      "caption": {
+        "vi": "Chọn mức độ Nhẹ / Vừa / Nặng",
+        "en": "Pick severity: mild / moderate / severe"
+      }
+    },
+    {
+      "id": "p-tr-result",
+      "device": "phone",
+      "module": "MOD.01",
+      "extends": "p-tr-severity",
+      "actions": [
+        {
+          "wait": 900
+        }
+      ],
+      "caption": {
+        "vi": "Câu y tế mức Nặng — song ngữ, nút Gọi 115",
+        "en": "Severe phrase — bilingual, Call 115"
+      }
+    },
+    {
+      "id": "p-map-route",
+      "device": "phone",
+      "module": "MOD.02",
+      "url": "/index.html?demo=1#/map?from=hg-meo-vac&to=hg-ha-giang&strategy=shortest&tab=route&snap=half",
+      "actions": [
+        {
+          "wait": 2500
+        },
+        {
+          "macro": "mapDismissBasemap"
+        },
+        {
+          "eval": "(function(){ var e = document.getElementById('mp-result'); if (!e) throw new Error('#mp-result không có'); e.scrollIntoView({ block: 'start' }); return 'scrolled'; })()"
+        },
+        {
+          "wait": 500
+        },
+        {
+          "tiles": true
+        }
+      ],
+      "caption": {
+        "vi": "Lộ trình A* Mèo Vạc → Hà Giang, tô màu theo sóng",
+        "en": "A* route Mèo Vạc → Hà Giang by signal"
+      }
+    },
+    {
+      "id": "p-map-basemap",
+      "device": "phone",
+      "module": "MOD.02",
+      "url": "/index.html?demo=1#/map?from=hg-meo-vac&to=hg-ha-giang&strategy=shortest&tab=route&snap=half",
+      "actions": [
+        {
+          "wait": 2500
+        },
+        {
+          "waitFor": ".mk-bm-sug.is-open",
+          "timeout": 8000
+        },
+        {
+          "wait": 500
+        },
+        {
+          "tiles": true
+        },
+        {
+          "macro": "blurFocus"
+        }
+      ],
+      "caption": {
+        "vi": "Tuyến qua vùng mất sóng → gợi ý tải nền bản đồ offline",
+        "en": "Route through dead zones → offline basemap suggestion"
+      }
+    },
+    {
+      "id": "p-map-start",
+      "device": "phone",
+      "module": "MOD.02",
+      "url": "/index.html?demo=1#/map?from=hg-meo-vac&to=hg-ha-giang&strategy=shortest&tab=route&snap=full",
+      "actions": [
+        {
+          "wait": 2500
+        },
+        {
+          "macro": "mapDismissBasemap"
+        },
+        {
+          "eval": "(function(){ var e = document.getElementById('mp-result'); if (!e) throw new Error('#mp-result không có'); if (!e.querySelector('.mp-trip')) throw new Error('nút Bắt đầu đi (.mp-trip) không có'); e.scrollIntoView({ block: 'start' }); return 'scrolled'; })()"
+        },
+        {
+          "wait": 500
+        },
+        {
+          "tiles": true,
+          "optional": true
+        }
+      ],
+      "caption": {
+        "vi": "“Bắt đầu đi”: nhắc trước mỗi vùng mất sóng, không theo dõi GPS",
+        "en": "“Start trip”: a reminder before each dead zone, no GPS tracking"
+      }
+    },
+    {
+      "id": "p-map-nearest",
+      "device": "phone",
+      "module": "MOD.02",
+      "url": "/index.html?demo=1#/map?tab=med&snap=half",
+      "actions": [
+        {
+          "wait": 2500
+        },
+        {
+          "eval": "(function(){ var e = document.getElementById('mp-med-filter'); if (!e) throw new Error('#mp-med-filter không có'); e.scrollIntoView({ block: 'start' }); return 'scrolled'; })()"
+        },
+        {
+          "wait": 500
+        },
+        {
+          "tiles": true
+        }
+      ],
+      "caption": {
+        "vi": "Cơ sở y tế đã xác thực gần nhất",
+        "en": "Nearest verified medical facilities"
+      }
+    },
+    {
+      "id": "p-qr-owner",
+      "device": "phone",
+      "module": "MOD.03",
+      "url": "/index.html?demo=1#/qr",
+      "actions": [
+        {
+          "wait": 800
+        }
+      ],
+      "caption": {
+        "vi": "Hồ sơ QR 2 lớp, mã hoá trên máy",
+        "en": "Two-layer QR profile, encrypted on device"
+      }
+    },
+    {
+      "id": "p-qr-rescuer",
+      "device": "phone",
+      "module": "MOD.03",
+      "url": "/index.html?demo=1#/qr?view=rescuer",
+      "actions": [
+        {
+          "wait": 900
+        }
+      ],
+      "caption": {
+        "vi": "Chế độ người cứu hộ",
+        "en": "Rescuer view"
+      }
+    },
+    {
+      "id": "p-buddy-active",
+      "device": "phone",
+      "module": "MOD.04",
+      "url": "/index.html?demo=1#/settings",
+      "actions": [
+        {
+          "macro": "buddyStart"
+        },
+        {
+          "go": "buddy"
+        },
+        {
+          "wait": 1200
+        }
+      ],
+      "caption": {
+        "vi": "Buddy đang theo dõi — đếm ngược check-in",
+        "en": "Buddy active — check-in countdown"
+      }
+    },
+    {
+      "id": "p-buddy-setup",
+      "device": "phone",
+      "module": "MOD.04",
+      "url": "/index.html?demo=1#/buddy",
+      "actions": [
+        {
+          "waitFor": "#bd-f-rphone",
+          "timeout": 8000
+        },
+        {
+          "wait": 500
+        },
+        {
+          "eval": "(async function(){ var p = document.getElementById('bd-f-rphone'), e = document.getElementById('bd-f-remail'); if (!p || !e) throw new Error('#bd-f-rphone / #bd-f-remail không có'); await __mk.waitFor(function () { return p.value; }, 3000).catch(function () {}); if (e.value) { e.value = ''; ['input', 'change'].forEach(function (t) { e.dispatchEvent(new Event(t, { bubbles: true })); }); } return 'phone ' + p.value + ', email ' + (e.value || '(empty)'); })()"
+        },
+        {
+          "wait": 400
+        },
+        {
+          "scrollTo": {
+            "sel": "#bd-form .bd-fieldset"
+          },
+          "block": "start"
+        },
+        {
+          "macro": "tabbarShow"
+        },
+        {
+          "macro": "blurFocus"
+        }
+      ],
+      "caption": {
+        "vi": "Thiết lập Buddy: bắt buộc số di động, email tuỳ chọn",
+        "en": "Buddy setup: mobile number required, email optional"
+      }
+    },
+    {
+      "id": "p-buddy-sim",
+      "device": "phone",
+      "module": "MOD.04",
+      "extends": "p-buddy-active",
+      "actions": [
+        {
+          "eval": "(function(){ if (!(NC.buddy && NC.buddy.openDemo)) throw new Error('NC.buddy.openDemo chưa có'); NC.buddy.openDemo(); return 'demo open ' + document.getElementById('bd-demo').open; })()"
+        },
+        {
+          "wait": 500
+        },
+        {
+          "scrollTo": {
+            "sel": "#bd-s-play"
+          },
+          "block": "start"
+        },
+        {
+          "macro": "tabbarShow"
+        },
+        {
+          "eval": "(function(){ var s = NC.buddy && NC.buddy.sim; if (!s) throw new Error('NC.buddy.sim chưa có'); s.setSpeed(60); s.seek(16); s.play(); return s.state ? JSON.stringify(s.state()).slice(0, 80) : 'play'; })()"
+        },
+        {
+          "wait": 2600
+        },
+        {
+          "tiles": true,
+          "optional": true
+        }
+      ],
+      "caption": {
+        "vi": "Mô phỏng hành trình — sắp vào vùng mất sóng",
+        "en": "Journey simulator — approaching a dead zone"
+      }
+    },
+    {
+      "id": "p-buddy-alert",
+      "device": "phone",
+      "module": "MOD.04",
+      "url": "/index.html?demo=1#/settings",
+      "actions": [
+        {
+          "macro": "buddyStart"
+        },
+        {
+          "go": "buddy"
+        },
+        {
+          "wait": 1200
+        },
+        {
+          "eval": "(function(){ if (!(NC.buddy && NC.buddy.demoAlert)) throw new Error('NC.buddy.demoAlert chưa có'); var p = NC.buddy.demoAlert(); if (p && p.catch) p.catch(function () {}); return 'demo alert opened'; })()"
+        },
+        {
+          "waitFor": ".tw-pop-modal.is-open",
+          "timeout": 6000
+        },
+        {
+          "wait": 700
+        },
+        {
+          "macro": "blurFocus"
+        }
+      ],
+      "caption": {
+        "vi": "Sắp vào vùng mất sóng — gửi toạ độ cho người thân?",
+        "en": "Dead zone ahead — send your location to your contact?"
+      }
+    },
+    {
+      "id": "p-fa-library",
+      "device": "phone",
+      "module": "MOD.05",
+      "url": "/index.html?demo=1#/firstaid",
+      "actions": [
+        {
+          "wait": 800
+        }
+      ],
+      "caption": {
+        "vi": "Thư viện sơ cứu ngoại tuyến",
+        "en": "Offline first-aid library"
+      }
+    },
+    {
+      "id": "p-fa-step",
+      "device": "phone",
+      "module": "MOD.05",
+      "url": "/index.html?demo=1#/firstaid?item=bleeding&step=2",
+      "actions": [
+        {
+          "wait": 900
+        },
+        {
+          "scrollTo": {
+            "sel": "#screen-firstaid .fa-steps__head"
+          },
+          "block": "start"
+        },
+        {
+          "wait": 500
+        }
+      ],
+      "caption": {
+        "vi": "Hướng dẫn từng bước có minh hoạ",
+        "en": "Illustrated step-by-step guide"
+      }
+    },
+    {
+      "id": "p-emergency",
+      "device": "phone",
+      "module": "Khẩn cấp",
+      "url": "/index.html?demo=1#/settings",
+      "actions": [
+        {
+          "macro": "buddyStart"
+        },
+        {
+          "go": "home"
+        },
+        {
+          "wait": 900
+        },
+        {
+          "click": "#fab-emergency"
+        },
+        {
+          "wait": 900
+        }
+      ],
+      "caption": {
+        "vi": "Nút khẩn cấp: 115, SOS, hồ sơ y tế",
+        "en": "Emergency sheet: 115, SOS, medical ID"
+      }
+    },
+    {
+      "id": "p-settings-privacy",
+      "device": "phone",
+      "module": "Cài đặt",
+      "url": "/index.html?demo=1#/settings?section=privacy",
+      "actions": [
+        {
+          "wait": 1000
+        }
+      ],
+      "caption": {
+        "vi": "Quyền riêng tư — xoá dữ liệu 1 chạm",
+        "en": "Privacy — one-tap data wipe"
+      }
+    },
+    {
+      "id": "p-home-dark",
+      "device": "phone",
+      "module": "Trang chủ",
+      "theme": "dark",
+      "extends": "p-home",
+      "caption": {
+        "vi": "Trang chủ — chế độ tối",
+        "en": "Home — dark mode"
+      }
+    },
+    {
+      "id": "p-map-dark",
+      "device": "phone",
+      "module": "MOD.02",
+      "theme": "dark",
+      "extends": "p-map-route",
+      "caption": {
+        "vi": "Bản đồ nền tối, lớp sóng offline",
+        "en": "Dark basemap, offline signal layer"
+      }
+    },
+    {
+      "id": "p-tr-result-dark",
+      "device": "phone",
+      "module": "MOD.01",
+      "theme": "dark",
+      "url": "/index.html?demo=1#/translate",
+      "actions": [
+        {
+          "click": "#screen-translate [data-tr-act='group'][data-id='arms']"
+        },
+        {
+          "wait": 600
+        },
+        {
+          "click": "#screen-translate [data-tr-act='child'][data-id='arm-fracture']"
+        },
+        {
+          "wait": 600
+        },
+        {
+          "click": "#screen-translate [data-tr-act='sev'][data-id='severe']"
+        },
+        {
+          "wait": 900
+        }
+      ],
+      "caption": {
+        "vi": "Câu khẩn cấp + nút Gọi 115",
+        "en": "Urgent phrase + Call 115"
+      }
+    },
+    {
+      "id": "p-qr-owner-dark",
+      "device": "phone",
+      "module": "MOD.03",
+      "theme": "dark",
+      "extends": "p-qr-owner",
+      "caption": {
+        "vi": "Hồ sơ QR — chế độ tối",
+        "en": "QR profile — dark mode"
+      }
+    },
+    {
+      "id": "p-buddy-dark",
+      "device": "phone",
+      "module": "MOD.04",
+      "theme": "dark",
+      "extends": "p-buddy-active",
+      "caption": {
+        "vi": "Buddy Check-in — chế độ tối",
+        "en": "Buddy check-in — dark mode"
+      }
+    },
+    {
+      "id": "p-fa-cpr-dark",
+      "device": "phone",
+      "module": "MOD.05",
+      "theme": "dark",
+      "url": "/index.html?demo=1#/firstaid?item=cpr&tool=cpr",
+      "actions": [
+        {
+          "wait": 900
+        },
+        {
+          "eval": "(function(){ var m = NC.firstaid && NC.firstaid.metronome; if (m && m.start) { m.start(); return 'metronome'; } return 'no metronome'; })()",
+          "optional": true
+        },
+        {
+          "macro": "blurFocus"
+        },
+        {
+          "macro": "tabbarShow"
+        },
+        {
+          "wait": 2400
+        }
+      ],
+      "caption": {
+        "vi": "CPR: đếm nhịp ép tim 110 lần/phút",
+        "en": "CPR compression counter, 110/min"
+      }
+    },
+    {
+      "id": "p-emergency-dark",
+      "device": "phone",
+      "module": "Khẩn cấp",
+      "theme": "dark",
+      "extends": "p-emergency",
+      "caption": {
+        "vi": "Nút khẩn cấp — chế độ tối",
+        "en": "Emergency sheet — dark mode"
+      }
+    },
+    {
+      "id": "t-home",
+      "device": "tablet",
+      "module": "Trang chủ",
+      "url": "/index.html?demo=1#/settings",
+      "actions": [
+        {
+          "macro": "homePrep"
+        }
+      ],
+      "caption": {
+        "vi": "Trang chủ 2 cột + thanh điều hướng dạng rail",
+        "en": "Two-column home + navigation rail"
+      }
+    },
+    {
+      "id": "t-map",
+      "device": "tablet",
+      "module": "MOD.02",
+      "url": "/index.html?demo=1#/map?from=hg-meo-vac&to=hg-ha-giang&strategy=shortest&tab=route&snap=half",
+      "actions": [
+        {
+          "wait": 2500
+        },
+        {
+          "macro": "mapDismissBasemap"
+        },
+        {
+          "tiles": true
+        }
+      ],
+      "caption": {
+        "vi": "Bản đồ + bảng lộ trình bên cạnh",
+        "en": "Map + side route panel"
+      }
+    },
+    {
+      "id": "t-translate",
+      "device": "tablet",
+      "module": "MOD.01",
+      "offline": true,
+      "url": "/index.html?demo=1#/translate",
+      "actions": [
+        {
+          "click": "#screen-translate [data-tr-act='group'][data-id='legs']"
+        },
+        {
+          "wait": 600
+        },
+        {
+          "click": "#screen-translate [data-tr-act='symptom'][data-id='leg-exhaust-burn']"
+        },
+        {
+          "wait": 600
+        },
+        {
+          "click": "#screen-translate [data-tr-act='sev'][data-id='severe']"
+        },
+        {
+          "wait": 900
+        },
+        {
+          "click": "#screen-translate .tr-result__more > summary"
+        },
+        {
+          "wait": 600
+        },
+        {
+          "macro": "blurFocus"
+        }
+      ],
+      "caption": {
+        "vi": "Kết quả song ngữ chữ lớn, “Xem thêm” mở chi tiết câu",
+        "en": "Large bilingual result, “More” opens phrase details"
+      }
+    },
+    {
+      "id": "d-home",
+      "device": "desktop",
+      "module": "Trang chủ",
+      "url": "/index.html?demo=1#/settings",
+      "actions": [
+        {
+          "macro": "homePrep"
+        }
+      ],
+      "caption": {
+        "vi": "Trang chủ trên máy tính — sidebar đầy đủ",
+        "en": "Desktop home — full sidebar"
+      }
+    },
+    {
+      "id": "d-map",
+      "device": "desktop",
+      "module": "MOD.02",
+      "url": "/index.html?demo=1#/map?from=hg-meo-vac&to=hg-ha-giang&strategy=shortest&tab=route&snap=half",
+      "actions": [
+        {
+          "wait": 2500
+        },
+        {
+          "macro": "mapDismissBasemap"
+        },
+        {
+          "tiles": true
+        }
+      ],
+      "caption": {
+        "vi": "Bản đồ & định tuyến offline",
+        "en": "Offline map & routing"
+      }
+    },
+    {
+      "id": "d-nav-collapsed",
+      "device": "desktop",
+      "module": "MOD.02",
+      "url": "/index.html?demo=1#/map?from=hg-meo-vac&to=hg-ha-giang&strategy=shortest&tab=route",
+      "actions": [
+        {
+          "wait": 1500
+        },
+        {
+          "eval": "(function(){ if (!(NC.app && NC.app.setNavCollapsed)) throw new Error('NC.app.setNavCollapsed chưa có'); NC.app.setNavCollapsed(true); return JSON.stringify(NC.app.nav ? NC.app.nav() : {}); })()"
+        },
+        {
+          "wait": 1000
+        },
+        {
+          "macro": "mapDismissBasemap"
+        },
+        {
+          "tiles": true
+        }
+      ],
+      "caption": {
+        "vi": "Sidebar thu gọn thành thanh biểu tượng — bản đồ rộng hơn",
+        "en": "Sidebar collapsed to an icon rail — more room for the map"
+      }
+    },
+    {
+      "id": "d-buddy",
+      "device": "desktop",
+      "module": "MOD.04",
+      "url": "/index.html?demo=1#/settings",
+      "actions": [
+        {
+          "macro": "buddyStart"
+        },
+        {
+          "go": "buddy"
+        },
+        {
+          "wait": 1600
+        },
+        {
+          "tiles": true,
+          "optional": true
+        }
+      ],
+      "caption": {
+        "vi": "Buddy Check-in trên web: đếm ngược và vùng mất sóng kế tiếp",
+        "en": "Buddy check-in on the web: countdown and next dead zone"
+      }
+    },
+    {
+      "id": "a-overview",
+      "device": "desktop",
+      "module": "Admin",
+      "url": "/admin.html?backend=local",
+      "actions": [
+        {
+          "macro": "adminEnterDemo"
+        },
+        {
+          "wait": 1200
+        },
+        {
+          "tiles": true,
+          "optional": true
+        }
+      ],
+      "caption": {
+        "vi": "Dashboard: KPI, điểm y tế đã xác thực",
+        "en": "Dashboard: KPIs & verified facilities"
+      }
+    },
+    {
+      "id": "a-buddy",
+      "device": "desktop",
+      "module": "Admin",
+      "url": "/admin.html?backend=local",
+      "actions": [
+        {
+          "macro": "adminEnterDemo"
+        },
+        {
+          "hash": "#/buddy"
+        },
+        {
+          "wait": 1800
+        },
+        {
+          "tiles": true,
+          "optional": true
+        }
+      ],
+      "caption": {
+        "vi": "Giám sát Buddy — quá hạn lên đầu",
+        "en": "Buddy monitor — overdue first"
+      }
+    },
+    {
+      "id": "a-signal",
+      "device": "desktop",
+      "module": "Admin",
+      "url": "/admin.html?backend=local",
+      "actions": [
+        {
+          "macro": "adminEnterDemo"
+        },
+        {
+          "hash": "#/signal"
+        },
+        {
+          "wait": 2000
+        },
+        {
+          "tiles": true,
+          "optional": true
+        }
+      ],
+      "caption": {
+        "vi": "Bản đồ nhiệt sóng theo nhà mạng",
+        "en": "Signal heat map per carrier"
+      }
+    }
+  ],
+  "modules": {
+    "MOD.01": {
+      "name": {
+        "vi": "Dịch y tế 1 chạm",
+        "en": "One-tap medical translation"
+      },
+      "icon": "chat",
+      "desc": {
+        "vi": "Chạm vào hình cơ thể (6 nhóm) → triệu chứng → mức độ → màn hình song ngữ chữ lớn cho nhân viên y tế. Không cần mạng, không cần gõ chữ.",
+        "en": "Tap the body figure (6 areas) → symptom → severity → large bilingual screen for local medical staff. No network, no typing."
+      }
+    },
+    "MOD.02": {
+      "name": {
+        "vi": "Bản đồ & định tuyến offline",
+        "en": "Offline map & routing"
+      },
+      "icon": "map",
+      "desc": {
+        "vi": "A* trên gói dữ liệu hành lang tuyến, tô màu theo 3 mức sóng của nhà mạng; cơ sở y tế đã xác thực gần nhất và điểm dừng thiết yếu.",
+        "en": "A* on corridor data packs, route coloured by 3-level signal for your carrier; nearest verified facilities and essential stops."
+      }
+    },
+    "MOD.03": {
+      "name": {
+        "vi": "Hồ sơ QR sinh tồn",
+        "en": "Survival QR profile"
+      },
+      "icon": "qr",
+      "desc": {
+        "vi": "Lớp công khai (nhóm máu, dị ứng, bệnh nền, thuốc) quét được cả khi máy khoá; lớp định danh chỉ mở sau thao tác xác nhận. Mã hoá trên máy.",
+        "en": "Public layer (blood type, allergies, conditions, medications) scannable on the lock screen; identity only after hold-to-confirm. Encrypted on device."
+      }
+    },
+    "MOD.04": {
+      "name": {
+        "vi": "Buddy Check-in",
+        "en": "Buddy Check-in"
+      },
+      "icon": "shield",
+      "desc": {
+        "vi": "Cảnh báo trước khi vào vùng mất sóng + dead-man switch: quá hạn check-in thì gửi vị trí cuối cho người thân (xếp hàng khi offline).",
+        "en": "Warns before dead zones + dead-man switch: a missed check-in sends your last location to your contact (queued offline)."
+      }
+    },
+    "MOD.05": {
+      "name": {
+        "vi": "Thư viện sơ cứu offline",
+        "en": "Offline first-aid library"
+      },
+      "icon": "cross",
+      "desc": {
+        "vi": "Hướng dẫn từng bước có minh hoạ, dấu hiệu phải gọi 115, điều không nên làm, nhịp CPR 110 lần/phút, danh mục túi y tế.",
+        "en": "Illustrated steps, red flags for 115, don'ts, CPR compression counter (110/min), medical kit checklist."
+      }
+    }
+  },
+  "boards": {
+    "mobile": {
+      "name": {
+        "vi": "Giao diện di động (1)",
+        "en": "Mobile interface (1)"
+      },
+      "file": "board-mobile.png",
+      "width": 4000,
+      "height": 1250,
+      "layout": "banner",
+      "variant": "brand",
+      "title": {
+        "vi": "GIAO DIỆN DI ĐỘNG",
+        "en": "MOBILE INTERFACE"
+      },
+      "subtitle": {
+        "vi": "PWA offline-first · 5 module cứu hộ · iPhone 390 × 844",
+        "en": "Offline-first PWA · 5 safety modules · iPhone 390 × 844"
+      },
+      "shots": [
+        "p-onboarding",
+        "p-home",
+        "p-tr-figure",
+        "p-tr-result",
+        "p-map-route",
+        "p-qr-owner",
+        "p-buddy-active",
+        "p-fa-library",
+        "p-emergency"
+      ]
+    },
+    "mobile-2": {
+      "name": {
+        "vi": "Giao diện di động (2)",
+        "en": "Mobile interface (2)"
+      },
+      "file": "board-mobile-2.png",
+      "width": 4000,
+      "height": 1250,
+      "layout": "banner",
+      "variant": "light",
+      "title": {
+        "vi": "GIAO DIỆN",
+        "en": "INTERFACE"
+      },
+      "subtitle": {
+        "vi": "Riêng tư · Định tuyến theo sóng · Nhắc trước vùng mất sóng",
+        "en": "Privacy · Signal-aware routing · Dead-zone reminders"
+      },
+      "shots": [
+        "p-onboarding-consent",
+        "p-geo-permission",
+        "p-map-basemap",
+        "p-map-start",
+        "p-map-nearest",
+        "p-buddy-setup",
+        "p-buddy-alert",
+        "p-qr-rescuer",
+        "p-fa-step"
+      ]
+    },
+    "tablet": {
+      "name": {
+        "vi": "Máy tính bảng",
+        "en": "Tablet"
+      },
+      "file": "board-tablet.png",
+      "width": 3840,
+      "height": 2160,
+      "layout": "tablet",
+      "variant": "brand",
+      "title": {
+        "vi": "GIAO DIỆN MÁY TÍNH BẢNG",
+        "en": "TABLET INTERFACE"
+      },
+      "subtitle": {
+        "vi": "Bố cục 2 cột · thanh điều hướng rail · iPad 834 × 1194",
+        "en": "Two-column layout · navigation rail · iPad 834 × 1194"
+      },
+      "shots": [
+        "t-home",
+        "t-map",
+        "t-translate"
+      ]
+    },
+    "desktop": {
+      "name": {
+        "vi": "Web & dashboard quản trị",
+        "en": "Web & admin dashboard"
+      },
+      "file": "board-desktop.png",
+      "width": 3840,
+      "height": 2160,
+      "layout": "desktop",
+      "variant": "light",
+      "title": {
+        "vi": "WEB & DASHBOARD QUẢN TRỊ",
+        "en": "WEB APP & ADMIN DASHBOARD"
+      },
+      "subtitle": {
+        "vi": "Cùng một mã nguồn PWA · Supabase (PostgreSQL + PostGIS) · 1440 × 900",
+        "en": "One PWA codebase · Supabase (PostgreSQL + PostGIS) · 1440 × 900"
+      },
+      "groups": {
+        "app": {
+          "vi": "Ứng dụng web (PWA)",
+          "en": "Web app (PWA)"
+        },
+        "admin": {
+          "vi": "Dashboard quản trị",
+          "en": "Admin dashboard"
+        }
+      },
+      "shots": [
+        "d-home",
+        "a-overview",
+        "d-nav-collapsed",
+        "d-buddy",
+        "a-buddy",
+        "a-signal"
+      ]
+    },
+    "flow-mod01": {
+      "name": {
+        "vi": "Luồng MOD.01 dưới 15 giây",
+        "en": "MOD.01 flow under 15 s"
+      },
+      "file": "board-flow-mod01.png",
+      "width": 3840,
+      "height": 2160,
+      "layout": "flow",
+      "variant": "light",
+      "title": {
+        "vi": "LUỒNG MOD.01 — DỊCH Y TẾ 1 CHẠM",
+        "en": "MOD.01 FLOW — ONE-TAP MEDICAL TRANSLATION"
+      },
+      "subtitle": {
+        "vi": "5 bước, chạm là xong: không gõ chữ, không cần mạng",
+        "en": "5 steps, tap only: no typing, no network"
+      },
+      "shots": [
+        "p-flow-home",
+        "p-tr-body",
+        "p-tr-symptom",
+        "p-tr-severity",
+        "p-tr-result"
+      ],
+      "steps": [
+        {
+          "title": {
+            "vi": "Mở app",
+            "en": "Open the app"
+          },
+          "sub": {
+            "vi": "1 chạm từ màn hình khoá",
+            "en": "1 tap from the lock screen"
+          },
+          "sec": 2
+        },
+        {
+          "title": {
+            "vi": "Chọn vùng cơ thể",
+            "en": "Pick a body area"
+          },
+          "sub": {
+            "vi": "6 nhóm",
+            "en": "6 groups"
+          },
+          "sec": 3
+        },
+        {
+          "title": {
+            "vi": "Chọn triệu chứng",
+            "en": "Pick a symptom"
+          },
+          "sub": {
+            "vi": "cây quyết định, tối đa 2 cấp",
+            "en": "decision tree, max 2 levels"
+          },
+          "sec": 6
+        },
+        {
+          "title": {
+            "vi": "Chọn mức độ",
+            "en": "Pick severity"
+          },
+          "sub": {
+            "vi": "nhẹ / vừa / nặng",
+            "en": "mild / moderate / severe"
+          },
+          "sec": 2
+        },
+        {
+          "title": {
+            "vi": "Màn hình song ngữ",
+            "en": "Bilingual screen"
+          },
+          "sub": {
+            "vi": "chữ lớn, đưa nhân viên y tế đọc",
+            "en": "large type for medical staff"
+          },
+          "sec": 0
+        }
+      ],
+      "target": {
+        "vi": "Tổng thời gian thao tác mục tiêu: dưới 15 giây, không cần nhập chữ, không cần kết nối mạng",
+        "en": "Target total time: under 15 seconds, no typing, no network connection"
+      },
+      "note": {
+        "vi": "Thời gian từng bước là giả thuyết thiết kế (Hình 2 thuyết minh), sẽ được đo lại trong thử nghiệm thực địa (mục 3.3).",
+        "en": "Per-step timings are design hypotheses (Figure 2), to be re-measured in field tests (section 3.3)."
+      }
+    },
+    "dark": {
+      "name": {
+        "vi": "Chế độ tối",
+        "en": "Dark mode"
+      },
+      "file": "board-dark.png",
+      "width": 4000,
+      "height": 1320,
+      "layout": "banner",
+      "variant": "dark",
+      "title": {
+        "vi": "CHẾ ĐỘ TỐI",
+        "en": "DARK MODE"
+      },
+      "subtitle": {
+        "vi": "Tự động theo hệ thống · tương phản cao · SOS luôn màu đỏ",
+        "en": "Follows the system · high contrast · SOS always red"
+      },
+      "shots": [
+        "p-home-dark",
+        "p-tr-result-dark",
+        "p-map-dark",
+        "p-qr-owner-dark",
+        "p-buddy-dark",
+        "p-fa-cpr-dark",
+        "p-emergency-dark"
+      ]
+    },
+    "overview": {
+      "name": {
+        "vi": "Board tổng hợp",
+        "en": "Overview board"
+      },
+      "file": "board-overview.png",
+      "width": 3840,
+      "height": 2160,
+      "layout": "overview",
+      "variant": "brand",
+      "title": {
+        "vi": "Bản phác thảo giao diện sản phẩm demo",
+        "en": "Demo product interface mockup"
+      },
+      "subtitle": {
+        "vi": "Ứng dụng an toàn y tế offline-first cho phượt thủ · PWA điện thoại, máy tính bảng, web + dashboard quản trị",
+        "en": "Offline-first medical-safety app for backpackers · phone, tablet, web PWA + admin dashboard"
+      },
+      "shots": [
+        "d-home",
+        "t-map",
+        "p-tr-result",
+        "p-home",
+        "p-buddy-active"
+      ]
+    }
+  }
+}

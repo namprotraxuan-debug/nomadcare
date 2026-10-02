@@ -1,0 +1,21 @@
+/* data-harness.css — styles of the data-layer test page (owner: P1 data, tests only). Uses tokens.css. */
+body { margin: 0; background: var(--c-bg); color: var(--c-text); font-family: var(--font-sans); font-size: var(--fs-sm); }
+.dh { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.dh__head h1 { font-size: var(--fs-xl); margin: 0 0 8px; }
+.dh__warn { margin: 0 0 12px; padding: 10px 12px; border-radius: var(--r-md); background: var(--c-warning-soft); border: 1px solid var(--c-warning); }
+.dh__bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px; }
+.dh__bar button { min-height: 44px; padding: 0 18px; border: 0; border-radius: var(--r-pill); background: var(--c-primary); color: var(--c-on-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.dh__bar button:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+.dh__summary { font-weight: 700; }
+.dh__summary.is-pass { color: var(--c-success); }
+.dh__summary.is-fail { color: var(--c-danger); }
+.dh__table { width: 100%; border-collapse: collapse; background: var(--c-surface); border-radius: var(--r-md); overflow: hidden; box-shadow: var(--sh-1); }
+.dh__table th, .dh__table td { padding: 6px 8px; border-bottom: 1px solid var(--c-border); text-align: left; vertical-align: top; }
+.dh__table td:nth-child(4) { font-family: var(--font-mono); font-size: var(--fs-xs); word-break: break-word; color: var(--c-text-2); }
+.dh__ok { color: var(--c-success); font-weight: 800; }
+.dh__ko { color: var(--c-danger); font-weight: 800; }
+.dh__viz h2 { font-size: var(--fs-lg); margin: 20px 0 8px; }
+.dh__map { height: 320px; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh-2); }
+.dh__vizrow { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 12px; padding: 12px; background: var(--c-surface); border-radius: var(--r-md); }
+.dh__vizrow > .vz-strip, .dh__vizrow > .vz-bars { flex: 1 1 100%; }
+@media (max-width: 600px) { .dh__table th:nth-child(5), .dh__table td:nth-child(5) { display: none; } }

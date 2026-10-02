@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="auto">
+<head>
+  <!--
+    admin.html — NomadCare server-tier dashboard (owner: P2 admin-core).
+    Shell only: admin.js builds the navigation + one <section class="ad-page"> per registered page (NC.admin.register),
+    handles the auth gate (Supabase login / local demo), topbar (mode, realtime, language, theme, user menu).
+  -->
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; font-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NomadCare Admin — Bảng điều khiển tầng máy chủ</title>
+  <meta name="description" content="NomadCare Admin: duyệt điểm y tế cộng đồng, bản đồ nhiệt vùng lõm sóng, giám sát Buddy Check-in và phát hành gói dữ liệu offline.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0B7A6E" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1616" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="icon" href="assets/img/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="icon" href="assets/img/icons/favicon-32.png?v=2" type="image/png" sizes="32x32">
+  <link rel="icon" href="assets/img/icons/favicon-16.png?v=2" type="image/png" sizes="16x16">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/img/icons/apple-touch-icon.png?v=2">
+
+  <link rel="stylesheet" href="assets/css/fonts.css">
+  <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+  <link rel="stylesheet" href="assets/css/print.css" media="print">
+
+  <script src="assets/js/core/theme-init.js"></script>
+  <script src="assets/js/core/page-admin.js"></script>
+</head>
+<body class="ad">
+  <a class="skip-link" href="#ad-view" data-i18n="ad.core.skip">Bỏ qua, tới nội dung chính</a>
+
+  <div class="ad-splash" id="ad-splash" aria-hidden="true">
+    <img class="ad-splash__logo" src="assets/img/logo.svg" alt="" width="64" height="64">
+    <span class="ad-splash__name">NomadCare <b>Admin</b></span>
+    <span class="spinner" aria-hidden="true"></span>
+  </div>
+
+  <div class="ad-shell" id="app" hidden>
+    <!-- ============ SIDEBAR (mobile: drawer · tablet: icon rail · desktop: full) ============ -->
+    <aside class="ad-sidebar" id="ad-sidebar" aria-label="NomadCare Admin">
+      <div class="ad-brand">
+        <a class="ad-brand__link" href="#/overview">
+          <img class="ad-brand__logo" src="assets/img/logo.svg" alt="" width="42" height="42">
+          <span class="ad-brand__text">
+            <span class="ad-brand__name">Nomad<b>Care</b></span>
+            <span class="ad-brand__tag" data-i18n="ad.core.console">Bảng điều khiển máy chủ</span>
+          </span>
+        </a>
+        <button class="btn btn--ghost btn--icon ad-brand__close" id="ad-drawer-close" type="button"
+                data-i18n-attr="aria-label:ad.core.menu_close" aria-label="Đóng menu">
+          <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+        </button>
+      </div>
+
+      <nav class="ad-nav" id="ad-nav" data-i18n-attr="aria-label:ad.core.nav_aria" aria-label="Điều hướng quản trị"></nav>
+
+      <div class="ad-sidebar__foot" id="ad-sb-foot">
+        <button class="ad-sb-mode" id="ad-sb-mode" type="button" data-ad-go="connection">
+          <span class="ad-sb-mode__icon"><svg class="icon" aria-hidden="true"><use href="#i-server"></use></svg></span>
+          <span class="ad-sb-mode__text">
+            <span class="ad-sb-mode__label" data-i18n="ad.core.backend">Máy chủ</span>
+            <span class="ad-sb-mode__value" id="ad-sb-mode-value">—</span>
+          </span>
+          <span class="ad-live-dot" data-live-dot aria-hidden="true"></span>
+        </button>
+        <a class="ad-sb-app" href="index.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-smartphone"></use></svg>
+          <span data-i18n="ad.core.open_app">Mở ứng dụng người dùng</span>
+          <svg class="icon icon--xs" aria-hidden="true"><use href="#i-arrow-up-right"></use></svg>
+        </a>
+      </div>
+    </aside>
+    <div class="ad-scrim" id="ad-scrim" hidden></div>
+
+    <!-- ============ MAIN COLUMN ============ -->
+    <div class="ad-main">
+      <header class="ad-topbar" id="ad-topbar">
+        <button class="btn btn--ghost btn--icon ad-topbar__menu" id="ad-menu" type="button" aria-controls="ad-sidebar" aria-expanded="false"
+                data-i18n-attr="aria-label:ad.core.menu_open" aria-label="Mở menu">
+          <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+        </button>
+        <div class="ad-topbar__heading">
+          <span class="ad-topbar__crumb" id="ad-crumb">NomadCare Admin</span>
+          <h1 class="ad-topbar__title" id="ad-title">Tổng quan</h1>
+        </div>
+        <div class="ad-topbar__actions">
+          <span class="badge ad-mode" id="ad-mode">—</span>
+          <span class="ad-live" id="ad-live" role="status" data-state="off">
+            <span class="ad-live-dot" data-live-dot aria-hidden="true"></span>
+            <span class="ad-live__label" id="ad-live-label">—</span>
+          </span>
+          <button class="btn btn--ghost btn--icon ad-topbar__btn" id="ad-lang" type="button" aria-label="Ngôn ngữ">
+            <span class="ad-lang-code">VI</span>
+          </button>
+          <button class="btn btn--ghost btn--icon ad-topbar__btn" id="ad-theme" type="button" aria-label="Giao diện">
+            <svg class="icon" aria-hidden="true"><use href="#i-sun-moon"></use></svg>
+          </button>
+          <div class="ad-user" id="ad-user">
+            <button class="ad-user__btn" id="ad-user-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="ad-user-menu">
+              <span class="ad-user__avatar" id="ad-user-avatar">A</span>
+              <span class="ad-user__name" id="ad-user-name">admin</span>
+              <svg class="icon icon--sm ad-user__chev" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+            </button>
+            <div class="ad-usermenu" id="ad-user-menu" role="menu" hidden></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="ad-banner" id="ad-banner" role="status" hidden></div>
+
+      <main class="ad-view" id="ad-view" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <!-- ============ AUTH GATE (Supabase login / local demo) — filled by admin.js ============
+       The gate is the page's <main> while signed out (#app with #ad-view is hidden then); only one is ever visible. -->
+  <main class="ad-auth" id="ad-auth" tabindex="-1" hidden></main>
+
+  <div id="sheet-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+  <noscript>
+    <p class="noscript">NomadCare Admin cần JavaScript để chạy.</p>
+  </noscript>
+
+  <script defer src="assets/js/config.js"></script>
+  <script defer src="assets/js/core/loader.js"></script>
+  <script defer src="assets/vendor/leaflet/leaflet.js"></script>
+  <script defer src="assets/js/core/util.js"></script>
+  <script defer src="assets/js/core/bus.js"></script>
+  <script defer src="assets/js/core/i18n.js"></script>
+  <script defer src="assets/js/core/icons.js"></script>
+  <script defer src="assets/js/core/store.js"></script>
+  <script defer src="assets/js/core/secure.js"></script>
+  <script defer src="assets/js/core/net.js"></script>
+  <script defer src="assets/js/core/ui.js"></script>
+  <script defer src="assets/js/data/seed-core.js"></script>
+  <script defer src="assets/js/data/seed-admin.js"></script>
+  <script defer src="assets/js/services/routing.js"></script>
+  <script defer src="assets/js/services/profile.js"></script>
+  <script defer src="assets/js/services/backend-local.js"></script>
+  <script defer src="assets/js/services/backend-supabase.js"></script>
+  <script defer src="assets/js/services/dataservice.js"></script>
+  <script defer src="assets/js/services/mapkit.js"></script>
+  <script defer src="assets/js/app/viz.js"></script>
+  <script defer src="assets/js/admin/admin.js"></script>
+  <script defer src="assets/js/admin/overview.js"></script>
+  <script defer src="assets/js/admin/facilities.js"></script>
+  <script defer src="assets/js/admin/community.js"></script>
+  <script defer src="assets/js/admin/connection.js"></script>
+  <script defer src="assets/js/admin/signal.js"></script>
+  <script defer src="assets/js/admin/buddy.js"></script>
+  <script defer src="assets/js/admin/packs.js"></script>
+  <script defer src="assets/js/admin/audit.js"></script>
+</body>
+</html>

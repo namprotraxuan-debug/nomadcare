@@ -1,0 +1,67 @@
+/*
+ * ui-kit.css — layout for the design-system reference page (docs/ui-kit.html) only. Owner: P1 shell.
+ * Component styles come from assets/css/*; this file only arranges the gallery (prefix kit-).
+ */
+.kit-header {
+  position: -webkit-sticky; position: sticky; top: 0; z-index: 20;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
+  padding: 12px max(16px, env(safe-area-inset-left));
+  background: var(--c-topbar);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--c-border);
+}
+.kit-header__brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.kit-header__brand img { width: 36px; height: 36px; }
+.kit-header__brand h1 { margin: 0; font-size: var(--fs-lg); }
+.kit-header__brand p { margin: 0; font-size: var(--fs-xs); color: var(--c-muted); }
+.kit-header .segmented { min-width: 260px; }
+
+.kit-intro { max-width: 1480px; margin: 0 auto; padding: 20px 16px 0; color: var(--c-text-2); font-size: var(--fs-sm); }
+.kit-intro code { background: var(--c-surface-2); padding: 1px 6px; border-radius: 6px; }
+
+.kit-panes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 1480px; margin: 0 auto; padding: 16px; }
+.kit-pane {
+  background: var(--c-bg); background-image: var(--grad-page);
+  color: var(--c-text);
+  border: 1px solid var(--c-border); border-radius: var(--r-xl);
+  padding: 18px 16px 28px; min-width: 0;
+}
+.kit-pane__label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: var(--fs-sm); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--c-muted); }
+
+.kit-section { margin-top: 28px; }
+.kit-section:first-of-type { margin-top: 8px; }
+.kit-section > h2 { font-size: var(--fs-lg); margin-bottom: 4px; }
+.kit-section > .kit-note { margin: 0 0 12px; font-size: var(--fs-xs); color: var(--c-muted); }
+.kit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+.kit-row--top { align-items: flex-start; }
+.kit-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+
+.kit-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.kit-swatch { border-radius: var(--r-md); border: 1px solid var(--c-border); overflow: hidden; background: var(--c-surface); font-size: 11px; }
+.kit-swatch__chip { height: 44px; }
+.kit-swatch__meta { padding: 6px 8px; line-height: 1.35; }
+.kit-swatch__meta b { display: block; font-family: var(--font-mono); font-size: 10.5px; color: var(--c-text); }
+.kit-swatch__meta span { color: var(--c-muted); font-family: var(--font-mono); }
+
+.kit-type > * { margin: 0 0 6px; }
+.kit-brand { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.kit-brand img { background: var(--c-surface); border-radius: var(--r-md); padding: 6px; border: 1px solid var(--c-border); }
+/* Maskable icon: preview it the way a launcher crops it (circle), not as the raw full-bleed white square. */
+.kit-brand img.kit-brand__maskable { padding: 0; border-radius: 50%; }
+.kit-illus { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.kit-illus img { width: 100%; height: auto; background: var(--c-surface); border-radius: var(--r-md); border: 1px solid var(--c-border); }
+
+.kit-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.kit-icon {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 4px; border-radius: var(--r-md);
+  background: var(--c-surface); border: 1px solid var(--c-card-border);
+  color: var(--c-text); font-size: 10.5px; text-align: center; word-break: break-word;
+}
+.kit-icon .icon { width: 24px; height: 24px; }
+.kit-icon span { color: var(--c-muted); font-family: var(--font-mono); }
+
+@media (min-width: 1100px) {
+  .kit-panes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kit-pane { padding: 22px 22px 32px; }
+}

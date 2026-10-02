@@ -1,0 +1,1094 @@
+{
+ "p-onboarding": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 240,
+   "bottomLum": 254
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 4507,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-onboarding-consent": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 239,
+   "bottomLum": 254
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 7072,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-home": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 254
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5268,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"pack ha-giang-loop:viettel → 1\"",
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "p-flow-home": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 254
+  },
+  "taps": [
+   {
+    "x": 0.1287,
+    "y": 0.2998,
+    "w": 0.1754,
+    "h": 0.0995
+   }
+  ],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 4013,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "tap → a.hm-mod.hm-mod--primary \"dịch y tế\""
+   ]
+  }
+ },
+ "p-tr-body": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 253
+  },
+  "taps": [
+   {
+    "x": 0.5,
+    "y": 0.5902,
+    "w": 0.1206,
+    "h": 0.0524
+   }
+  ],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 2156,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "tap → button.tr-hot.tr-hot--chest.tr-tone--danger \"chest, ngực\""
+   ]
+  }
+ },
+ "p-tr-symptom": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 254
+  },
+  "taps": [
+   {
+    "x": 0.5,
+    "y": 0.5979,
+    "w": 0.9128,
+    "h": 0.09
+   }
+  ],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 3507,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "click → button.tr-hot.tr-hot--chest.tr-tone--danger \"chest, ngực\"",
+    "tap → button.tr-sym__main \"shortness of breathkhó thở\""
+   ]
+  }
+ },
+ "p-tr-severity": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 254
+  },
+  "taps": [
+   {
+    "x": 0.5,
+    "y": 0.7165,
+    "w": 0.9179,
+    "h": 0.1256
+   }
+  ],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 4426,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "click → button.tr-hot.tr-hot--chest.tr-tone--danger \"chest, ngực\"",
+    "click → button.tr-sym__main \"shortness of breathkhó thở\"",
+    "tap → button.tr-sevbtn.tr-tone--danger.tr-sevbtn--urgent \"severenặnggọi 115very bad — i need a doctor righ\""
+   ]
+  }
+ },
+ "p-tr-result": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 250
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5690,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "click → button.tr-hot.tr-hot--chest.tr-tone--danger \"chest, ngực\"",
+    "click → button.tr-sym__main \"shortness of breathkhó thở\"",
+    "click → button.tr-sevbtn.tr-tone--danger.tr-sevbtn--urgent \"severenặnggọi 115very bad — i need a doctor righ\""
+   ]
+  }
+ },
+ "p-map-route": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 253
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6537,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"basemap sheet dismissed\"",
+    "eval → \"scrolled\""
+   ]
+  }
+ },
+ "p-map-nearest": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 253
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6033,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"scrolled\""
+   ]
+  }
+ },
+ "p-qr-owner": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 254
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 2858,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-qr-rescuer": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 255,
+   "bottomLum": 171
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 2938,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-buddy-active": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 254
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 4669,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "p-buddy-sim": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 253
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 9545,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"buddy active\"",
+    "eval → \"demo open true\"",
+    "eval → \"tab bar shown\"",
+    "eval → \"{\\\"playing\\\":true,\\\"holding\\\":false,\\\"pos_km\\\":16,\\\"sim_min\\\":0,\\\"mode\\\":\\\"moto"
+   ]
+  }
+ },
+ "p-fa-library": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 254
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 2875,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-fa-step": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 232,
+   "bottomLum": 225
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 3928,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-emergency": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "dark",
+   "topLum": 141,
+   "bottomLum": 255
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5963,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "p-settings-privacy": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 237,
+   "bottomLum": 232
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 3101,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-home-dark": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "light",
+   "topLum": 21,
+   "bottomLum": 30
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5241,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"pack ha-giang-loop:viettel → 1\"",
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "p-map-dark": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "light",
+   "topLum": 21,
+   "bottomLum": 32
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6502,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"basemap sheet dismissed\"",
+    "eval → \"scrolled\""
+   ]
+  }
+ },
+ "p-tr-result-dark": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "light",
+   "topLum": 21,
+   "bottomLum": 30
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5814,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-qr-owner-dark": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "light",
+   "topLum": 21,
+   "bottomLum": 30
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 2871,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-buddy-dark": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "light",
+   "topLum": 21,
+   "bottomLum": 31
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 4728,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "p-fa-cpr-dark": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "light",
+   "topLum": 35,
+   "bottomLum": 31
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6176,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"metronome\"",
+    "eval → \"blur BUTTON\"",
+    "eval → \"tab bar shown\""
+   ]
+  }
+ },
+ "p-emergency-dark": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "light",
+   "topLum": 8,
+   "bottomLum": 29
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5962,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "t-home": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 834,
+  "height": 1194,
+  "scale": 2,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 246,
+   "bottomLum": 243
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5216,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"pack ha-giang-loop:viettel → 1\"",
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "t-map": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 834,
+  "height": 1194,
+  "scale": 2,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 246,
+   "bottomLum": 227
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6146,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"basemap sheet dismissed\""
+   ]
+  }
+ },
+ "t-translate": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 834,
+  "height": 1194,
+  "scale": 2,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 246,
+   "bottomLum": 210
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 7014,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"blur SUMMARY\""
+   ]
+  }
+ },
+ "d-home": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 1440,
+  "height": 900,
+  "scale": 2,
+  "safe_area_applied": false,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 248,
+   "bottomLum": 242
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5109,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"pack ha-giang-loop:viettel → 1\"",
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "d-map": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 1440,
+  "height": 900,
+  "scale": 2,
+  "safe_area_applied": false,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 247,
+   "bottomLum": 228
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6136,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"basemap sheet dismissed\""
+   ]
+  }
+ },
+ "d-buddy": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 1440,
+  "height": 900,
+  "scale": 2,
+  "safe_area_applied": false,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 247,
+   "bottomLum": 244
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5210,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"buddy active\""
+   ]
+  }
+ },
+ "a-overview": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 1440,
+  "height": 900,
+  "scale": 2,
+  "safe_area_applied": false,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 244,
+   "bottomLum": 234
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6392,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "a-buddy": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 1440,
+  "height": 900,
+  "scale": 2,
+  "safe_area_applied": false,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 244,
+   "bottomLum": 245
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 8001,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "a-signal": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 1440,
+  "height": 900,
+  "scale": 2,
+  "safe_area_applied": false,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 233
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 7842,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": []
+  }
+ },
+ "p-tr-figure": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 253
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 2892,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"press chest\""
+   ]
+  }
+ },
+ "p-geo-permission": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "dark",
+   "topLum": 141,
+   "bottomLum": 255
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5078,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"blur BUTTON\""
+   ]
+  }
+ },
+ "p-map-basemap": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "dark",
+   "topLum": 141,
+   "bottomLum": 255
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6054,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"blur BUTTON\""
+   ]
+  }
+ },
+ "p-map-start": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 253
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6405,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"basemap sheet dismissed\"",
+    "eval → \"scrolled\""
+   ]
+  }
+ },
+ "p-buddy-setup": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 244,
+   "bottomLum": 254
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 3981,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"phone +84 000 000 001, email (empty)\"",
+    "eval → \"tab bar shown\"",
+    "eval → \"no focus\""
+   ]
+  }
+ },
+ "p-buddy-alert": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 390,
+  "height": 844,
+  "scale": 3,
+  "safe_area_applied": true,
+  "tone": {
+   "top": "light",
+   "bottom": "light",
+   "topLum": 141,
+   "bottomLum": 146
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 5590,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"buddy active\"",
+    "eval → \"demo alert opened\"",
+    "eval → \"blur BUTTON\""
+   ]
+  }
+ },
+ "d-nav-collapsed": {
+  "placeholder": false,
+  "captured_at": "2026-10-02T07:30:49.487Z",
+  "width": 1440,
+  "height": 900,
+  "scale": 2,
+  "safe_area_applied": false,
+  "tone": {
+   "top": "dark",
+   "bottom": "dark",
+   "topLum": 245,
+   "bottomLum": 233
+  },
+  "taps": [],
+  "lastRun": {
+   "ok": true,
+   "at": "2026-10-02T07:30:49.487Z",
+   "ms": 6259,
+   "errors": [],
+   "warnings": [],
+   "consoleErrors": [],
+   "log": [
+    "eval → \"{\\\"collapsed\\\":true,\\\"tabbarHidden\\\":false,\\\"drawerOpen\\\":false}\"",
+    "eval → \"basemap sheet dismissed\""
+   ]
+  }
+ }
+}

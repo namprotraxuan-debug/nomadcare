@@ -1,0 +1,159 @@
+/*
+ * base.css — reset, document defaults, typography, focus rings, utilities.
+ * Owner: P1 shell. Mobile-first; breakpoint overrides live in responsive.css.
+ * Colors only via tokens (tokens.css).
+ */
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--c-bg);
+  scroll-padding-top: calc(var(--topbar-h) + 12px);
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  line-height: var(--lh-base);
+  color: var(--c-text);
+  background-color: var(--c-bg);
+  background-image: var(--grad-page);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+img, svg, video, canvas { display: block; max-width: 100%; }
+img { height: auto; }
+button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+button:disabled { cursor: not-allowed; }
+a { color: var(--c-primary-strong); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+[hidden] { display: none !important; }
+table { border-collapse: collapse; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { padding: 0; }
+dl, dd { margin: 0; }
+hr { border: 0; border-top: 1px solid var(--c-border); margin: var(--sp-4) 0; }
+::selection { background: var(--c-primary-soft); color: var(--c-text); }
+
+/* ---------- Typography ---------- */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 var(--sp-2);
+  line-height: var(--lh-tight);
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--c-text);
+}
+h1 { font-size: var(--fs-2xl); font-weight: 800; }
+h2 { font-size: var(--fs-xl); }
+h3 { font-size: var(--fs-lg); }
+h4 { font-size: var(--fs-md); }
+p { margin: 0 0 var(--sp-3); }
+p:last-child { margin-bottom: 0; }
+small, .small { font-size: var(--fs-sm); }
+strong, b { font-weight: 700; }
+code, kbd, samp, .mono { font-family: var(--font-mono); font-size: .92em; }
+kbd {
+  padding: 1px 6px; border-radius: 6px; border: 1px solid var(--c-border);
+  background: var(--c-surface-2); font-size: var(--fs-xs);
+}
+
+/* ---------- Focus ---------- */
+/* Fallback first: engines without :focus-visible (Safari < 15.4) drop the :not(:focus-visible) rule below and keep
+   this ring on every focus, so keyboard users are never left without an indicator. Each :focus-visible selector
+   lives in its own rule — a selector list containing an unsupported pseudo-class would drop the whole rule. */
+:focus { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+:focus:not(:focus-visible) { outline: none; }
+:focus-visible {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.btn:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+.chip:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+.pill:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+.card--interactive:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+/* Programmatic focus targets (screen containers, dialog panels) never show a ring. */
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: none; }
+
+/* ---------- Scrollbars (desktop pointers) ---------- */
+* { scrollbar-width: thin; scrollbar-color: var(--c-scrollbar) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--c-scrollbar); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- Skip link ---------- */
+.skip-link {
+  position: fixed; left: 12px; top: -60px; z-index: 100;
+  display: inline-flex; align-items: center; min-height: 44px; /* touch target (D17) */
+  padding: 10px 16px; border-radius: var(--r-md);
+  background: var(--c-primary); color: var(--c-on-primary);
+  font-weight: 600; box-shadow: var(--sh-2);
+  transition: top var(--dur-2) var(--ease);
+}
+.skip-link:focus { top: calc(12px + env(safe-area-inset-top)); text-decoration: none; }
+
+/* ---------- Icons (sprite <use>) ---------- */
+.icon {
+  width: 22px; height: 22px; flex: none;
+  display: inline-block; vertical-align: middle;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  max-width: none; /* the img/svg reset above would shrink icons to 0 in shrink-to-fit table cells (WebKit/Gecko) */
+}
+.icon--xs { width: 14px; height: 14px; }
+.icon--sm { width: 18px; height: 18px; }
+.icon--lg { width: 28px; height: 28px; }
+.icon--xl { width: 36px; height: 36px; }
+.icon--fill { fill: currentColor; }
+
+/* ---------- Utilities ---------- */
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.muted { color: var(--c-muted); }
+.text-2 { color: var(--c-text-2); }
+.text-danger { color: var(--c-danger); }
+.text-success { color: var(--c-success); }
+.text-warning { color: var(--c-warning-strong); }
+.text-primary { color: var(--c-primary-strong); }
+.text-center, .center { text-align: center; }
+.text-right { text-align: right; }
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
+.nowrap { white-space: nowrap; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.tabular { font-variant-numeric: tabular-nums; }
+.eyebrow {
+  display: inline-block; font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--c-primary-strong);
+}
+.lead { font-size: var(--fs-lg); color: var(--c-text-2); line-height: 1.5; }
+.m-0 { margin: 0 !important; }
+.mt-2 { margin-top: var(--sp-2); } .mt-3 { margin-top: var(--sp-3); } .mt-4 { margin-top: var(--sp-4); } .mt-6 { margin-top: var(--sp-6); }
+.mb-2 { margin-bottom: var(--sp-2); } .mb-3 { margin-bottom: var(--sp-3); } .mb-4 { margin-bottom: var(--sp-4); } .mb-6 { margin-bottom: var(--sp-6); }
+.w-full { width: 100%; }
+.print-only { display: none; }
+
+/* ---------- Reduced motion ---------- */
+/* Near-instant, NOT none/0s: Leaflet, sheets and drawers wait for transitionend, which a 0s / `none` transition
+   never fires. Do not go below .01ms either — WebKit (Safari/iOS) never finishes 1µs (.001ms) transitions, leaving
+   drawers off-screen and Leaflet with a stale container size (cross-browser review, verified in WebKit/Blink/Gecko). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

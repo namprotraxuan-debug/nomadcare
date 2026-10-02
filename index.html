@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; font-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NomadCare — Chiếc phao sinh tồn kỹ thuật số</title>
+  <meta name="description" content="NomadCare — ứng dụng an toàn y tế offline-first cho phượt thủ tại Việt Nam: dịch y tế 1 chạm, bản đồ & định tuyến theo vùng sóng, hồ sơ QR sinh tồn, Buddy Check-in và thư viện sơ cứu.">
+  <meta name="theme-color" content="#0B7A6E" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1616" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <meta name="application-name" content="NomadCare">
+  <meta name="apple-mobile-web-app-title" content="NomadCare">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/img/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="icon" href="assets/img/icons/favicon-32.png?v=2" type="image/png" sizes="32x32">
+  <link rel="icon" href="assets/img/icons/favicon-16.png?v=2" type="image/png" sizes="16x16">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/img/icons/apple-touch-icon.png?v=2">
+
+  <link rel="stylesheet" href="assets/css/fonts.css">
+  <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/modules/home.css">
+  <link rel="stylesheet" href="assets/css/modules/onboarding.css">
+  <link rel="stylesheet" href="assets/css/modules/settings.css">
+  <link rel="stylesheet" href="assets/css/modules/translate.css">
+  <link rel="stylesheet" href="assets/css/modules/map.css">
+  <link rel="stylesheet" href="assets/css/modules/qr.css">
+  <link rel="stylesheet" href="assets/css/modules/buddy.css">
+  <link rel="stylesheet" href="assets/css/modules/firstaid.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+  <link rel="stylesheet" href="assets/css/print.css" media="print">
+
+  <script src="assets/js/core/theme-init.js"></script>
+  <script src="assets/js/core/page-app.js"></script>
+</head>
+<body class="nc">
+  <a class="skip-link" href="#view" data-i18n="app.skip">Bỏ qua, tới nội dung chính</a>
+
+  <div class="boot-splash" id="boot-splash" aria-hidden="true">
+    <img class="boot-splash__logo" src="assets/img/logo.svg" alt="" width="76" height="76">
+    <span class="boot-splash__name">NomadCare</span>
+    <span class="boot-splash__tag" data-i18n="app.splash">Đang chuẩn bị dữ liệu offline…</span>
+  </div>
+
+  <div class="app-shell" id="app">
+    <!-- ============ SIDEBAR (tablet: icon rail + ☰ drawer · desktop: full, collapsible to the rail) ============ -->
+    <aside class="sidebar" id="sidebar" aria-label="NomadCare">
+      <div class="sidebar__head">
+        <a class="brand" href="#/home" data-i18n-attr="aria-label:app.brand_home" aria-label="NomadCare — Trang chủ">
+          <img class="brand__logo" src="assets/img/logo.svg" alt="" width="44" height="44">
+          <span class="brand__text"><span class="brand__name">Nomad<b>Care</b></span></span>
+        </a>
+        <button class="btn btn--ghost btn--icon sidebar__toggle" id="nav-toggle" type="button" aria-controls="sidebar" aria-expanded="true"
+                aria-label="Thu gọn thanh điều hướng" title="Thu gọn thanh điều hướng">
+          <svg class="icon" aria-hidden="true"><use href="#i-panel-left-close"></use></svg>
+        </button>
+      </div>
+
+      <nav class="side-nav" data-i18n-attr="aria-label:app.nav.aria" aria-label="Điều hướng chính">
+        <a class="side-nav__item" data-nav="home" href="#/home" data-i18n-attr="title:app.nav.home" title="Trang chủ">
+          <svg class="icon" aria-hidden="true"><use href="#i-home"></use></svg>
+          <span class="side-nav__label" data-i18n="app.nav.home">Trang chủ</span>
+          <span class="side-nav__short" data-i18n="app.nav_short.home">Trang chủ</span>
+        </a>
+        <a class="side-nav__item" data-nav="translate" href="#/translate" data-i18n-attr="title:app.nav.translate" title="Dịch y tế">
+          <svg class="icon" aria-hidden="true"><use href="#i-languages"></use></svg>
+          <span class="side-nav__label" data-i18n="app.nav.translate">Dịch y tế</span>
+          <span class="side-nav__short" data-i18n="app.nav_short.translate">Dịch</span>
+          <span class="side-nav__mod">MOD.01</span>
+        </a>
+        <a class="side-nav__item" data-nav="map" href="#/map" data-i18n-attr="title:app.nav.map" title="Bản đồ">
+          <svg class="icon" aria-hidden="true"><use href="#i-map"></use></svg>
+          <span class="side-nav__label" data-i18n="app.nav.map">Bản đồ</span>
+          <span class="side-nav__short" data-i18n="app.nav_short.map">Bản đồ</span>
+          <span class="side-nav__mod">MOD.02</span>
+        </a>
+        <a class="side-nav__item" data-nav="qr" href="#/qr" data-i18n-attr="title:app.nav.qr" title="Hồ sơ QR">
+          <svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg>
+          <span class="side-nav__label" data-i18n="app.nav.qr">Hồ sơ QR</span>
+          <span class="side-nav__short" data-i18n="app.nav_short.qr">Hồ sơ</span>
+          <span class="side-nav__mod">MOD.03</span>
+        </a>
+        <a class="side-nav__item" data-nav="buddy" href="#/buddy" data-i18n-attr="title:app.nav.buddy" title="Buddy">
+          <svg class="icon" aria-hidden="true"><use href="#i-shield-check"></use></svg>
+          <span class="side-nav__label" data-i18n="app.nav.buddy">Buddy</span>
+          <span class="side-nav__short" data-i18n="app.nav_short.buddy">Buddy</span>
+          <span class="side-nav__mod">MOD.04</span>
+        </a>
+        <a class="side-nav__item" data-nav="firstaid" href="#/firstaid" data-i18n-attr="title:app.nav.firstaid" title="Sơ cứu">
+          <svg class="icon" aria-hidden="true"><use href="#i-cross"></use></svg>
+          <span class="side-nav__label" data-i18n="app.nav.firstaid">Sơ cứu</span>
+          <span class="side-nav__short" data-i18n="app.nav_short.firstaid">Sơ cứu</span>
+          <span class="side-nav__mod">MOD.05</span>
+        </a>
+        <span class="side-nav__sep" aria-hidden="true"></span>
+        <a class="side-nav__item" data-nav="settings" href="#/settings" data-i18n-attr="title:app.nav.settings" title="Cài đặt">
+          <svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg>
+          <span class="side-nav__label" data-i18n="app.nav.settings">Cài đặt</span>
+          <span class="side-nav__short" data-i18n="app.nav_short.settings">Cài đặt</span>
+        </a>
+      </nav>
+
+      <button class="btn btn--danger btn--block sidebar__emergency" id="sb-emergency" type="button" data-action="emergency"
+              data-i18n-attr="aria-label:app.emergency_aria;title:app.emergency_aria" aria-label="Mở màn hình khẩn cấp — gọi 115, gửi SOS">
+        <svg class="icon" aria-hidden="true"><use href="#i-siren"></use></svg>
+        <span data-i18n="app.emergency">Khẩn cấp</span>
+        <span class="sidebar__emergency-num">115</span>
+      </button>
+    </aside>
+    <div class="nav-scrim" id="nav-scrim" hidden></div>
+
+    <!-- ============ MAIN COLUMN ============ -->
+    <div class="main-col" id="main-col">
+      <header class="topbar" id="topbar">
+        <button class="btn btn--ghost btn--icon topbar__back" id="topbar-back" type="button" hidden
+                data-i18n-attr="aria-label:app.back" aria-label="Quay lại">
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"></use></svg>
+        </button>
+        <a class="topbar__brand" href="#/home" aria-label="NomadCare">
+          <img src="assets/img/logo.svg" alt="" width="36" height="36">
+          <span class="topbar__brand-name">Nomad<b>Care</b></span>
+        </a>
+        <div class="topbar__heading">
+          <span class="topbar__mod" id="topbar-mod" hidden></span>
+          <p class="topbar__title" id="topbar-title" role="heading" aria-level="1">Trang chủ</p>
+        </div>
+        <div class="topbar__actions">
+          <button class="pill pill--online" id="net-pill" type="button">
+            <span class="pill__dot" aria-hidden="true"></span>
+            <span class="pill__label">Online</span>
+            <span class="pill__count" id="sync-badge" aria-hidden="true" hidden>0</span>
+          </button>
+          <button class="btn btn--ghost btn--icon topbar__btn" id="lang-toggle" type="button" aria-label="Ngôn ngữ">
+            <span class="lang-toggle__code">VI</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="offline-banner" id="offline-banner" role="status" hidden>
+        <svg class="icon" aria-hidden="true"><use href="#i-wifi-off"></use></svg>
+        <span class="offline-banner__text">
+          <span data-i18n="app.banner.offline">Đang offline — mọi tính năng cứu mạng vẫn hoạt động</span>
+          <small class="offline-banner__sub"></small>
+        </span>
+        <button class="btn btn--sm" type="button" data-action="sim-off" hidden data-i18n="app.banner.turn_off">Tắt giả lập</button>
+      </div>
+
+      <main class="view" id="view" tabindex="-1">
+        <section class="screen" id="screen-home" data-screen="home"><!-- @screen:home -->
+<div class="hm" id="hm-root">
+  <h1 class="visually-hidden hm-h1" id="hm-h1" data-i18n="home.h1">NomadCare — Trang chủ</h1>
+  <section class="hm-top" aria-labelledby="hm-hello">
+    <div class="hm-top__line">
+      <h2 class="hm-hello" id="hm-hello" data-i18n="home.hello_anon">Xin chào, bạn</h2>
+      <p class="hm-date" id="hm-date"></p>
+    </div>
+    <button class="hm-trip" id="hm-trip" type="button" data-go="settings" data-params="section=trip"></button>
+  </section>
+
+  <nav class="hm-mods" data-i18n-attr="aria-label:home.mods.aria" aria-label="Các module">
+    <a class="hm-mod hm-mod--primary" href="#/translate"><span class="hm-mod__icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-languages"></use></svg></span><span class="hm-mod__label" data-i18n="home.mod.translate">Dịch y tế</span></a>
+    <a class="hm-mod hm-mod--info" href="#/map"><span class="hm-mod__icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-map"></use></svg></span><span class="hm-mod__label" data-i18n="home.mod.map">Bản đồ</span></a>
+    <a class="hm-mod hm-mod--accent" href="#/qr"><span class="hm-mod__icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg></span><span class="hm-mod__label" data-i18n="home.mod.qr">Hồ sơ QR</span></a>
+    <a class="hm-mod hm-mod--warning" href="#/buddy"><span class="hm-mod__icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-shield-check"></use></svg></span><span class="hm-mod__label" data-i18n="home.mod.buddy">Buddy</span></a>
+    <a class="hm-mod hm-mod--success" href="#/firstaid"><span class="hm-mod__icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-cross"></use></svg></span><span class="hm-mod__label" data-i18n="home.mod.firstaid">Sơ cứu</span></a>
+  </nav>
+
+  <section class="hm-buddy card" id="hm-buddy" aria-labelledby="hm-buddy-title">
+    <div class="hm-card-head">
+      <span class="icon-tile icon-tile--sm icon-tile--warning" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-shield-check"></use></svg></span>
+      <h2 class="hm-card-head__title" id="hm-buddy-title" data-i18n="home.buddy.title">Buddy Check-in</h2>
+      <span class="hm-card-head__trail" id="hm-buddy-status"></span>
+    </div>
+    <div class="hm-buddy__body" id="hm-buddy-body"></div>
+  </section>
+
+  <section class="hm-route card" id="hm-route" aria-labelledby="hm-route-title">
+    <div class="hm-card-head">
+      <span class="icon-tile icon-tile--sm icon-tile--info" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-signal"></use></svg></span>
+      <h2 class="hm-card-head__title" id="hm-route-title" data-i18n="home.route.title">Sóng dọc tuyến</h2>
+    </div>
+    <div class="hm-route__body" id="hm-route-body" aria-live="polite"></div>
+    <div class="hm-route__actions">
+      <a class="btn btn--primary btn--sm" href="#/map"><svg class="icon" aria-hidden="true"><use href="#i-map"></use></svg><span data-i18n="home.route.open_map">Mở bản đồ</span></a>
+    </div>
+  </section>
+
+  <!-- Folded sections: the shared .disclosure look (components.css, heading variant); home.js toggles them. -->
+  <section class="hm-fold disclosure disclosure--card" id="hm-check" aria-labelledby="hm-check-btn">
+    <h2 class="disclosure__h">
+      <button class="disclosure__sum hm-fold__btn" id="hm-check-btn" type="button" aria-expanded="false" aria-controls="hm-check-panel">
+        <span class="hm-fold__lead hm-check__ring" id="hm-check-ring" aria-hidden="true"></span>
+        <span class="disclosure__txt"><span class="disclosure__title" data-i18n="home.check.title">Chuẩn bị trước chuyến đi</span><span class="disclosure__sub hm-fold__meta" id="hm-check-progress"></span></span>
+        <span class="disclosure__chev" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-chevron-down"></use></svg></span>
+      </button>
+    </h2>
+    <div class="disclosure__body hm-fold__panel" id="hm-check-panel" hidden><ul class="hm-check__list" id="hm-check-list"></ul></div>
+  </section>
+
+  <section class="hm-fold disclosure disclosure--card hm-weather" id="hm-weather" aria-labelledby="hm-weather-btn">
+    <h2 class="disclosure__h">
+      <button class="disclosure__sum hm-fold__btn" id="hm-weather-btn" type="button" aria-expanded="false" aria-controls="hm-weather-panel">
+        <span class="hm-fold__lead hm-fold__icon" id="hm-weather-icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-cloud"></use></svg></span>
+        <span class="disclosure__txt"><span class="disclosure__title" data-i18n="home.weather.title">Thời tiết trên tuyến</span><span class="disclosure__sub hm-fold__meta" id="hm-weather-place"></span></span>
+        <span class="disclosure__chev" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-chevron-down"></use></svg></span>
+      </button>
+    </h2>
+    <div class="disclosure__body hm-fold__panel" id="hm-weather-panel" hidden><div class="hm-weather__body" id="hm-weather-body" aria-live="polite"></div></div>
+  </section>
+
+  <footer class="hm-foot" id="hm-foot">
+    <p class="hm-foot__meta" id="hm-foot-meta"></p>
+  </footer>
+</div>
+<!-- /@screen:home --></section>
+        <section class="screen" id="screen-translate" data-screen="translate"><!-- @screen:translate -->
+<div class="tr" id="tr-root" data-tab="sym" data-step="group">
+  <section class="page-intro tr-intro" id="tr-intro">
+    <div class="page-intro__text">
+      <p class="page-intro__lead" data-i18n="tr.intro.lead">Vài chạm, không cần gõ hay có mạng — nhân viên y tế luôn thấy bản tiếng Việt.</p>
+    </div>
+    <div class="page-intro__actions tr-lang">
+      <p class="tr-lang__label" id="tr-lang-label" data-i18n="tr.lang.you_speak">Bạn nói</p>
+      <div class="chip-group chip-group--scroll scroll-fade-x tr-lang__chips" id="tr-lang" role="radiogroup" aria-labelledby="tr-lang-label"></div>
+    </div>
+  </section>
+
+  <div class="segmented segmented--lg tr-tabs" id="tr-tabs" role="tablist" data-i18n-attr="aria-label:tr.tab.aria" aria-label="Cách giao tiếp">
+    <button class="segmented__btn tr-tab is-selected" type="button" role="tab" id="tr-tab-sym" data-tr-tab="sym" aria-controls="tr-panel-sym" aria-selected="true">
+      <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-activity"></use></svg>
+      <span data-i18n="tr.tab.sym">Triệu chứng</span>
+    </button>
+    <button class="segmented__btn tr-tab" type="button" role="tab" id="tr-tab-quick" data-tr-tab="quick" aria-controls="tr-panel-quick" aria-selected="false" tabindex="-1">
+      <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-message-square"></use></svg>
+      <span data-i18n="tr.tab.quick">Câu nhanh</span>
+    </button>
+    <button class="segmented__btn tr-tab" type="button" role="tab" id="tr-tab-staff" data-tr-tab="staff" aria-controls="tr-panel-staff" aria-selected="false" tabindex="-1">
+      <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-stethoscope"></use></svg>
+      <span data-i18n="tr.tab.staff">Nhân viên hỏi</span>
+    </button>
+  </div>
+
+  <div class="tr-listbar" id="tr-listbar" hidden></div>
+
+  <section class="tr-panel" id="tr-panel-sym" role="tabpanel" aria-labelledby="tr-tab-sym"></section>
+  <section class="tr-panel" id="tr-panel-quick" role="tabpanel" aria-labelledby="tr-tab-quick" hidden></section>
+  <section class="tr-panel" id="tr-panel-staff" role="tabpanel" aria-labelledby="tr-tab-staff" hidden></section>
+
+  <footer class="tr-foot" id="tr-foot">
+    <div class="tr-foot__disclaimer" id="tr-disclaimer"></div>
+    <div class="tr-foot__meta" id="tr-foot-meta"></div>
+  </footer>
+</div>
+<!-- /@screen:translate --></section>
+        <section class="screen" id="screen-map" data-screen="map"><!-- @screen:map -->
+<!-- MOD.02 — Bản đồ & định tuyến offline (owner: mod02-map). Dynamic content rendered by assets/js/app/mod02-map.js -->
+<div class="mp" id="mp-root" data-snap="half">
+  <div class="mp-stage" id="mp-stage">
+    <div class="mp-map" id="mp-map" role="region" data-i18n-attr="aria-label:mp.map_aria" aria-label="Bản đồ tuyến, lớp sóng và cơ sở y tế"></div>
+
+    <div class="mp-top" id="mp-top">
+      <div class="mp-top__row">
+        <button class="chip mp-fchip mp-fchip--route" id="mp-route-chip" type="button" aria-haspopup="dialog">
+          <span class="mp-fchip__icon icon-tile icon-tile--sm icon-tile--solid"><svg class="icon" aria-hidden="true"><use href="#i-route"></use></svg></span>
+          <span class="mp-fchip__text">
+            <small data-i18n="mp.chip.route">Tuyến</small>
+            <b id="mp-route-chip-name">Hà Giang Loop</b>
+          </span>
+          <svg class="icon mp-fchip__chev" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+        </button>
+        <button class="chip mp-fchip mp-fchip--carrier" id="mp-carrier-chip" type="button" data-action="carrier" aria-haspopup="dialog">
+          <svg class="icon" aria-hidden="true"><use href="#i-signal"></use></svg>
+          <span id="mp-carrier-name">Viettel</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mp-fabs" role="group">
+      <!-- "Lớp bản đồ": one compact menu for Sóng / Y tế / Dịch vụ / Nền offline (toggle buttons, aria-pressed) -->
+      <button class="mp-fab mp-lbtn" id="mp-layers-btn" type="button" data-mp="layers-menu" aria-expanded="false" aria-controls="mp-layers-panel"
+              aria-label="Lớp bản đồ" title="Lớp bản đồ">
+        <svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg>
+      </button>
+      <div class="mp-lpanel" id="mp-layers-panel" role="group" aria-labelledby="mp-layers-title" hidden>
+        <p class="mp-lpanel__title" id="mp-layers-title" data-i18n="mp.layers.btn">Lớp bản đồ</p>
+        <button class="mp-lopt" type="button" data-layer="signal" aria-pressed="true">
+          <span class="mp-lopt__icon"><svg class="icon" aria-hidden="true"><use href="#i-signal"></use></svg></span>
+          <span class="mp-lopt__text"><span data-i18n="mp.layers.signal">Sóng</span><small class="mp-lopt__sub" data-i18n="mp.layers.signal_sub">Mức sóng dọc tuyến</small></span>
+          <span class="mp-lopt__check" aria-hidden="true"><svg class="icon"><use href="#i-check"></use></svg></span>
+        </button>
+        <button class="mp-lopt" type="button" data-layer="med" aria-pressed="true">
+          <span class="mp-lopt__icon"><svg class="icon" aria-hidden="true"><use href="#i-cross"></use></svg></span>
+          <span class="mp-lopt__text"><span data-i18n="mp.layers.med">Y tế</span><small class="mp-lopt__sub" data-i18n="mp.layers.med_sub">Cơ sở y tế đã xác minh</small></span>
+          <span class="mp-lopt__check" aria-hidden="true"><svg class="icon"><use href="#i-check"></use></svg></span>
+        </button>
+        <button class="mp-lopt" type="button" data-layer="svc" aria-pressed="false">
+          <span class="mp-lopt__icon"><svg class="icon" aria-hidden="true"><use href="#i-fuel"></use></svg></span>
+          <span class="mp-lopt__text"><span data-i18n="mp.layers.svc">Dịch vụ</span><small class="mp-lopt__sub" data-i18n="mp.layers.svc_sub">Lưu trú, xăng, sửa xe, thuê xe</small></span>
+          <span class="mp-lopt__check" aria-hidden="true"><svg class="icon"><use href="#i-check"></use></svg></span>
+        </button>
+        <button class="mp-lopt" type="button" data-layer="vbase" aria-pressed="false">
+          <span class="mp-lopt__icon"><svg class="icon" aria-hidden="true"><use href="#i-map"></use></svg></span>
+          <span class="mp-lopt__text"><span data-i18n="mp.layers.vbase">Nền offline</span><small class="mp-lopt__sub">Chưa tải — tải ở thẻ Gói dữ liệu</small></span>
+          <span class="mp-lopt__check" aria-hidden="true"><svg class="icon"><use href="#i-check"></use></svg></span>
+        </button>
+        <!-- Map key for the markers (the signal levels are in the legend on the map) -->
+        <p class="mp-lpanel__title mp-lkey__title" id="mp-lkey-title" data-i18n="mp.key.title">Ký hiệu trên bản đồ</p>
+        <ul class="mp-lkey" aria-labelledby="mp-lkey-title">
+          <li class="mp-lkey__item"><span class="mp-lkey__mk"><span class="mk-poi mk-poi--medical mk-poi--benh_vien"><svg class="icon" aria-hidden="true"><use href="#i-hospital"></use></svg></span></span><span data-i18n="mp.type.benh_vien">Bệnh viện · TTYT</span></li>
+          <li class="mp-lkey__item"><span class="mp-lkey__mk"><span class="mk-poi mk-poi--medical mk-poi--tram_y_te"><svg class="icon" aria-hidden="true"><use href="#i-cross"></use></svg></span></span><span data-i18n="mp.type.tram_y_te">Trạm y tế xã</span></li>
+          <li class="mp-lkey__item"><span class="mp-lkey__mk"><span class="mk-poi mk-poi--medical mk-poi--phong_kham"><svg class="icon" aria-hidden="true"><use href="#i-cross"></use></svg></span></span><span data-i18n="mp.type.phong_kham">Phòng khám</span></li>
+          <li class="mp-lkey__item"><span class="mp-lkey__mk"><span class="mk-poi mk-poi--medical mk-poi--nha_thuoc"><svg class="icon" aria-hidden="true"><use href="#i-pill"></use></svg></span></span><span data-i18n="mp.type.nha_thuoc">Nhà thuốc</span></li>
+          <li class="mp-lkey__item"><span class="mp-lkey__mk"><span class="mk-poi mk-poi--medical mk-poi--tram_y_te mk-poi--stale"><svg class="icon" aria-hidden="true"><use href="#i-cross"></use></svg></span></span><span data-i18n="mp.key.stale">Viền cam: cần xác minh lại</span></li>
+          <li class="mp-lkey__item"><span class="mp-lkey__mk"><span class="mp-zone"><svg class="icon" aria-hidden="true"><use href="#i-wifi-off"></use></svg></span></span><span data-i18n="mp.key.zone">Bắt đầu vùng mất sóng</span></li>
+        </ul>
+      </div>
+      <button class="mp-fab" type="button" data-mp="locate" aria-label="Định vị bằng GPS" title="Định vị bằng GPS">
+        <svg class="icon" aria-hidden="true"><use href="#i-locate"></use></svg>
+      </button>
+      <button class="mp-fab" type="button" data-mp="fit" aria-label="Xem toàn tuyến" title="Xem toàn tuyến">
+        <svg class="icon" aria-hidden="true"><use href="#i-maximize"></use></svg>
+      </button>
+      <!-- Short landscape screens only (responsive.css): the signal legend folds behind this button -->
+      <button class="mp-fab mp-legend-btn" id="mp-legend-btn" type="button" data-mp="legend" aria-expanded="false" aria-controls="mp-legend"
+              aria-label="Chú giải mức sóng" title="Chú giải mức sóng">
+        <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>
+      </button>
+    </div>
+
+    <div class="mp-legend" id="mp-legend" role="note">
+      <span class="mp-legend__item"><i class="mp-legend__sw mp-legend__sw--likely" aria-hidden="true"></i><span data-i18n="mp.legend.likely">Có sóng</span></span>
+      <span class="mp-legend__item"><i class="mp-legend__sw mp-legend__sw--uncertain" aria-hidden="true"></i><span data-i18n="mp.legend.uncertain">Không chắc</span></span>
+      <span class="mp-legend__item"><i class="mp-legend__sw mp-legend__sw--lost" aria-hidden="true"></i><span data-i18n="mp.legend.lost">Mất sóng</span></span>
+      <span class="mp-legend__item"><i class="mp-legend__sw mp-legend__sw--unknown" aria-hidden="true"></i><span data-i18n="mp.legend.unknown">Chưa có dữ liệu sóng</span></span>
+    </div>
+
+    <div class="card card--warning mp-far" id="mp-far" role="status" hidden></div>
+    <div class="mp-pick" id="mp-pick" role="status" hidden></div>
+  </div>
+
+  <section class="mp-panel" id="mp-panel" data-i18n-attr="aria-label:mp.panel_aria" aria-label="Bảng lộ trình và thông tin tuyến">
+    <div class="mp-panel__top" id="mp-panel-top">
+      <button class="mp-panel__grip" id="mp-grip" type="button" aria-controls="mp-panel-body" aria-expanded="true"
+              data-i18n-attr="aria-label:mp.panel.grip;title:mp.panel.grip" aria-label="Kéo hoặc nhấn để thay đổi kích thước bảng"><span></span></button>
+      <div class="mp-summary" id="mp-summary" aria-live="polite"></div>
+    </div>
+
+    <div class="tabs mp-tabs" id="mp-tabs" role="tablist">
+      <button class="tab is-active" type="button" role="tab" id="mp-tab-route" data-tab="route" aria-controls="mp-pane-route" aria-selected="true">
+        <svg class="icon" aria-hidden="true"><use href="#i-route"></use></svg><span data-i18n="mp.tab.route">Lộ trình</span>
+      </button>
+      <button class="tab" type="button" role="tab" id="mp-tab-med" data-tab="med" aria-controls="mp-pane-med" aria-selected="false" tabindex="-1">
+        <svg class="icon" aria-hidden="true"><use href="#i-hospital"></use></svg><span data-i18n="mp.tab.med">Y tế gần nhất</span>
+      </button>
+      <button class="tab" type="button" role="tab" id="mp-tab-stops" data-tab="stops" aria-controls="mp-pane-stops" aria-selected="false" tabindex="-1">
+        <svg class="icon" aria-hidden="true"><use href="#i-fuel"></use></svg><span data-i18n="mp.tab.stops">Điểm dừng</span>
+      </button>
+      <button class="tab" type="button" role="tab" id="mp-tab-packs" data-tab="packs" aria-controls="mp-pane-packs" aria-selected="false" tabindex="-1">
+        <svg class="icon" aria-hidden="true"><use href="#i-package"></use></svg><span data-i18n="mp.tab.packs">Gói dữ liệu</span>
+      </button>
+    </div>
+
+    <div class="mp-panel__body" id="mp-panel-body">
+      <!-- Lộ trình -->
+      <div class="mp-pane stack" id="mp-pane-route" role="tabpanel" aria-labelledby="mp-tab-route">
+        <div class="card mp-plan" id="mp-plan">
+          <div class="mp-plan__grid">
+            <span class="mp-plan__dot mp-plan__dot--from" aria-hidden="true"></span>
+            <div class="mp-plan__field">
+              <label class="mp-plan__lab visually-hidden" for="mp-from" data-i18n="mp.plan.from">Từ</label>
+              <div class="input-group mp-combo mp-combo--from">
+                <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+                <input class="input mp-plan__input" id="mp-from" type="text" autocomplete="off" spellcheck="false" enterkeyhint="search"
+                       role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mp-from-list"
+                       data-i18n-attr="placeholder:mp.plan.from_ph" placeholder="Chọn điểm xuất phát…">
+                <button class="btn btn--ghost btn--icon btn--sm mp-combo__clear" id="mp-from-clear" type="button" data-mp="from-clear" hidden
+                        data-i18n-attr="aria-label:mp.plan.from_clear" aria-label="Xoá điểm xuất phát">
+                  <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+                </button>
+              </div>
+            </div>
+            <button class="btn btn--outline btn--icon mp-plan__swap" type="button" data-mp="swap"
+                    data-i18n-attr="aria-label:mp.plan.swap;title:mp.plan.swap" aria-label="Đảo chiều điểm đi và điểm đến">
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-down"></use></svg>
+            </button>
+            <span class="mp-plan__dot mp-plan__dot--to" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-flag"></use></svg></span>
+            <div class="mp-plan__field">
+              <label class="mp-plan__lab visually-hidden" for="mp-to" data-i18n="mp.plan.to">Đến</label>
+              <div class="input-group mp-combo">
+                <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+                <input class="input mp-plan__input" id="mp-to" type="text" autocomplete="off" spellcheck="false" enterkeyhint="search"
+                       role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mp-to-list"
+                       data-i18n-attr="placeholder:mp.plan.to_ph" placeholder="Tìm điểm đến…">
+                <button class="btn btn--ghost btn--icon btn--sm mp-combo__clear" id="mp-to-clear" type="button" data-mp="to-clear" hidden
+                        data-i18n-attr="aria-label:mp.plan.clear" aria-label="Xoá điểm đến">
+                  <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <ul class="mp-combo__list" id="mp-from-list" role="listbox" data-i18n-attr="aria-label:mp.plan.from" aria-label="Từ" hidden></ul>
+          <ul class="mp-combo__list" id="mp-to-list" role="listbox" data-i18n-attr="aria-label:mp.plan.to" aria-label="Đến" hidden></ul>
+          <p class="mp-plan__hint" id="mp-geo-hint" hidden></p>
+          <div class="mp-plan__opts">
+            <div class="segmented mp-seg-icon" id="mp-mode" data-i18n-attr="aria-label:mp.plan.mode" aria-label="Phương tiện">
+              <button class="segmented__btn" type="button" data-value="motorbike" data-i18n-attr="title:mp.mode.motorbike" title="Xe máy"><svg class="icon" aria-hidden="true"><use href="#i-bike"></use></svg><span class="visually-hidden" data-i18n="mp.mode.motorbike">Xe máy</span></button>
+              <button class="segmented__btn" type="button" data-value="hiking" data-i18n-attr="title:mp.mode.hiking" title="Đi bộ"><svg class="icon" aria-hidden="true"><use href="#i-footprints"></use></svg><span class="visually-hidden" data-i18n="mp.mode.hiking">Đi bộ</span></button>
+            </div>
+            <div class="segmented mp-seg-strat" id="mp-strategy" data-i18n-attr="aria-label:mp.plan.strategy" aria-label="Chiến lược định tuyến">
+              <button class="segmented__btn" type="button" data-value="shortest"><svg class="icon" aria-hidden="true"><use href="#i-route"></use></svg><span data-i18n="mp.strategy.shortest">Ngắn nhất</span></button>
+              <button class="segmented__btn" type="button" data-value="signal"><svg class="icon" aria-hidden="true"><use href="#i-signal"></use></svg><span data-i18n="mp.strategy.signal">Ưu tiên có sóng</span></button>
+            </div>
+          </div>
+          <div class="chip-group chip-group--scroll mp-presets" id="mp-presets"></div>
+        </div>
+        <div class="stack mp-result" id="mp-result" aria-live="polite"></div>
+        <!-- Demo tools: always present, collapsed by default (one tap to open) -->
+        <details class="disclosure disclosure--card disclosure--demo mp-demo" id="mp-demo">
+          <summary class="disclosure__sum">
+            <svg class="icon" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+            <span class="disclosure__txt"><span class="disclosure__title" data-i18n="mp.demo.title">Chế độ demo</span><span class="disclosure__sub" data-i18n="mp.demo.sub">Vị trí mô phỏng cho buổi trình diễn</span></span>
+            <span class="disclosure__chev"><svg class="icon" aria-hidden="true"><use href="#i-chevron-down"></use></svg></span>
+          </summary>
+          <div class="disclosure__body mp-demo__body" id="mp-demo-body">
+            <p class="mp-demo__text" data-i18n="mp.demo.text">Cho buổi trình diễn hoặc khi GPS chưa bắt được: đặt vị trí mô phỏng trên tuyến. Mẹo: nhấn giữ (hoặc chuột phải) trên bản đồ để đặt vị trí bất kỳ.</p>
+            <p class="mp-demo__status" id="mp-demo-status" hidden></p>
+            <div class="mp-demo__actions">
+              <button class="btn btn--outline btn--sm" type="button" data-mp="sim">
+                <svg class="icon" aria-hidden="true"><use href="#i-crosshair"></use></svg><span data-i18n="mp.fab.sim">Vị trí mô phỏng</span>
+              </button>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Y tế gần nhất -->
+      <div class="mp-pane stack" id="mp-pane-med" role="tabpanel" aria-labelledby="mp-tab-med" hidden>
+        <div id="mp-med-pos"></div>
+        <div class="chip-group chip-group--scroll scroll-fade-x mp-filter" id="mp-med-filter" role="group" data-i18n-attr="aria-label:mp.med.filter_aria" aria-label="Lọc loại cơ sở y tế"></div>
+        <div class="stack mp-med-list" id="mp-med-list"></div>
+        <p class="mp-note">
+          <svg class="icon" aria-hidden="true"><use href="#i-shield-check"></use></svg>
+          <span data-i18n="mp.med.order_note">Xếp theo quãng đường đi thực tế trên gói dữ liệu (không có đường thì theo đường chim bay) — không bao giờ theo quan hệ đối tác hay tài trợ.</span>
+        </p>
+        <div id="mp-med-disclaimer"></div>
+      </div>
+
+      <!-- Điểm dừng -->
+      <div class="mp-pane stack" id="mp-pane-stops" role="tabpanel" aria-labelledby="mp-tab-stops" hidden>
+        <div class="stack" id="mp-stops"></div>
+      </div>
+
+      <!-- Gói dữ liệu -->
+      <div class="mp-pane stack" id="mp-pane-packs" role="tabpanel" aria-labelledby="mp-tab-packs" hidden>
+        <div class="stack" id="mp-packs"></div>
+      </div>
+    </div>
+  </section>
+</div>
+<!-- /@screen:map --></section>
+        <section class="screen" id="screen-qr" data-screen="qr"><!-- @screen:qr -->
+<!-- MOD.03 qr — static skeleton for #screen-qr (owner: P2 mod03-qr). Dynamic parts are rendered by assets/js/app/mod03-qr.js. -->
+<div class="qr" id="qr-root">
+  <div class="qr-owner" id="qr-owner">
+    <section class="page-intro qr-intro" id="qr-intro">
+      <div class="page-intro__text"><p class="page-intro__lead" data-i18n="qr.intro.lead">Mã QR chỉ chứa thông tin y tế để cấp cứu đúng — không lộ bạn là ai.</p></div>
+    </section>
+
+    <div class="qr-layout">
+      <section class="card qr-card" id="qr-card" aria-labelledby="qr-hero-title">
+        <div class="qr-hero" id="qr-hero">
+          <h2 class="qr-hero__title" id="qr-hero-title" data-i18n="qr.card.title">Mã QR y tế</h2>
+        </div>
+        <nav class="qr-actions" id="qr-actions" data-i18n-attr="aria-label:qr.act.aria" aria-label="Thao tác với mã QR"></nav>
+      </section>
+
+      <div class="qr-main">
+        <div class="qr-layers">
+          <section class="card qr-layer qr-layer--public" id="qr-public" aria-labelledby="qr-public-title">
+            <h3 class="card__title" id="qr-public-title" data-i18n="qr.pub.title">Lớp công khai</h3>
+          </section>
+          <section class="card qr-layer qr-layer--identity" id="qr-identity" aria-labelledby="qr-identity-title">
+            <h3 class="card__title" id="qr-identity-title" data-i18n="qr.id.title">Lớp định danh</h3>
+          </section>
+        </div>
+      </div>
+
+      <aside class="qr-side">
+        <details class="disclosure disclosure--card qr-fold qr-diagram" id="qr-diagram">
+          <summary class="disclosure__sum">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-layers"></use></svg>
+            <span class="disclosure__txt">
+              <span class="disclosure__title" id="qr-dg-title" data-i18n="qr.dg.title">Hai lớp bảo vệ danh tính</span>
+              <span class="disclosure__sub" data-i18n="qr.dg.fold_sub">Ai xem được thông tin nào, và khi nào</span>
+            </span>
+            <span class="disclosure__chev"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-chevron-down"></use></svg></span>
+          </summary>
+          <div class="disclosure__body qr-fold__body">
+            <p class="qr-fold__lead" data-i18n="qr.dg.sub">Ai nhặt được máy chỉ thấy thông tin y tế — không biết bạn là ai.</p>
+            <ol class="qr-dg">
+              <li class="qr-dg__layer qr-dg__layer--public">
+                <span class="icon-tile icon-tile--sm icon-tile--success"><svg class="icon" aria-hidden="true"><use href="#i-unlock"></use></svg></span>
+                <span class="qr-dg__text">
+                  <b data-i18n="qr.dg.l1">Lớp 1 · Công khai</b>
+                  <span data-i18n="qr.dg.l1_items">Nhóm máu · Dị ứng · Bệnh nền · Thuốc đang dùng</span>
+                  <small data-i18n="qr.dg.l1_where">QR trên màn hình khoá · thẻ ví · chế độ người cứu hộ</small>
+                </span>
+              </li>
+              <li class="qr-dg__gate">
+                <span class="qr-dg__pill">
+                  <svg class="icon" aria-hidden="true"><use href="#i-fingerprint"></use></svg>
+                  <span data-i18n="qr.dg.gate">Nhấn giữ 1,5 giây (+ mã 4 số nếu đã đặt)</span>
+                </span>
+              </li>
+              <li class="qr-dg__layer qr-dg__layer--identity">
+                <span class="icon-tile icon-tile--sm icon-tile--accent"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></span>
+                <span class="qr-dg__text">
+                  <b data-i18n="qr.dg.l2">Lớp 2 · Định danh</b>
+                  <span data-i18n="qr.dg.l2_items">Họ tên · Quốc tịch · Người liên hệ khẩn cấp</span>
+                  <small data-i18n="qr.dg.l2_where">Chỉ trong chế độ người cứu hộ, tự ẩn sau 60 giây</small>
+                </span>
+              </li>
+              <li class="qr-dg__layer qr-dg__layer--none">
+                <span class="icon-tile icon-tile--sm icon-tile--neutral"><svg class="icon" aria-hidden="true"><use href="#i-x-circle"></use></svg></span>
+                <span class="qr-dg__text">
+                  <b data-i18n="qr.dg.none">Không thu thập</b>
+                  <span data-i18n="qr.dg.none_items">Số CCCD / hộ chiếu — giá trị cấp cứu thấp, rủi ro lộ danh tính cao</span>
+                </span>
+              </li>
+            </ol>
+          </div>
+        </details>
+
+        <details class="disclosure disclosure--card qr-fold qr-privacy" id="qr-privacy">
+          <summary class="disclosure__sum">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-shield-check"></use></svg>
+            <span class="disclosure__txt">
+              <span class="disclosure__title" id="qr-pv-title" data-i18n="qr.pv.fold_title">Quyền riêng tư &amp; chi tiết kỹ thuật</span>
+              <span class="disclosure__sub" data-i18n="qr.pv.sub">Hồ sơ chỉ nằm trên máy này.</span>
+            </span>
+            <span class="disclosure__chev"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-chevron-down"></use></svg></span>
+          </summary>
+          <div class="disclosure__body qr-fold__body qr-privacy__body" id="qr-privacy-body"></div>
+        </details>
+
+        <div class="qr-disclaimer" id="qr-disclaimer"></div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="qr-rs" id="qr-rescuer" role="dialog" aria-modal="true" aria-labelledby="qr-rs-title" tabindex="-1" lang="vi" hidden></div>
+  <div class="qr-print" id="qr-print" data-theme="light" aria-hidden="true"></div>
+</div>
+<!-- /@screen:qr --></section>
+        <section class="screen" id="screen-buddy" data-screen="buddy"><!-- @screen:buddy -->
+<!-- MOD.04 Buddy Check-in (owner: mod04-buddy) — static skeleton; dynamic parts are rendered by assets/js/app/mod04-buddy.js -->
+<div class="bd" id="bd-root" data-state="loading">
+  <p class="visually-hidden" id="bd-live" role="status" aria-live="polite"></p>
+  <div class="bd-grid">
+
+    <!-- Status intro (.page-intro): lead + status + main CTA (no session) · countdown ring + "Tôi ổn" (open session) -->
+    <section class="page-intro bd-hero" id="bd-hero" aria-labelledby="bd-hero-title">
+      <div class="bd-hero__skeleton" aria-hidden="true">
+        <span class="skeleton skeleton--circle"></span>
+        <span class="skeleton skeleton--title"></span>
+      </div>
+      <h2 class="visually-hidden" id="bd-hero-title" data-i18n="bd.title">Buddy Check-in</h2>
+    </section>
+
+    <!-- Quick actions of an open session -->
+    <section class="bd-actions" id="bd-actions" hidden data-i18n-attr="aria-label:bd.actions.aria" aria-label="Thao tác nhanh">
+      <button type="button" class="bd-act" data-bd="location">
+        <span class="icon-tile icon-tile--info"><svg class="icon" aria-hidden="true"><use href="#i-map-pin"></use></svg></span>
+        <span class="bd-act__title" data-i18n="bd.act.location">Ghi vị trí</span>
+        <span class="bd-act__hint" data-i18n="bd.act.location_hint">Lưu lên máy chủ, không báo ai</span>
+      </button>
+      <button type="button" class="bd-act" data-bd="sms">
+        <span class="icon-tile icon-tile--primary"><svg class="icon" aria-hidden="true"><use href="#i-message-square"></use></svg></span>
+        <span class="bd-act__title" data-i18n="bd.act.sms">SMS dự phòng</span>
+        <span class="bd-act__hint" data-i18n="bd.act.sms_hint">Khi sóng yếu</span>
+      </button>
+      <button type="button" class="bd-act bd-act--sos" data-bd="sos">
+        <span class="icon-tile icon-tile--solid-danger"><svg class="icon" aria-hidden="true"><use href="#i-siren"></use></svg></span>
+        <span class="bd-act__title" data-i18n="bd.act.sos">SOS</span>
+        <span class="bd-act__hint" data-i18n="bd.act.sos_hint">Khẩn + vị trí</span>
+      </button>
+    </section>
+
+    <!-- Recipient (compact: who, phone, channel; details + sync behind a disclosure), stop -->
+    <section class="card bd-rcp" id="bd-rcp" hidden aria-labelledby="bd-rcp-title">
+      <h2 class="card__title bd-rcp__title" id="bd-rcp-title" data-i18n="bd.rcp.title">Người nhận</h2>
+      <div id="bd-rcp-body"></div>
+    </section>
+
+    <!-- Setup (no open session) -->
+    <section class="card bd-setup" id="bd-setup" hidden aria-labelledby="bd-setup-title">
+      <header class="card__header bd-setup__head">
+        <span class="icon-tile icon-tile--primary"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></span>
+        <div>
+          <h2 class="card__title" id="bd-setup-title" data-i18n="bd.setup.title">Thiết lập Buddy Check-in</h2>
+          <p class="card__subtitle" data-i18n="bd.setup.sub">Một người nhận, một lịch check-in — miễn phí vĩnh viễn.</p>
+        </div>
+      </header>
+
+      <form class="bd-form" id="bd-form" novalidate>
+        <div class="field">
+          <label class="field__label" for="bd-f-traveler" data-i18n="bd.f.traveler">Tên hiển thị của bạn</label>
+          <input class="input" id="bd-f-traveler" name="traveler" type="text" autocomplete="nickname" maxlength="60"
+                 data-i18n-attr="placeholder:bd.f.traveler_ph" placeholder="VD: Minh Anh">
+          <span class="field__hint" data-i18n="bd.f.traveler_hint">Người nhận thấy tên này trong cảnh báo.</span>
+        </div>
+
+        <fieldset class="bd-fieldset">
+          <legend class="bd-legend" data-i18n="bd.f.recipient">Người nhận cảnh báo</legend>
+          <div class="bd-form__grid">
+            <div class="field" id="bd-fld-rname">
+              <label class="field__label" for="bd-f-rname"><span data-i18n="bd.f.rname">Họ tên</span><span class="req" aria-hidden="true">*</span></label>
+              <input class="input" id="bd-f-rname" name="rname" type="text" autocomplete="off" maxlength="80" required aria-describedby="bd-f-rname-err">
+              <span class="field__error" id="bd-f-rname-err" hidden data-i18n="bd.f.err_rname">Nhập tên người nhận.</span>
+            </div>
+            <div class="field" id="bd-fld-rphone">
+              <label class="field__label" for="bd-f-rphone"><span data-i18n="bd.f.rphone">Số di động</span><span class="req" aria-hidden="true">*</span></label>
+              <input class="input" id="bd-f-rphone" name="rphone" type="tel" inputmode="tel" autocomplete="off" maxlength="32" required
+                     aria-describedby="bd-f-rphone-hint" data-i18n-attr="placeholder:bd.f.rphone_ph" placeholder="0912 345 678">
+              <span class="field__error" id="bd-f-rphone-err" hidden data-i18n="bd.f.err_phone_req">Nhập số di động người nhận — cần để gửi SMS từ máy này.</span>
+              <span class="field__hint" id="bd-f-rphone-hint" data-i18n="bd.f.rphone_hint">Để bạn gửi SMS cho người nhận từ máy này: số di động 03x, 05x, 07x, 08x, 09x hoặc +mã quốc gia. Không nhận số máy bàn 02x.</span>
+            </div>
+            <div class="field" id="bd-fld-remail">
+              <label class="field__label" for="bd-f-remail"><span data-i18n="bd.f.remail">Email</span> <small class="bd-opt" data-i18n="bd.f.optional">(không bắt buộc)</small></label>
+              <input class="input" id="bd-f-remail" name="remail" type="email" inputmode="email" autocomplete="off" maxlength="254"
+                     aria-describedby="bd-f-remail-hint" data-i18n-attr="placeholder:bd.f.remail_ph" placeholder="ten@example.com">
+              <span class="field__error" id="bd-f-remail-err" hidden data-i18n="bd.f.err_email">Email chưa đúng định dạng — sửa lại hoặc để trống.</span>
+              <span class="field__hint" id="bd-f-remail-hint">Nên có: máy chủ tự gửi email cảnh báo khi bạn quá hạn hoặc bấm SOS.</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <span class="field__label" id="bd-f-interval-l" data-i18n="bd.f.interval">Check-in định kỳ mỗi</span>
+          <div class="chip-group bd-chips" id="bd-f-interval" role="radiogroup" aria-labelledby="bd-f-interval-l"></div>
+        </div>
+        <div class="field">
+          <span class="field__label" id="bd-f-grace-l" data-i18n="bd.f.grace">Chờ thêm trước khi báo quá hạn</span>
+          <div class="chip-group bd-chips" id="bd-f-grace" role="radiogroup" aria-labelledby="bd-f-grace-l"></div>
+        </div>
+
+        <div class="bd-form__grid bd-form__grid--2">
+          <div class="field">
+            <label class="field__label" for="bd-f-route" data-i18n="bd.f.route">Tuyến đường</label>
+            <select class="select" id="bd-f-route" name="route"></select>
+          </div>
+          <div class="field">
+            <span class="field__label" id="bd-f-mode-l" data-i18n="bd.f.mode">Phương thức di chuyển</span>
+            <div class="segmented" id="bd-f-mode" aria-labelledby="bd-f-mode-l">
+              <button type="button" class="segmented__btn" data-value="motorbike"><svg class="icon" aria-hidden="true"><use href="#i-bike"></use></svg><span data-i18n="bd.mode.motorbike">Xe máy</span></button>
+              <button type="button" class="segmented__btn" data-value="hiking"><svg class="icon" aria-hidden="true"><use href="#i-footprints"></use></svg><span data-i18n="bd.mode.hiking">Đi bộ</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bd-consent bd-consent--medical">
+          <label class="switch switch--end">
+            <input type="checkbox" id="bd-f-share" name="share">
+            <span class="switch__track"></span>
+            <span class="switch__label"><b data-i18n="bd.f.share">Gửi kèm lớp y tế công khai trong cảnh báo</b></span>
+          </label>
+          <p class="bd-consent__text" id="bd-f-share-text" data-i18n="bd.f.share_text">Chỉ nhóm máu, dị ứng, bệnh nền và thuốc — đi kèm email cảnh báo, không có họ tên hay giấy tờ. Tắt mặc định.</p>
+          <p class="bd-consent__warn" id="bd-f-share-na" hidden></p>
+        </div>
+
+        <label class="check bd-consent bd-consent--req" id="bd-fld-consent">
+          <input type="checkbox" id="bd-f-consent" name="consent" required>
+          <span>
+            <span data-i18n="bd.f.consent">Tôi đồng ý bật dead-man switch: máy chủ NomadCare lưu lịch check-in, vị trí (cả tín hiệu định kỳ 5 phút/lần khi ứng dụng đang mở) và người nhận của phiên này; nếu có email người nhận, máy chủ gửi email kèm vị trí cuối khi tôi quá hạn, bấm SOS hoặc mất liên lạc bất thường.</span>
+            <span class="field__error" hidden data-i18n="bd.f.err_consent">Cần đồng ý để bật dead-man switch.</span>
+          </span>
+        </label>
+
+        <button type="submit" class="btn btn--primary btn--lg btn--block" id="bd-f-submit">
+          <svg class="icon" aria-hidden="true"><use href="#i-shield-check"></use></svg>
+          <span data-i18n="bd.f.submit">Bật Buddy Check-in</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Proactive warning + journey simulator -->
+    <div class="bd-side" id="bd-side">
+      <section class="card bd-warn" id="bd-warn" aria-labelledby="bd-warn-title">
+        <header class="card__header">
+          <span class="icon-tile icon-tile--warning"><svg class="icon" aria-hidden="true"><use href="#i-signal-off"></use></svg></span>
+          <div>
+            <h2 class="card__title" id="bd-warn-title" data-i18n="bd.warn.title">Cảnh báo trước vùng mất sóng</h2>
+            <p class="card__subtitle" id="bd-warn-path"></p>
+          </div>
+        </header>
+        <div class="bd-trip" id="bd-trip" aria-live="polite"></div>
+        <div class="bd-warn__body" id="bd-warn-body"></div>
+        <div class="bd-warn__prefs">
+          <label class="switch switch--end">
+            <input type="checkbox" id="bd-p-notify">
+            <span class="switch__track"></span>
+            <span class="switch__label"><b data-i18n="bd.warn.notify">Thông báo hệ thống</b><small id="bd-p-notify-hint">Thông báo của máy kèm lời nhắc trong ứng dụng.</small></span>
+          </label>
+          <label class="switch switch--end">
+            <input type="checkbox" id="bd-p-vibrate">
+            <span class="switch__track"></span>
+            <span class="switch__label"><b data-i18n="bd.warn.vibrate">Rung khi cảnh báo</b></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- "Chế độ demo" (round 2 R1): always present, collapsed (shared .disclosure--demo) — quick demo schedule,
+           journey simulator, formula t = d ÷ v̄, roadmap -->
+      <details class="disclosure disclosure--card disclosure--demo bd-demo" id="bd-demo">
+        <summary class="disclosure__sum">
+          <svg class="icon" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+          <span class="disclosure__txt">
+            <span class="disclosure__title" data-i18n="bd.demo.title">Chế độ demo</span>
+            <span class="disclosure__sub" data-i18n="bd.demo.sub">Lịch demo nhanh, mô phỏng hành trình, cách tính cảnh báo, lộ trình phát triển</span>
+          </span>
+          <span class="disclosure__chev"><svg class="icon" aria-hidden="true"><use href="#i-chevron-down"></use></svg></span>
+        </summary>
+      <div class="disclosure__body bd-demo__body">
+      <label class="switch switch--end bd-demo__sched">
+        <input type="checkbox" id="bd-p-demosched">
+        <span class="switch__track"></span>
+        <span class="switch__label"><b data-i18n="bd.demo.sched">Lịch demo nhanh</b><small data-i18n="bd.demo.sched_hint">Thêm lựa chọn “2 phút” và “chờ thêm 1 phút” vào biểu mẫu thiết lập để trình diễn dead-man switch.</small></span>
+      </label>
+      <div class="bd-demo__alert">
+        <button type="button" class="btn btn--outline btn--block" data-bd="demo-alert" id="bd-demo-alert">
+          <svg class="icon" aria-hidden="true"><use href="#i-signal-off"></use></svg><span data-i18n="bd.demo.alert">Mô phỏng: sắp vào vùng mất sóng</span>
+        </button>
+        <p class="bd-demo__hint" data-i18n="bd.demo.alert_hint">Hiện ngay cửa sổ “Gửi toạ độ cho người thân?” như khi sắp vào vùng mất sóng — kể cả khi chuyển màn hình.</p>
+      </div>
+      <section class="bd-sim" id="bd-sim" aria-labelledby="bd-sim-title">
+        <header class="card__header">
+          <span class="icon-tile icon-tile--accent"><svg class="icon" aria-hidden="true"><use href="#i-route"></use></svg></span>
+          <div>
+            <h2 class="card__title" id="bd-sim-title" data-i18n="bd.sim.title">Mô phỏng hành trình</h2>
+            <p class="card__subtitle" data-i18n="bd.sim.sub">Demo: đi dọc tuyến với lớp sóng thật của nhà mạng bạn chọn.</p>
+          </div>
+        </header>
+
+        <div class="bd-sim__controls">
+          <div class="field bd-sim__path">
+            <label class="field__label" for="bd-s-path" data-i18n="bd.sim.path">Lộ trình</label>
+            <select class="select" id="bd-s-path"></select>
+          </div>
+          <div class="bd-sim__row">
+            <div class="segmented" id="bd-s-mode" data-i18n-attr="aria-label:bd.f.mode" aria-label="Phương thức di chuyển">
+              <button type="button" class="segmented__btn" data-value="motorbike"><svg class="icon" aria-hidden="true"><use href="#i-bike"></use></svg><span data-i18n="bd.mode.motorbike">Xe máy</span></button>
+              <button type="button" class="segmented__btn" data-value="hiking"><svg class="icon" aria-hidden="true"><use href="#i-footprints"></use></svg><span data-i18n="bd.mode.hiking">Đi bộ</span></button>
+            </div>
+            <div class="segmented bd-sim__speed" id="bd-s-speed" data-i18n-attr="aria-label:bd.sim.speed" aria-label="Tốc độ mô phỏng">
+              <button type="button" class="segmented__btn" data-value="30">×30</button>
+              <button type="button" class="segmented__btn" data-value="60">×60</button>
+              <button type="button" class="segmented__btn" data-value="120">×120</button>
+            </div>
+          </div>
+          <div class="bd-sim__buttons">
+            <button type="button" class="btn btn--primary bd-sim__play" id="bd-s-play">
+              <svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg><span data-i18n="bd.sim.play">Chạy</span>
+            </button>
+            <button type="button" class="btn btn--soft" id="bd-s-skip" data-i18n-attr="title:bd.sim.skip_title" title="Tới gần vùng mất sóng kế tiếp">
+              <svg class="icon" aria-hidden="true"><use href="#i-chevron-right"></use></svg><span data-i18n="bd.sim.skip">Tới gần vùng mất sóng</span>
+            </button>
+            <button type="button" class="btn btn--ghost btn--icon" id="bd-s-reset" data-i18n-attr="aria-label:bd.sim.reset;title:bd.sim.reset" aria-label="Đặt lại">
+              <svg class="icon" aria-hidden="true"><use href="#i-rotate-ccw"></use></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="bd-sim__stage">
+          <div class="bd-sim__map" id="bd-s-map" role="region" data-i18n-attr="aria-label:bd.sim.map_aria" aria-label="Bản đồ mô phỏng hành trình"></div>
+          <div class="bd-sim__net" id="bd-s-net" aria-live="polite"></div>
+        </div>
+        <div class="bd-sim__strip" id="bd-s-strip" data-i18n-attr="title:bd.sim.strip_title" title="Nhấn để chọn vị trí xuất phát"></div>
+        <div class="bd-hold" id="bd-s-hold" hidden></div>
+        <dl class="bd-ro" id="bd-s-readouts"></dl>
+
+        <div class="bd-sim__opts">
+          <label class="switch switch--end">
+            <input type="checkbox" id="bd-p-autonet">
+            <span class="switch__track"></span>
+            <span class="switch__label"><b data-i18n="bd.sim.autonet">Tự giả lập mất sóng theo lớp sóng</b><small data-i18n="bd.sim.autonet_hint">Vào đoạn “mất sóng” → cả ứng dụng offline; ra khỏi đoạn → hàng đợi tự gửi.</small></span>
+          </label>
+          <label class="switch switch--end">
+            <input type="checkbox" id="bd-p-hold">
+            <span class="switch__track"></span>
+            <span class="switch__label"><b data-i18n="bd.sim.hold">Dừng trong vùng mất sóng tới khi quá hạn</b><small id="bd-p-hold-hint">Mô phỏng người đi gặp nạn, không thể check-in — dùng với “Lịch demo nhanh” ở trên.</small></span>
+          </label>
+        </div>
+        <p class="bd-sim__note" id="bd-s-note"></p>
+      </section>
+
+      <div class="bd-demo__formula" id="bd-demo-formula"></div>
+
+      <p class="bd-group">
+        <svg class="icon" aria-hidden="true"><use href="#i-bluetooth"></use></svg>
+        <span data-i18n="bd.group">Đồng bộ chéo trong nhóm qua Bluetooth — có trên ứng dụng di động (lộ trình).</span>
+      </p>
+      </div>
+      </details>
+    </div>
+
+    <!-- Event log -->
+    <section class="card bd-tl" id="bd-timeline" aria-labelledby="bd-tl-title">
+      <header class="card__header">
+        <span class="icon-tile icon-tile--neutral"><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg></span>
+        <div>
+          <h2 class="card__title" id="bd-tl-title" data-i18n="bd.tl.title">Nhật ký sự kiện</h2>
+          <p class="card__subtitle" id="bd-tl-sub"></p>
+        </div>
+      </header>
+      <ol class="bd-tl__list" id="bd-tl-list"></ol>
+    </section>
+
+  </div>
+</div>
+<!-- /@screen:buddy --></section>
+        <section class="screen" id="screen-firstaid" data-screen="firstaid"><!-- @screen:firstaid -->
+<div class="fa" id="fa-root">
+  <!-- ================= LIBRARY (#/firstaid, #/firstaid?tab=kit) ================= -->
+  <div class="fa-lib" id="fa-lib">
+    <section class="page-intro fa-intro" id="fa-intro">
+      <div class="page-intro__text">
+        <p class="page-intro__lead fa-intro__lead" id="fa-hero-sub" data-i18n="fa.intro.lead" data-i18n-vars='{"n":31}'>31 tình huống thường gặp khi phượt — từng bước, có hình, không cần mạng.</p>
+      </div>
+      <div class="page-intro__actions fa-intro__actions">
+        <form class="fa-search" id="fa-search" role="search" autocomplete="off">
+          <label class="visually-hidden" for="fa-q" data-i18n="fa.search.label">Tìm hướng dẫn sơ cứu</label>
+          <svg class="icon fa-search__icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+          <input class="fa-search__input" id="fa-q" type="search" enterkeyhint="search" spellcheck="false"
+                 data-i18n-attr="placeholder:fa.search.placeholder" placeholder="Tìm: rắn cắn, bỏng, ngừng tim…">
+          <button class="fa-search__btn" type="button" id="fa-q-clear" hidden
+                  data-i18n-attr="aria-label:fa.search.clear;title:fa.search.clear" aria-label="Xoá tìm kiếm">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-x"></use></svg>
+          </button>
+          <button class="fa-search__btn fa-search__mic" type="button" id="fa-q-mic" hidden
+                  data-i18n-attr="aria-label:fa.search.voice;title:fa.search.voice" aria-label="Tìm bằng giọng nói">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-mic"></use></svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <div class="segmented segmented--lg fa-tabs" id="fa-tabs" role="tablist" data-i18n-attr="aria-label:fa.tabs_aria" aria-label="Thư viện sơ cứu">
+      <button class="segmented__btn is-selected" type="button" role="tab" id="fa-tab-lib" data-tab="lib" aria-selected="true" aria-controls="fa-panel-lib">
+        <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-book-open"></use></svg><span data-i18n="fa.tab.library">Hướng dẫn</span>
+      </button>
+      <button class="segmented__btn" type="button" role="tab" id="fa-tab-kit" data-tab="kit" aria-selected="false" aria-controls="fa-panel-kit" tabindex="-1">
+        <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-backpack"></use></svg><span data-i18n="fa.tab.kit">Túi sơ cứu</span><span class="fa-tabs__count" id="fa-kit-count"></span>
+      </button>
+    </div>
+
+    <section class="fa-panel" id="fa-panel-lib" role="tabpanel" aria-labelledby="fa-tab-lib">
+      <p class="fa-results" id="fa-results" aria-live="polite"></p>
+      <section class="fa-crit" id="fa-crit" aria-labelledby="fa-crit-title">
+        <div class="fa-crit__head">
+          <h2 class="fa-crit__title" id="fa-crit-title"><span class="fa-crit__dot" aria-hidden="true"></span><span data-i18n="fa.crit.title">Nguy kịch — hành động ngay</span></h2>
+          <div class="fa-crit__acts">
+            <a class="btn btn--danger btn--sm fa-crit__call" href="tel:115" data-call="115">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-phone"></use></svg><span data-i18n="fa.call.btn">Gọi 115</span>
+            </a>
+            <a class="btn btn--outline btn--sm fa-crit__cpr" href="#/firstaid?item=cpr&amp;tool=cpr">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-heart-pulse"></use></svg><span data-i18n="fa.quick.cpr">Đếm nhịp ép tim</span>
+            </a>
+          </div>
+          <p class="fa-crit__hint" data-i18n="fa.crit.hint">Gọi 115 (bật loa) hoặc nhờ người gọi — đồng thời làm ngay các bước</p>
+        </div>
+        <div class="fa-crit__list" id="fa-crit-list"></div>
+      </section>
+      <div class="fa-sections" id="fa-sections"></div>
+      <div class="fa-foot" id="fa-lib-foot"></div>
+    </section>
+
+    <section class="fa-panel" id="fa-panel-kit" role="tabpanel" aria-labelledby="fa-tab-kit" hidden></section>
+  </div>
+
+  <!-- ================= ITEM (#/firstaid?item=<id>) ================= -->
+  <article class="fa-item" id="fa-item" hidden></article>
+</div>
+<!-- /@screen:firstaid --></section>
+        <section class="screen" id="screen-settings" data-screen="settings"><!-- @screen:settings -->
+<div class="st" id="st-root">
+  <nav class="st-jump scroll-fade-x" id="st-jump" data-i18n-attr="aria-label:st.jump" aria-label="Mục cài đặt">
+    <button class="st-jump__item" type="button" data-st-jump="trip"><svg class="icon" aria-hidden="true"><use href="#i-route"></use></svg><span data-i18n="st.trip.title"></span></button>
+    <button class="st-jump__item" type="button" data-st-jump="look"><svg class="icon" aria-hidden="true"><use href="#i-sun-moon"></use></svg><span data-i18n="st.look.title"></span></button>
+    <button class="st-jump__item" type="button" data-st-jump="packs"><svg class="icon" aria-hidden="true"><use href="#i-package"></use></svg><span data-i18n="st.packs.title"></span></button>
+    <button class="st-jump__item" type="button" data-st-jump="privacy"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span data-i18n="st.privacy.title"></span></button>
+    <button class="st-jump__item" type="button" data-st-jump="sync"><svg class="icon" aria-hidden="true"><use href="#i-server"></use></svg><span data-i18n="st.sync.title"></span></button>
+    <button class="st-jump__item" type="button" data-st-jump="content"><svg class="icon" aria-hidden="true"><use href="#i-book-open"></use></svg><span data-i18n="st.content.title"></span></button>
+    <button class="st-jump__item" type="button" data-st-jump="field"><svg class="icon" aria-hidden="true"><use href="#i-timer"></use></svg><span data-i18n="st.field.title"></span></button>
+    <button class="st-jump__item" type="button" data-st-jump="about"><svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg><span data-i18n="st.about.title"></span></button>
+  </nav>
+  <div class="st-grid">
+    <section class="card st-card st-card--trip" id="st-trip" data-section="trip" aria-labelledby="st-trip-title">
+      <header class="st-card__head">
+        <span class="icon-tile icon-tile--info" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-route"></use></svg></span>
+        <div class="st-card__heading">
+          <h2 class="st-card__title" id="st-trip-title" data-i18n="st.trip.title"></h2>
+          <p class="st-card__sub" data-i18n="st.trip.sub"></p>
+        </div>
+      </header>
+      <div class="st-card__body" id="st-trip-body"></div>
+    </section>
+    <section class="card st-card st-card--look" id="st-look" data-section="look" aria-labelledby="st-look-title">
+      <header class="st-card__head">
+        <span class="icon-tile icon-tile--accent" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-sun-moon"></use></svg></span>
+        <div class="st-card__heading">
+          <h2 class="st-card__title" id="st-look-title" data-i18n="st.look.title"></h2>
+          <p class="st-card__sub" data-i18n="st.look.sub"></p>
+        </div>
+      </header>
+      <div class="st-card__body" id="st-look-body"></div>
+    </section>
+    <section class="card st-card st-card--packs" id="st-packs" data-section="packs" aria-labelledby="st-packs-title">
+      <header class="st-card__head">
+        <span class="icon-tile icon-tile--success" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-package"></use></svg></span>
+        <div class="st-card__heading">
+          <h2 class="st-card__title" id="st-packs-title" data-i18n="st.packs.title"></h2>
+          <p class="st-card__sub" data-i18n="st.packs.sub"></p>
+        </div>
+      </header>
+      <div class="st-card__body" id="st-packs-body"></div>
+    </section>
+    <section class="card st-card st-card--privacy" id="st-privacy" data-section="privacy" aria-labelledby="st-privacy-title">
+      <header class="st-card__head">
+        <span class="icon-tile icon-tile--primary" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></span>
+        <div class="st-card__heading">
+          <h2 class="st-card__title" id="st-privacy-title" data-i18n="st.privacy.title"></h2>
+          <p class="st-card__sub" data-i18n="st.privacy.sub"></p>
+        </div>
+      </header>
+      <div class="st-card__body" id="st-privacy-body"></div>
+    </section>
+    <section class="card st-card st-card--sync st-card--fold" id="st-sync" data-section="sync" aria-labelledby="st-sync-title">
+      <header class="st-card__head">
+        <span class="icon-tile icon-tile--info" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-server"></use></svg></span>
+        <div class="st-card__heading">
+          <h2 class="st-card__title"><button class="st-fold" type="button" id="st-sync-title" aria-expanded="false" aria-controls="st-sync-body" data-st-fold="sync"><span data-i18n="st.sync.title"></span></button></h2>
+          <p class="st-card__sub" data-i18n="st.sync.sub"></p>
+        </div>
+        <svg class="icon st-fold__chev" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+      </header>
+      <div class="st-card__body" id="st-sync-body" hidden></div>
+    </section>
+    <section class="card st-card st-card--content st-card--fold" id="st-content" data-section="content" aria-labelledby="st-content-title">
+      <header class="st-card__head">
+        <span class="icon-tile icon-tile--success" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-book-open"></use></svg></span>
+        <div class="st-card__heading">
+          <h2 class="st-card__title"><button class="st-fold" type="button" id="st-content-title" aria-expanded="false" aria-controls="st-content-body" data-st-fold="content"><span data-i18n="st.content.title"></span></button></h2>
+          <p class="st-card__sub" data-i18n="st.content.sub"></p>
+        </div>
+        <svg class="icon st-fold__chev" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+      </header>
+      <div class="st-card__body" id="st-content-body" hidden></div>
+    </section>
+    <section class="card st-card st-card--field st-card--fold" id="st-field" data-section="field" aria-labelledby="st-field-title">
+      <header class="st-card__head">
+        <span class="icon-tile icon-tile--warning" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-timer"></use></svg></span>
+        <div class="st-card__heading">
+          <h2 class="st-card__title"><button class="st-fold" type="button" id="st-field-title" aria-expanded="false" aria-controls="st-field-body" data-st-fold="field"><span data-i18n="st.field.title"></span></button></h2>
+          <p class="st-card__sub" data-i18n="st.field.sub"></p>
+        </div>
+        <svg class="icon st-fold__chev" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+      </header>
+      <div class="st-card__body" id="st-field-body" hidden></div>
+    </section>
+    <section class="card st-card st-card--about st-card--fold" id="st-about" data-section="about" aria-labelledby="st-about-title">
+      <header class="st-card__head">
+        <span class="icon-tile icon-tile--neutral" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg></span>
+        <div class="st-card__heading">
+          <h2 class="st-card__title"><button class="st-fold" type="button" id="st-about-title" aria-expanded="false" aria-controls="st-about-body" data-st-fold="about"><span data-i18n="st.about.title"></span></button></h2>
+          <p class="st-card__sub" data-i18n="st.about.sub"></p>
+        </div>
+        <svg class="icon st-fold__chev" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+      </header>
+      <div class="st-card__body" id="st-about-body" hidden></div>
+    </section>
+  </div>
+</div>
+<!-- /@screen:settings --></section>
+      </main>
+    </div>
+
+    <!-- ============ BOTTOM TAB BAR (mobile; auto-hides on scroll-down — the 115 button never hides) ============ -->
+    <nav class="tabbar" id="tabbar" data-i18n-attr="aria-label:app.tab.aria" aria-label="Thanh điều hướng">
+      <a class="tabbar__item" data-nav="home" href="#/home" data-i18n-attr="title:app.tab.home">
+        <span class="tabbar__icon"><svg class="icon" aria-hidden="true"><use href="#i-home"></use></svg></span>
+        <span class="tabbar__label" data-i18n="app.tab.home">Trang chủ</span>
+      </a>
+      <a class="tabbar__item" data-nav="map" href="#/map" data-i18n-attr="title:app.tab.map">
+        <span class="tabbar__icon"><svg class="icon" aria-hidden="true"><use href="#i-map"></use></svg></span>
+        <span class="tabbar__label" data-i18n="app.tab.map">Bản đồ</span>
+      </a>
+      <button class="tabbar__fab" id="fab-emergency" type="button" data-action="emergency"
+              data-i18n-attr="aria-label:app.emergency_aria;title:app.emergency_aria" aria-label="Mở màn hình khẩn cấp — gọi 115, gửi SOS" title="Mở màn hình khẩn cấp — gọi 115, gửi SOS">
+        <span class="tabbar__fab-btn"><svg class="icon" aria-hidden="true"><use href="#i-siren"></use></svg><span class="tabbar__fab-label" data-i18n="app.tab.emergency">Khẩn cấp</span></span>
+      </button>
+      <a class="tabbar__item" data-nav="buddy" href="#/buddy" data-i18n-attr="title:app.tab.buddy">
+        <span class="tabbar__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield-check"></use></svg></span>
+        <span class="tabbar__label" data-i18n="app.tab.buddy">Buddy</span>
+      </a>
+      <a class="tabbar__item" data-nav="qr" href="#/qr" data-i18n-attr="title:app.tab.qr">
+        <span class="tabbar__icon"><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg></span>
+        <span class="tabbar__label" data-i18n="app.tab.qr">Hồ sơ QR</span>
+      </a>
+    </nav>
+  </div>
+
+  <section class="onboarding" id="screen-onboarding" data-screen="onboarding" role="main" tabindex="-1" data-i18n-attr="aria-label:app.title.onboarding" aria-label="Bắt đầu" hidden><!-- @screen:onboarding -->
+<div class="ob" id="ob-root" data-step="1">
+  <aside class="ob-art" aria-hidden="true">
+    <div class="ob-art__brand"><img src="assets/img/logo.svg" alt="" width="40" height="40"><span>Nomad<b>Care</b></span></div>
+    <figure class="ob-art__fig">
+      <img class="ob-art__img" id="ob-art-img" src="assets/img/illustrations/onboarding-phrase-card.svg" alt="" width="320" height="240">
+      <figcaption class="ob-art__text" id="ob-art-text"></figcaption>
+    </figure>
+    <ol class="ob-art__steps" id="ob-art-steps"></ol>
+  </aside>
+  <div class="ob-panel" role="region" data-i18n-attr="aria-label:ob.aria" aria-label="Thiết lập NomadCare">
+    <header class="ob-head">
+      <span class="ob-head__brand"><img src="assets/img/logo.svg" alt="" width="32" height="32"><span class="ob-head__name">Nomad<b>Care</b></span></span>
+      <ol class="ob-dots" id="ob-dots" data-i18n-attr="aria-label:ob.progress" aria-label="Tiến trình thiết lập"></ol>
+      <button class="ob-sos" type="button" data-action="emergency" data-i18n-attr="aria-label:ob.sos_aria;title:ob.sos_aria" aria-label="Khẩn cấp — gọi 115">
+        <svg class="icon" aria-hidden="true"><use href="#i-siren"></use></svg><span>115</span>
+      </button>
+    </header>
+    <div class="ob-body" id="ob-body" tabindex="-1" aria-live="polite"></div>
+    <footer class="ob-nav">
+      <button class="btn btn--ghost ob-nav__back" id="ob-back" type="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"></use></svg><span data-i18n="ob.back">Quay lại</span>
+      </button>
+      <span class="ob-nav__step" id="ob-step-label"></span>
+      <button class="btn btn--primary btn--lg ob-nav__next" id="ob-next" type="button">
+        <span id="ob-next-label" data-i18n="ob.next">Tiếp tục</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+      </button>
+    </footer>
+  </div>
+</div>
+<!-- /@screen:onboarding --></section>
+
+  <div id="sheet-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+  <noscript>
+    <p class="noscript">NomadCare cần JavaScript để chạy. Trong trường hợp khẩn cấp, hãy gọi <a href="tel:115">115</a>.</p>
+  </noscript>
+
+  <script defer src="assets/js/config.js"></script>
+  <script defer src="assets/js/core/loader.js"></script>
+  <script defer src="assets/vendor/leaflet/leaflet.js"></script>
+  <script defer src="assets/vendor/qrcode/qrcode.min.js"></script>
+  <script defer src="assets/js/core/util.js"></script>
+  <script defer src="assets/js/core/bus.js"></script>
+  <script defer src="assets/js/core/i18n.js"></script>
+  <script defer src="assets/js/core/icons.js"></script>
+  <script defer src="assets/js/core/store.js"></script>
+  <script defer src="assets/js/core/secure.js"></script>
+  <script defer src="assets/js/core/net.js"></script>
+  <script defer src="assets/js/core/ui.js"></script>
+  <script defer src="assets/js/data/seed-core.js"></script>
+  <script defer src="assets/js/data/phrases.js"></script>
+  <script defer src="assets/js/data/firstaid.js"></script>
+  <script defer src="assets/js/services/routing.js"></script>
+  <script defer src="assets/js/services/profile.js"></script>
+  <script defer src="assets/js/services/backend-local.js"></script>
+  <script defer src="assets/js/services/backend-supabase.js"></script>
+  <script defer src="assets/js/services/dataservice.js"></script>
+  <script defer src="assets/js/services/push.js"></script>
+  <script defer src="assets/js/services/tripwatch.js"></script>
+  <script defer src="assets/js/services/mapkit.js"></script>
+  <script defer src="assets/js/services/basemap.js"></script>
+  <script defer src="assets/js/services/geo.js"></script>
+  <script defer src="assets/js/services/geo-online.js"></script>
+  <script defer src="assets/js/app/viz.js"></script>
+  <script defer src="assets/js/app/app.js"></script>
+  <script defer src="assets/js/app/emergency.js"></script>
+  <script defer src="assets/js/app/home.js"></script>
+  <script defer src="assets/js/app/onboarding.js"></script>
+  <script defer src="assets/js/app/settings.js"></script>
+  <script defer src="assets/js/app/mod01-translate.js"></script>
+  <script defer src="assets/js/app/mod02-map.js"></script>
+  <script defer src="assets/js/app/mod03-qr.js"></script>
+  <script defer src="assets/js/app/mod04-buddy.js"></script>
+  <script defer src="assets/js/app/mod05-firstaid.js"></script>
+  <script defer src="assets/js/app/boot.js"></script>
+</body>
+</html>

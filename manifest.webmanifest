@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "NomadCare — Chiếc phao sinh tồn kỹ thuật số",
+  "short_name": "NomadCare",
+  "description": "An toàn y tế offline-first cho phượt thủ tại Việt Nam: dịch y tế 1 chạm, bản đồ theo vùng sóng, hồ sơ QR sinh tồn, Buddy Check-in, thư viện sơ cứu.",
+  "lang": "vi",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#0B7A6E",
+  "background_color": "#F3F7F7",
+  "categories": ["health", "medical", "travel", "navigation"],
+  "icons": [
+    { "src": "assets/img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Bản đồ offline", "short_name": "Bản đồ", "url": "./index.html#/map", "icons": [{ "src": "assets/img/icons/shortcut-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Hồ sơ y tế QR", "short_name": "Hồ sơ QR", "url": "./index.html#/qr?view=rescuer", "icons": [{ "src": "assets/img/icons/shortcut-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Dịch y tế 1 chạm", "short_name": "Dịch y tế", "url": "./index.html#/translate", "icons": [{ "src": "assets/img/icons/shortcut-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Thư viện sơ cứu", "short_name": "Sơ cứu", "url": "./index.html#/firstaid", "icons": [{ "src": "assets/img/icons/shortcut-96.png", "sizes": "96x96", "type": "image/png" }] }
+  ]
+}

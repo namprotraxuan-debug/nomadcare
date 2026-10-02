@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NomadCare — Giao diện demo</title>
+  <meta name="description" content="Bản phác thảo (mockup) giao diện sản phẩm demo NomadCare v2 — ảnh chụp thật của app trên điện thoại, máy tính bảng, web và dashboard quản trị. Team Stormbreakers · AISC 2026.">
+  <meta name="theme-color" content="#0B7A6E">
+  <link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="mockup.css">
+  <link rel="stylesheet" href="showcase.css">
+</head>
+<body class="sc">
+  <a class="sc-skip" href="#main" data-t="skip">Bỏ qua điều hướng</a>
+  <header class="sc-nav" id="top">
+    <div class="sc-wrap sc-nav__in">
+      <a class="sc-nav__brand" href="#top" id="nav-brand"></a>
+      <nav class="sc-nav__links" id="nav-links" aria-label="Mục"></nav>
+      <div class="sc-nav__tools">
+        <button class="sc-toggle" id="btn-live" type="button" aria-pressed="false"><span class="sc-toggle__dot"></span><span data-t="live">Xem trực tiếp</span></button>
+        <div class="sc-seg" role="group" aria-label="Ngôn ngữ / Language">
+          <button type="button" data-lang="vi" aria-pressed="true">VI</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section class="sc-hero" id="hero"></section>
+    <section class="sc-sec" id="mobile"></section>
+    <section class="sc-sec sc-sec--tint" id="tablet"></section>
+    <section class="sc-sec" id="web"></section>
+    <section class="sc-sec sc-sec--tint" id="flow"></section>
+    <section class="sc-sec" id="modules"></section>
+    <section class="sc-sec sc-sec--tint" id="downloads"></section>
+  </main>
+
+  <footer class="sc-foot" id="foot"></footer>
+
+  <div class="sc-lb" id="lightbox" hidden>
+    <div class="sc-lb__backdrop" data-lb="close"></div>
+    <div class="sc-lb__panel" role="dialog" aria-modal="true" aria-labelledby="lb-title">
+      <button class="sc-lb__btn sc-lb__close" type="button" data-lb="close" aria-label="Đóng"></button>
+      <button class="sc-lb__btn sc-lb__prev" type="button" data-lb="prev" aria-label="Trước"></button>
+      <figure class="sc-lb__fig">
+        <div class="sc-lb__media" id="lb-media"></div>
+        <figcaption class="sc-lb__cap">
+          <div id="lb-tag"></div>
+          <h3 id="lb-title"></h3>
+          <p id="lb-desc"></p>
+          <p class="sc-lb__meta" id="lb-meta"></p>
+          <div class="sc-lb__actions" id="lb-actions"></div>
+        </figcaption>
+      </figure>
+      <button class="sc-lb__btn sc-lb__next" type="button" data-lb="next" aria-label="Tiếp"></button>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="mk-common.js"></script>
+  <script src="showcase.js"></script>
+</body>
+</html>

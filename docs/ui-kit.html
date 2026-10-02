@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NomadCare UI Kit</title>
+  <meta name="description" content="NomadCare design system reference — every shared component in light and dark themes.">
+  <meta name="theme-color" content="#0B7A6E">
+  <link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="stylesheet" href="ui-kit.css">
+</head>
+<body class="nc">
+  <header class="kit-header">
+    <div class="kit-header__brand">
+      <img src="../assets/img/logo.svg" alt="" width="36" height="36">
+      <div>
+        <h1>NomadCare UI Kit</h1>
+        <p>Design tokens · components · icons — light &amp; dark</p>
+      </div>
+    </div>
+    <div class="segmented" id="kit-page-theme" aria-label="Page theme">
+      <button class="segmented__btn" type="button" data-value="light">Light page</button>
+      <button class="segmented__btn" type="button" data-value="dark">Dark page</button>
+    </div>
+    <button class="btn btn--outline btn--sm" type="button" id="kit-lang"><span class="lang-toggle__code">VI</span><span>Đổi ngôn ngữ</span></button>
+  </header>
+
+  <p class="kit-intro">
+    Mọi màn hình dùng chung các lớp trong <code>assets/css/components.css</code> và các helper <code>NC.ui.*</code>.
+    Hai cột bên dưới render cùng một bộ component với <code>data-theme="light"</code> và <code>data-theme="dark"</code>.
+    Sheet, modal và toast mở ở cấp trang (theo theme của trang).
+  </p>
+
+  <main class="kit-panes" id="kit-panes">
+    <section class="kit-pane" data-theme="light" data-kit-pane="light" aria-label="Light theme"></section>
+    <section class="kit-pane" data-theme="dark" data-kit-pane="dark" aria-label="Dark theme"></section>
+  </main>
+
+  <div id="sheet-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+  <script defer src="../assets/js/core/util.js"></script>
+  <script defer src="../assets/js/core/bus.js"></script>
+  <script defer src="../assets/js/core/i18n.js"></script>
+  <script defer src="../assets/js/core/icons.js"></script>
+  <script defer src="../assets/js/core/store.js"></script>
+  <script defer src="../assets/js/core/secure.js"></script>
+  <script defer src="../assets/js/core/net.js"></script>
+  <script defer src="../assets/js/core/ui.js"></script>
+  <script defer src="ui-kit.js"></script>
+</body>
+</html>

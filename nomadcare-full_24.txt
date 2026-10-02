@@ -1,0 +1,2969 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NomadCare — Chiếc phao sinh tồn kỹ thuật số</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#171b21;
+    --surface:#1f252d;
+    --surface-raised:#262e38;
+    --border:#333c47;
+    --text:#edeae3;
+    --text-muted:#8992a0;
+    --signal:#ff5a2b;
+    --safe:#2bb3a3;
+    --danger:#e0503a;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.label-tag, nav .title{
+    font-family:'Barlow Condensed','Arial Narrow',sans-serif;
+    text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .mono{ font-family:'IBM Plex Mono','Courier New',monospace; }
+  svg.icon{ width:18px; height:18px; stroke:currentColor; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+  .app{ min-height:100vh; display:flex; flex-direction:column; }
+
+  /* ---------- TOPBAR ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:16px 28px; border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#1c222a,#171b21); flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:38px; height:38px; border-radius:9px; background:var(--signal);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:19px; color:#171b21;
+  }
+  .brand-name{ font-size:21px; font-weight:700; letter-spacing:0.07em; }
+  .brand-sub{ color:var(--text-muted); font-size:12px; }
+
+  .status-cluster{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .pill{
+    display:flex; align-items:center; gap:8px; background:var(--surface);
+    border:1px solid var(--border); padding:7px 13px; border-radius:999px;
+    font-size:12.5px; cursor:default; white-space:nowrap;
+  }
+  .pill.clickable{ cursor:pointer; }
+  .pill.clickable:hover{ border-color:var(--signal); }
+  .led{ width:8px; height:8px; border-radius:50%; background:var(--danger); box-shadow:0 0 7px var(--danger); flex-shrink:0; }
+  .led.on{ background:var(--safe); box-shadow:0 0 7px var(--safe); }
+
+  /* ---------- BODY / NAV ---------- */
+  .body{ display:flex; flex:1; min-height:0; }
+  .panel-nav{ width:230px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); padding:16px 10px; display:flex; flex-direction:column; gap:5px; }
+  .nav-btn{
+    display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:9px;
+    border:1px solid transparent; background:transparent; color:var(--text-muted);
+    cursor:pointer; text-align:left; font-family:inherit; width:100%;
+  }
+  .nav-btn .txt{ display:flex; flex-direction:column; gap:1px; }
+  .nav-btn .tag{ font-size:10.5px; color:var(--signal); letter-spacing:0.1em; }
+  .nav-btn .title{ font-size:13.5px; color:var(--text); font-weight:600; }
+  .nav-btn:hover{ background:var(--surface-raised); }
+  .nav-btn.active{ background:var(--surface-raised); border-color:var(--signal); }
+  .nav-btn.active .tag{ color:var(--signal); }
+  .nav-btn.active svg.icon{ stroke:var(--signal); }
+
+  .content{ flex:1; padding:28px 34px; overflow-y:auto; }
+  .module{ display:none; max-width:940px; }
+  .module.active{ display:block; animation:fadein .25s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+  .module h2{ font-size:27px; margin:0 0 6px; }
+  .module .desc{ color:var(--text-muted); font-size:14px; margin:0 0 22px; max-width:660px; line-height:1.55; }
+
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:19px 21px; margin-bottom:16px; }
+  .card h3{ font-size:13px; color:var(--text-muted); margin:0 0 13px; letter-spacing:0.08em; }
+
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ background:var(--surface-raised); border:1px solid var(--border); color:var(--text); padding:9px 14px; border-radius:8px; cursor:pointer; font-size:14px; }
+  .chip:hover{ border-color:var(--signal); }
+  .chip.picked{ background:var(--signal); color:#171b21; border-color:var(--signal); font-weight:600; }
+
+  select, input[type=text], input[type=number], input[type=date], input[type=tel]{ background:var(--surface-raised); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:8px; font-size:14px; font-family:inherit; color-scheme:dark; }
+  label{ font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px; }
+  .field{ margin-bottom:14px; }
+  .row{ display:flex; gap:16px; flex-wrap:wrap; }
+  .row > .field{ flex:1; min-width:180px; }
+
+  button.action{ background:var(--signal); color:#171b21; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13.5px; font-family:'Barlow Condensed',sans-serif; letter-spacing:0.05em; text-transform:uppercase; }
+  button.action:hover{ filter:brightness(1.08); }
+  button.action:disabled{ opacity:.4; cursor:not-allowed; }
+  button.ghost{ background:transparent; color:var(--text-muted); border:1px solid var(--border); padding:9px 16px; border-radius:8px; cursor:pointer; font-size:13px; }
+  button.ghost:hover{ border-color:var(--signal); color:var(--text); }
+
+  .output-card{ background:#171b21; border:1px dashed var(--safe); border-radius:8px; padding:16px; margin-top:6px; }
+  .output-card .phrase{ font-size:17px; color:var(--safe); }
+  .output-card .meta{ color:var(--text-muted); font-size:12px; margin-top:8px; }
+  .bin{ color:var(--text-muted); font-size:11px; margin-top:6px; word-break:break-all; }
+
+  .facility-item{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px; }
+  .facility-item:last-child{ border-bottom:none; }
+  .facility-item .dist{ color:var(--signal); font-weight:700; }
+  .facility-item .type{ color:var(--text-muted); font-size:12px; }
+
+  svg.mapviz{ width:100%; height:220px; background:#14181e; border-radius:8px; border:1px solid var(--border); cursor:grab; touch-action:none; display:block; }
+  svg.mapviz:active{ cursor:grabbing; }
+  .map-wrap{ position:relative; }
+  .map-toolbar{ position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:4px; z-index:2; }
+  .map-btn{
+    width:30px; height:30px; border-radius:7px; border:1px solid var(--border);
+    background:rgba(31,37,45,0.9); color:var(--text); font-size:16px; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;
+  }
+  .map-btn:hover{ border-color:var(--signal); color:var(--signal); }
+  .dot-user{ fill:var(--signal); } .dot-fac{ fill:var(--safe); }
+
+  .route-seg{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; }
+  .route-seg:last-child{ border-bottom:none; }
+  .seg-badge{ font-size:11px; padding:3px 8px; border-radius:6px; font-weight:700; }
+  .seg-badge.ok{ background:rgba(43,179,163,.15); color:var(--safe); }
+  .seg-badge.dead{ background:rgba(224,80,58,.15); color:var(--danger); }
+  .warn-banner{ background:rgba(255,90,43,.1); border:1px solid var(--signal); color:var(--signal); padding:12px 14px; border-radius:8px; font-size:13px; margin-top:10px; }
+
+  #qrbox{ background:#fff; padding:12px; border-radius:8px; width:fit-content; }
+  .log{ font-size:13px; }
+  .log-entry{ padding:8px 0; border-bottom:1px solid var(--border); color:var(--text-muted); }
+  .log-entry b{ color:var(--text); }
+  .log-entry.warn b{ color:var(--signal); }
+  .log-entry.ok b{ color:var(--safe); }
+
+  .toggle-switch{ display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; background:var(--surface-raised); border:1px solid var(--border); padding:10px 16px; border-radius:8px; }
+  .switch-track{ width:38px; height:20px; border-radius:999px; background:#3a4351; position:relative; transition:.2s; }
+  .switch-track::after{ content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#cfd6df; transition:.2s; }
+  .switch-track.on{ background:var(--danger); }
+  .switch-track.on::after{ transform:translateX(18px); background:#fff; }
+
+  .sos-btn{
+    width:100%; padding:22px; border:none; border-radius:12px; cursor:pointer;
+    background:var(--danger); color:#fff; font-size:20px; font-weight:800;
+    font-family:'Barlow Condensed',sans-serif; letter-spacing:0.06em;
+    box-shadow:0 0 0 rgba(224,80,58,0.5);
+  }
+  .sos-btn:hover{ filter:brightness(1.08); }
+  .sos-btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .sos-btn.urgent{ animation:sosPulse 1.1s ease-in-out infinite; }
+  @keyframes sosPulse{
+    0%{ box-shadow:0 0 0 0 rgba(224,80,58,0.55); }
+    70%{ box-shadow:0 0 0 16px rgba(224,80,58,0); }
+    100%{ box-shadow:0 0 0 0 rgba(224,80,58,0); }
+  }
+  #sosCard.urgent{ border-color:var(--danger); }
+
+  .cpr-wrap{ display:flex; gap:24px; flex-wrap:wrap; align-items:center; }
+  .cpr-stats{ display:flex; gap:20px; }
+  .cpr-stat{ text-align:center; }
+  .cpr-stat b{ font-size:26px; color:var(--signal); display:block; }
+  .cpr-stat span{ color:var(--text-muted); font-size:11px; }
+  #cprHands{ animation:compress 0.545s ease-in-out infinite; animation-play-state:paused; transform-origin:center; }
+  @keyframes compress{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(13px);} }
+
+  .flip-frame{ min-height:70px; }
+  .adv-summary{
+    cursor:pointer; display:inline-flex; align-items:center; gap:8px; list-style:none;
+    color:var(--signal); font-weight:700; font-size:14px; letter-spacing:0.03em;
+    font-family:'Barlow Condensed',sans-serif; text-transform:uppercase;
+    background:rgba(255,90,43,0.1); border:1px solid var(--signal); border-radius:8px;
+    padding:9px 14px;
+  }
+  .adv-summary::-webkit-details-marker{ display:none; }
+  .adv-summary:hover{ background:rgba(255,90,43,0.18); }
+  .adv-summary .adv-hint{ color:var(--text-muted); font-weight:400; text-transform:none; letter-spacing:0; font-size:12.5px; }
+  .fa-illust{ width:220px; height:110px; background:#14181e; border:1px solid var(--border); border-radius:8px; display:block; }
+  .step-dots{ display:flex; gap:6px; margin-top:14px; }
+  .step-dot{ width:8px; height:8px; border-radius:50%; background:var(--border); }
+  .step-dot.on{ background:var(--signal); }
+
+  footer.note{ color:var(--text-muted); font-size:12px; padding:16px 34px; border-top:1px solid var(--border); }
+
+  @media (max-width:780px){
+    .body{ flex-direction:column; }
+    .panel-nav{ width:100%; flex-direction:row; overflow-x:auto; }
+    .nav-btn{ flex-shrink:0; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4V4z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="15" y="15" width="2.5" height="2.5"/><rect x="19" y="15" width="2" height="2"/><rect x="15" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><path d="M4 19c4-9 6 5 10-4s4 4 6-4"/><circle cx="4" cy="19" r="1.4" fill="currentColor" stroke="none"/><circle cx="20" cy="11" r="1.4" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-sms" viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4V4z"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="15" r="0.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M3 12h4l2-6 3 11 2-8 2 3h5"/></symbol>
+</svg>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div>
+        <div class="brand-name">NOMADCARE</div>
+        <div class="brand-sub">Chiếc phao sinh tồn kỹ thuật số — cho phượt thủ ở bất kỳ nơi hẻo lánh nào trên thế giới</div>
+      </div>
+    </div>
+    <div class="status-cluster">
+      <div class="pill clickable" id="connPill" onclick="toggleConnection()">
+        <span class="led" id="connLed"></span>
+        <span id="connLabel">MẤT SÓNG — OFFLINE MODE</span>
+      </div>
+      <div class="pill" id="cloudPill">☁ <span id="cloudLabel">Chờ kết nối để đồng bộ</span></div>
+      <div class="pill" id="weatherPill">🌡️ <span id="weatherLabel">Chưa có dữ liệu thời tiết</span></div>
+    </div>
+  </div>
+
+  
+
+  <div class="body">
+    <nav class="panel-nav" id="nav">
+      <button class="nav-btn active" data-mod="mod1" onclick="showModule('mod1', this)">
+        <svg class="icon"><use href="#i-chat"/></svg>
+        <span class="txt"><span class="tag">MOD.01</span><span class="title">Dịch y tế 1 chạm</span></span>
+      </button>
+      <button class="nav-btn" data-mod="mod2" onclick="showModule('mod2', this)">
+        <svg class="icon"><use href="#i-pin"/></svg>
+        <span class="txt"><span class="tag">MOD.02</span><span class="title">Bản đồ cứu hộ</span></span>
+      </button>
+      <button class="nav-btn" data-mod="mod3" onclick="showModule('mod3', this)">
+        <svg class="icon"><use href="#i-qr"/></svg>
+        <span class="txt"><span class="tag">MOD.03</span><span class="title">QR sinh tồn</span></span>
+      </button>
+      <button class="nav-btn" data-mod="mod4" onclick="showModule('mod4', this)">
+        <svg class="icon"><use href="#i-route"/></svg>
+        <span class="txt"><span class="tag">MOD.04</span><span class="title">Dự báo mất sóng</span></span>
+      </button>
+      <button class="nav-btn" data-mod="mod5" onclick="showModule('mod5', this)">
+        <svg class="icon"><use href="#i-sms"/></svg>
+        <span class="txt"><span class="tag">MOD.05</span><span class="title">Buddy Check-in</span></span>
+      </button>
+      <button class="nav-btn" data-mod="mod6" onclick="showModule('mod6', this)">
+        <svg class="icon"><use href="#i-heart"/></svg>
+        <span class="txt"><span class="tag">MOD.06</span><span class="title">Sơ cứu ngoại tuyến</span></span>
+      </button>
+    </nav>
+
+    <main class="content">
+
+      <!-- MOD 1 -->
+      <section class="module active" id="mod1">
+        <h2>Giao tiếp y tế 1 chạm</h2>
+        <p class="desc">Cây quyết định tĩnh: chạm chọn bộ phận → triệu chứng → mức độ. Mỗi đường đi trỏ tới 1 mã cố định, được mã hóa nhị phân và tra ra câu dịch sẵn — không sinh câu mới, không cần mạng. Danh sách ngôn ngữ dưới đây chỉ là ví dụ minh họa; kiến trúc cho phép nạp thêm gói ngôn ngữ cho bất kỳ khu vực hẻo lánh nào trên thế giới.</p>
+
+        <div class="card">
+          <h3>NGÔN NGỮ ĐÍCH (BẢN ĐỊA)</h3>
+          <label>Quốc gia bạn đang ở — gõ tên hoặc bấm chọn từ gợi ý</label>
+          <input type="text" id="targetCountry" list="countryList" value="Thái Lan" oninput="renderPhrase()" placeholder="Nhập tên quốc gia...">
+        </div>
+
+        <!-- Datalist quốc gia dùng chung cho MOD.01, MOD.03, MOD.06 -->
+        <datalist id="countryList">
+          <option value="Việt Nam">
+          <option value="Lào">
+          <option value="Thái Lan">
+          <option value="Campuchia">
+          <option value="Philippines">
+          <option value="Singapore">
+          <option value="Malaysia">
+          <option value="Trung Quốc">
+          <option value="Nhật Bản">
+          <option value="Hàn Quốc">
+          <option value="Nepal">
+          <option value="Australia">
+          <option value="Vương quốc Anh">
+          <option value="Tây Ban Nha">
+          <option value="Iceland">
+          <option value="Hoa Kỳ">
+          <option value="Mexico">
+          <option value="Colombia">
+          <option value="Peru">
+          <option value="Morocco">
+          <option value="Kenya">
+        </datalist>
+
+        <div class="card"><h3>BƯỚC 1 — BỘ PHẬN CƠ THỂ</h3><div class="chip-row" id="step1"></div></div>
+        <div class="card" id="step2card" style="display:none;"><h3>BƯỚC 2 — LOẠI TRIỆU CHỨNG</h3><div class="chip-row" id="step2"></div></div>
+        <div class="card" id="step3card" style="display:none;"><h3>BƯỚC 3 — MỨC ĐỘ</h3><div class="chip-row" id="step3"></div></div>
+
+        <div class="card" id="resultCard" style="display:none;">
+          <h3>KẾT QUẢ — HIỂN THỊ CHO NHÂN VIÊN Y TẾ BẢN ĐỊA</h3>
+          <div class="output-card">
+            <div class="phrase mono" id="phraseOut">—</div>
+            <div class="meta" id="phraseMeta">—</div>
+            <div class="bin mono" id="phraseBin">—</div>
+          </div>
+          <p style="margin-top:10px;"><button class="ghost" onclick="resetTree()">↺ Chọn lại từ đầu</button></p>
+        </div>
+      </section>
+
+      <!-- MOD 2 -->
+      <section class="module" id="mod2">
+        <h2>Bản đồ vector cứu hộ</h2>
+        <p class="desc">Vị trí của bạn được xác định <b>tự động</b> qua GPS của thiết bị (Geolocation API) — không cần nhập gì cả. Hệ thống lập tức tìm cơ sở y tế gần nhất từ dữ liệu offline đã đóng gói theo khu vực (regional data pack), rồi vẽ đường đi + đọc chỉ đường bằng giọng nói.</p>
+
+        <div class="card">
+          <h3>VỊ TRÍ CỦA BẠN</h3>
+          <p class="desc" id="geoStatus" style="margin:0 0 12px;">📍 Đang tự động xác định vị trí của bạn...</p>
+          <button class="action" onclick="detectUserLocation()">🔄 Xác định lại vị trí GPS</button>
+
+          <details style="margin-top:16px;">
+            <summary class="adv-summary">⚙ NÂNG CAO <span class="adv-hint">— mô phỏng vị trí khác (dùng khi test hoặc trình duyệt chặn quyền định vị)</span></summary>
+
+            <div class="field" style="margin-top:12px;">
+              <label>Chọn quốc gia — gõ tên hoặc bấm để lướt theo châu lục</label>
+              <input type="text" id="advCountryInput" list="countryList" oninput="onAdvCountryInputChange()" placeholder="Nhập hoặc chọn tên quốc gia...">
+            </div>
+
+            <div class="card" id="advLocationCard" style="display:none; background:var(--surface-raised); margin:4px 0 12px;">
+              <h3>CHỌN ĐIỂM MÔ PHỎNG — <span id="advCountryName">—</span></h3>
+
+              <div class="field" style="margin-bottom:14px;">
+                <label>🏕️ Vùng hẻo lánh, ít/không có sóng</label>
+                <input type="text" id="advRemoteInput" list="advRemoteList" oninput="onAdvLocationInput('remote')" placeholder="Gõ tên địa điểm...">
+                <datalist id="advRemoteList"></datalist>
+              </div>
+
+              <div class="field">
+                <label>🏙️ Đô thị lớn, phủ sóng đầy đủ</label>
+                <input type="text" id="advUrbanInput" list="advUrbanList" oninput="onAdvLocationInput('urban')" placeholder="Gõ tên địa điểm...">
+                <datalist id="advUrbanList"></datalist>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field"><label>Vĩ độ (lat)</label><input type="number" id="userLat" step="0.0001" value="27.8000"></div>
+              <div class="field"><label>Kinh độ (lng)</label><input type="number" id="userLng" step="0.0001" value="86.7000"></div>
+            </div>
+            <button class="ghost" onclick="findNearest()">Dùng tọa độ này thay vì GPS thật</button>
+          </details>
+        </div>
+
+        <div class="card">
+          <h3>SƠ ĐỒ VECTOR — ĐƯỜNG ĐI TỚI CƠ SỞ GẦN NHẤT</h3>
+          <div class="map-wrap">
+            <svg class="mapviz" id="mapSvg" viewBox="0 0 600 220"></svg>
+            <div class="map-toolbar">
+              <button class="map-btn" onclick="zoomMap(0.8)" title="Phóng to">+</button>
+              <button class="map-btn" onclick="zoomMap(1.25)" title="Thu nhỏ">−</button>
+              <button class="map-btn" onclick="resetMapView()" title="Về vị trí ban đầu">⤾</button>
+            </div>
+          </div>
+          <p class="desc" style="margin-top:8px;">Kéo/lướt để di chuyển bản đồ (chuột hoặc chạm), lăn chuột hoặc bấm +/− để phóng to/thu nhỏ.</p>
+        </div>
+        <div class="card"><h3>TOP 3 GẦN NHẤT</h3><div id="facilityList"><p class="desc">Đang chờ xác định vị trí...</p></div></div>
+
+        <div class="card" id="directionsCard" style="display:none;">
+          <h3>CHỈ ĐƯỜNG BẰNG HÌNH ẢNH &amp; GIỌNG NÓI</h3>
+          <div id="directionSteps"></div>
+          <p style="margin-top:12px;">
+            <button class="action" onclick="speakDirections()">🔊 Đọc chỉ đường (loa / tai nghe)</button>
+            <button class="ghost" onclick="stopSpeaking()" style="margin-left:8px;">⏹ Dừng đọc</button>
+          </p>
+          <p class="desc" style="margin-top:8px;">Dùng Web Speech API của trình duyệt — phát qua loa điện thoại hoặc tai nghe đang kết nối, không cần tải giọng đọc qua mạng.</p>
+        </div>
+      </section>
+
+      <!-- MOD 3 -->
+      <section class="module" id="mod3">
+        <h2>Mã QR sinh tồn — màn hình khóa</h2>
+        <p class="desc">Đóng gói hồ sơ y tế cá nhân thành mã QR. Thuật toán tự nhận diện quốc gia hiện tại (theo GPS gần nhất) và chọn đúng ngôn ngữ hiển thị — khác Apple Medical ID vốn chỉ hiện ngôn ngữ cố định của máy. Danh sách bên dưới chỉ là ví dụ; hệ thống được thiết kế để nạp thêm gói ngôn ngữ cho bất kỳ quốc gia nào.</p>
+
+        <div class="card">
+          <h3>HỒ SƠ Y TẾ CÁ NHÂN</h3>
+          <div class="row">
+            <div class="field"><label>1. Họ và Tên</label><input type="text" id="fullName" value="Nguyễn Văn A"></div>
+            <div class="field"><label>2. Ngày tháng năm sinh</label><input type="date" id="dob" value="1998-05-20"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>3. CCCD (Mã định danh cá nhân)</label><input type="text" id="idNumber" value="079xxxxxxxxx"></div>
+            <div class="field"><label>4. Quốc tịch</label><input type="text" id="nationality" list="countryList" value="Việt Nam"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>5. Quê quán</label><input type="text" id="hometown" value="Nam Định, Việt Nam"></div>
+            <div class="field"><label>6. Nơi ở hiện tại</label><input type="text" id="currentResidence" value="TP.HCM, Việt Nam"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>7. Số điện thoại</label><input type="tel" id="phoneNumber" value="+84 909 123 456"></div>
+            <div class="field"><label>8. Nhóm máu</label><select id="bloodType"><option>O+</option><option>O-</option><option>A+</option><option>B+</option><option>AB+</option></select></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>9. Dị ứng</label><input type="text" id="allergyGeneral" value="Phấn hoa"></div>
+            <div class="field"><label>10. Dị ứng thuốc</label><input type="text" id="allergyInput" value="Penicillin"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>11. Tiền sử bệnh</label><input type="text" id="historyInput" value="Hen suyễn"></div>
+            <div class="field"><label>12. Lịch sử tiêm chủng</label><input type="text" id="vaccination" value="Uốn ván (2023), Viêm gan B"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>13. Tên người thân liên hệ</label><input type="text" id="contactName" value="Nguyễn Thị B"></div>
+            <div class="field"><label>14. SĐT liên hệ khẩn cấp</label><input type="tel" id="contactInput" value="+84 909 999 888"></div>
+          </div>
+          <div class="field"><label>15. Quốc gia hiện tại (mô phỏng GPS) — gõ tên hoặc bấm chọn từ gợi ý</label>
+            <input type="text" id="qrCountry" list="countryList" value="Việt Nam" placeholder="Nhập tên quốc gia...">
+          </div>
+          <button class="action" onclick="generateQR()">Tạo mã QR sinh tồn</button>
+        </div>
+
+        <div class="card" id="qrResultCard" style="display:none;">
+          <h3>KẾT QUẢ</h3>
+          <div class="row">
+            <div>
+              <div id="qrbox"></div>
+              <div class="meta mono" id="qrPayload" style="margin-top:8px;color:var(--text-muted);font-size:11px;max-width:220px;word-break:break-all;"></div>
+            </div>
+            <div style="flex:2;min-width:260px;">
+              <div class="output-card">
+                <div class="meta" style="margin-bottom:8px;">Nhân viên y tế bản địa quét mã, thấy:</div>
+                <div class="phrase" id="qrTranslated" style="font-size:15px;line-height:1.8;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MOD 4 -->
+      <section class="module" id="mod4">
+        <h2>Safe Route Predictor</h2>
+        <p class="desc">Chọn quốc gia, sau đó chọn điểm đi/điểm đến trong số các địa điểm của quốc gia đó — từ đô thị lớn phủ sóng đầy đủ đến vùng hẻo lánh, ít/không có sóng. Thuật toán Dijkstra tìm lộ trình ngắn nhất qua các chặng, quét từng chặng để cảnh báo vùng mất sóng cần tải dữ liệu offline.</p>
+
+        <div class="card">
+          <div class="field">
+            <label>Chọn quốc gia — gõ tên hoặc bấm để lướt theo châu lục</label>
+            <input type="text" id="routeCountryInput" list="countryList" oninput="onRouteCountryChange()" placeholder="Nhập hoặc chọn tên quốc gia...">
+          </div>
+        </div>
+
+        <div class="card" id="routePickerCard" style="display:none;">
+          <h3>ĐIỂM ĐI &amp; ĐIỂM ĐẾN — <span id="routeCountryName">—</span></h3>
+          <div class="row">
+            <div class="field">
+              <label>Điểm đi (gõ tên hoặc chọn từ gợi ý)</label>
+              <input type="text" id="routeFrom" list="routeNodesList" placeholder="Chọn hoặc gõ tên địa điểm...">
+            </div>
+            <div class="field">
+              <label>Điểm đến (gõ tên hoặc chọn từ gợi ý)</label>
+              <input type="text" id="routeTo" list="routeNodesList" placeholder="Chọn hoặc gõ tên địa điểm...">
+            </div>
+          </div>
+          <datalist id="routeNodesList"></datalist>
+          <button class="action" onclick="computeRoute()">Tính lộ trình &amp; quét vùng sóng</button>
+        </div>
+
+        <div class="card" id="routeResult" style="display:none;">
+          <h3>LỘ TRÌNH NGẮN NHẤT</h3>
+          <div id="routeSegs"></div>
+          <div id="routeWarn"></div>
+        </div>
+      </section>
+
+      <!-- MOD 5 -->
+      <section class="module" id="mod5">
+        <h2>Buddy Check-in</h2>
+        <p class="desc">Khi mất tín hiệu data (nhưng sóng 2G/SMS còn), ứng dụng tự soạn và gửi SMS chứa tọa độ GPS cuối cùng cho người thân/hostel. Khi có mạng lại, toàn bộ lịch sử tự đồng bộ lên máy chủ bảo mật (Hybrid Cloud).</p>
+        <div class="card">
+          <label class="toggle-switch" onclick="toggleConnection()">
+            <span class="switch-track" id="sigTrack"></span>
+            <span id="sigLabel">Đang có tín hiệu data</span>
+          </label>
+        </div>
+
+        <div class="card" id="sosCard">
+          <h3>TÍN HIỆU SOS KHẨN CẤP</h3>
+          <p class="desc" id="sosHint" style="margin:0 0 14px;">Nếu bạn gặp nguy hiểm, chỉ cần nhấn nút bên dưới — tín hiệu SOS kèm tọa độ GPS sẽ được gửi ngay tới máy chủ hệ thống NomadCare và liên hệ khẩn cấp (người thân/hostel), kể cả khi đang mất sóng data (qua SMS).</p>
+          <button class="sos-btn" id="sosBtn" onclick="sendSOS()">🆘 GỬI TÍN HIỆU SOS</button>
+        </div>
+
+        <div class="card"><h3>NHẬT KÝ SỰ KIỆN</h3><div class="log" id="buddyLog"><div class="log-entry">Chưa có sự kiện nào.</div></div></div>
+      </section>
+
+      <!-- MOD 6: FIRST AID -->
+      <section class="module" id="mod6">
+        <h2>Offline First Aid — Sơ cứu ngoại tuyến</h2>
+        <p class="desc">Gõ hoặc nói tên chấn thương bạn đang gặp phải — hệ thống tra cứu offline (không cần mạng) và hiển thị hướng dẫn sơ cứu dạng từng bước, dễ nhìn và làm theo ngay.</p>
+
+        <div class="card">
+          <h3>TÌM CHẤN THƯƠNG</h3>
+          <div class="row">
+            <div class="field" style="flex:3;">
+              <label>Nhập hoặc nói triệu chứng/chấn thương (vd: "gãy tay", "bỏng nước sôi"...)</label>
+              <input type="text" id="faSearch" placeholder="Nhập từ khóa..." oninput="renderSearchResults()">
+            </div>
+            <div class="field" style="flex:0 0 auto; align-self:flex-end;">
+              <button class="action" id="micBtn" onclick="startVoiceSearch()">🎤 Nói</button>
+            </div>
+          </div>
+          <div id="voiceStatus" class="desc" style="margin:-6px 0 10px;"></div>
+          <div id="searchResults" class="chip-row"></div>
+        </div>
+
+        <div class="card">
+          <h3>CHẤN THƯƠNG THƯỜNG GẶP (GỢI Ý NHANH)</h3>
+          <div class="chip-row" id="quickChips"></div>
+          <div class="chip-row" id="quickChipsMore" style="display:none; margin-top:8px;"></div>
+          <button class="ghost" id="quickChipsToggle" onclick="toggleQuickChips()" style="margin-top:10px;">Xem tất cả chấn thương thường gặp</button>
+        </div>
+
+        <!-- CPR (đặc biệt: có hoạt ảnh + đếm giờ) -->
+        <div class="card fa-panel" id="fa-cpr" style="display:none;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:2px;">
+            <span style="font-size:28px;">❤️‍🩹</span>
+            <h3 style="margin:0;" id="cprTitle">NHỊP ÉP TIM MÔ PHỎNG (~110 LẦN/PHÚT)</h3>
+          </div>
+          <div class="cpr-wrap">
+            <svg width="160" height="150" viewBox="0 0 160 150">
+              <ellipse cx="80" cy="110" rx="55" ry="26" fill="#2a323d" stroke="#3a4351"/>
+              <g id="cprHands">
+                <rect x="55" y="40" width="50" height="22" rx="8" fill="#ff5a2b"/>
+                <rect x="62" y="20" width="36" height="24" rx="8" fill="#ff5a2b" opacity="0.75"/>
+              </g>
+            </svg>
+            <div class="cpr-stats">
+              <div class="cpr-stat"><b id="cprTimer">30s</b><span>Thời gian còn lại</span></div>
+              <div class="cpr-stat"><b id="cprCount">0</b><span>Số lần ép</span></div>
+            </div>
+          </div>
+          <p style="margin-top:14px;"><button class="action" id="cprBtn" onclick="startCPR()">▶ Bắt đầu mô phỏng 30 giây</button>
+          <button class="ghost" onclick="stopCPR(false)" style="margin-left:8px;">⏸ Dừng</button></p>
+          <p class="desc" style="margin-top:10px;" id="cprCaption">Ép giữa ngực, sâu ~5cm, để lồng ngực nảy lại hoàn toàn giữa các lần ép. Gọi cấp cứu trước khi bắt đầu nếu có thể.</p>
+          <p style="margin-top:10px;"><a id="cprVideoLink" href="#" target="_blank" rel="noopener" class="ghost" style="text-decoration:none; display:inline-block;">🎥 Xem video hướng dẫn CPR (cần mạng)</a></p>
+        </div>
+
+        <!-- GENERIC STEP VIEWER (dùng chung cho mọi chấn thương khác) -->
+        <div class="card fa-panel" id="fa-generic" style="display:none;">
+          <div class="row" style="align-items:flex-end; margin-bottom:4px;">
+            <div class="field" style="flex:2; margin-bottom:0;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span id="faGenericIcon" style="font-size:28px;">🩹</span>
+                <h3 id="faGenericTitle" style="margin:0;">—</h3>
+              </div>
+            </div>
+            <div class="field" style="flex:1; margin-bottom:0;">
+              <label>Quốc gia hiện tại — gõ tên hoặc bấm chọn từ gợi ý</label>
+              <input type="text" id="faCountry" list="countryList" value="Việt Nam" oninput="onFaCountryChange()" placeholder="Nhập tên quốc gia...">
+            </div>
+          </div>
+          <p class="desc" id="faLangFallbackNote" style="display:none; margin:6px 0 0; color:var(--signal);"></p>
+          <svg id="faIllustration" class="fa-illust" viewBox="0 0 220 110"></svg>
+          <div class="flip-frame">
+            <p id="faGenericText" class="desc" style="margin:8px 0 0;"></p>
+          </div>
+          <div class="step-dots" id="faGenericDots"></div>
+          <p style="margin-top:12px;"><button class="ghost" onclick="prevGenericStep()">← Trước</button>
+          <button class="action" onclick="nextGenericStep()" style="margin-left:8px;">Bước tiếp theo →</button></p>
+          <p style="margin-top:10px;"><a id="faVideoLink" href="#" target="_blank" rel="noopener" class="ghost" style="text-decoration:none; display:inline-block;">🎥 Xem video hướng dẫn (cần mạng)</a></p>
+          <p class="desc" style="margin-top:8px;">Hướng dẫn từng bước đã được dịch đầy đủ sang toàn bộ 15 ngôn ngữ trong danh sách quốc gia ở trên (Việt, Anh, Tây Ban Nha, Pháp, Trung, Nhật, Hàn, Thái, Lào, Khmer, Filipino, Malay, Nepal, Iceland, Ả Rập, Swahili). Nội dung mang tính minh họa thuật toán — vẫn cần chuyên gia y tế bản địa xác thực trước khi triển khai thực tế.</p>
+        </div>
+
+        <div class="card" id="faEmpty">
+          <p class="desc" style="margin:0;">Chưa chọn chấn thương nào. Hãy tìm kiếm, nói, hoặc chọn 1 gợi ý nhanh ở trên để xem hướng dẫn sơ cứu.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="note">Dữ liệu, tọa độ, bản dịch và hướng dẫn sơ cứu trong bản demo này mang tính minh họa thuật toán — cần đội ngũ y tế, phiên dịch và bản đồ chuyên môn xác thực trước khi triển khai thực tế.</footer>
+</div>
+
+<script>
+/* ============ HYBRID CLOUD + CONNECTION TOGGLE ============ */
+let connected = false;
+let pendingSync = 0;
+let lastSyncedSignalLost = null; // khai báo sớm vì syncBuddyCheckinUI() được gọi ngay từ setConnectionState() lúc tải trang
+
+/** Cập nhật giao diện theo trạng thái kết nối (isOnline = true/false) — dùng chung cho cả tự động lẫn bấm tay */
+function setConnectionState(isOnline){
+  connected = isOnline;
+  document.getElementById('connLed').classList.toggle('on', connected);
+  document.getElementById('connLabel').textContent = connected ? 'CÓ MẠNG — ONLINE' : 'MẤT SÓNG — OFFLINE MODE';
+  updateCloudBadge();
+  if(connected && pendingSync > 0){
+    const n = pendingSync;
+    pendingSync = 0;
+    updateCloudBadge(`Đã đồng bộ ${n} bản ghi lên máy chủ bảo mật`);
+  }
+  syncBuddyCheckinUI(); // MOD.05: công tắc tự bật/tắt đúng theo trạng thái mạng thật, không cần bấm tay
+}
+/** Bấm tay vào pill vẫn dùng được để tự thử nghiệm (giả lập mất mạng khi demo) */
+function toggleConnection(){ setConnectionState(!connected); }
+function updateCloudBadge(customMsg){
+  const label = document.getElementById('cloudLabel');
+  if(customMsg){ label.textContent = customMsg; return; }
+  label.textContent = connected
+    ? 'Đã đồng bộ'
+    : (pendingSync > 0 ? `${pendingSync} bản ghi chờ đồng bộ` : 'Chờ kết nối để đồng bộ');
+}
+function queueSync(){
+  if(connected){ updateCloudBadge('Đã đồng bộ ngay lập tức'); }
+  else { pendingSync++; updateCloudBadge(); }
+}
+// Lắng nghe sự kiện mạng THẬT của trình duyệt/máy chủ — tự động cập nhật pill, không cần bấm tay
+window.addEventListener('online', () => setConnectionState(true));
+window.addEventListener('offline', () => setConnectionState(false));
+// Khởi tạo đúng theo trạng thái mạng thật của thiết bị ngay khi tải trang
+setConnectionState(navigator.onLine);
+
+/* ============ NAV ============ */
+function showModule(id, btn){
+  document.querySelectorAll('.module').forEach(m=>m.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ============ MOD 1: DECISION TREE TRANSLATE ============ */
+const tree = {
+  "Bụng": { "Đau": { "Nhẹ":"S01", "Dữ dội":"S02" }, "Buồn nôn": { "Nhẹ":"S03", "Dữ dội":"S04" } },
+  "Ngực": { "Khó thở": { "Nhẹ":"S05", "Dữ dội":"S06" }, "Đau tức": { "Nhẹ":"S07", "Dữ dội":"S08" } },
+  "Da": { "Nổi mẩn / Dị ứng": { "Nhẹ":"S09", "Dữ dội":"S10" }, "Vết thương hở": { "Nhẹ":"S11", "Dữ dội":"S12" } },
+  "Đầu": { "Chóng mặt": { "Nhẹ":"S13", "Dữ dội":"S14" }, "Đau đầu": { "Nhẹ":"S15", "Dữ dội":"S16" } },
+  "Tay": {
+    "Gãy xương": { "Nhẹ":"S17", "Dữ dội":"S18" },
+    "Đau nhức, mỏi": { "Nhẹ":"S19", "Dữ dội":"S20" },
+    "Bong gân": { "Nhẹ":"S21", "Dữ dội":"S22" },
+    "Chuột rút": { "Nhẹ":"S23", "Dữ dội":"S24" }
+  },
+  "Chân": {
+    "Gãy xương": { "Nhẹ":"S25", "Dữ dội":"S26" },
+    "Đau nhức, mỏi": { "Nhẹ":"S27", "Dữ dội":"S28" },
+    "Bong gân": { "Nhẹ":"S29", "Dữ dội":"S22" },
+    "Chuột rút": { "Nhẹ":"S30", "Dữ dội":"S31" }
+  }
+};
+const phrases = {
+  S01:{vi:"Tôi bị đau bụng nhẹ.", en:"I have mild stomach pain.", es:"Tengo dolor de estómago leve.", fr:"J'ai un léger mal de ventre.", zh:"我肚子有点疼。", ja:"お腹が少し痛いです。", ko:"배가 조금 아파요.", th:"ปวดท้องเล็กน้อย", lo:"ເຈັບທ້ອງເລັກນ້ອຍ", km:"ឈឺពោះបន្តិច", tl:"Bahagya akong sumasakit sa tiyan.", ms:"Saya mengalami sakit perut ringan.", np:"मलाई हल्का पेट दुखेको छ।", is:"Ég er með vægan magaverk.", ar:"أشعر بألم خفيف في المعدة.", sw:"Nina maumivu kidogo ya tumbo."},
+  S02:{vi:"Tôi bị đau bụng dữ dội, cần cấp cứu.", en:"I have severe stomach pain, need urgent help.", es:"Tengo dolor de estómago severo, necesito ayuda urgente.", fr:"J'ai un mal de ventre sévère, j'ai besoin d'aide urgente.", zh:"我肚子剧烈疼痛,需要紧急帮助。", ja:"お腹がひどく痛いです。緊急の助けが必要です。", ko:"배가 심하게 아파요. 긴급 도움이 필요해요.", th:"ปวดท้องรุนแรง ต้องการความช่วยเหลือด่วน", lo:"ເຈັບທ້ອງແຮງ ຕ້ອງການຄວາມຊ່ວຍເຫຼືອດ່ວນ", km:"ឈឺពោះខ្លាំង ត្រូវការជំនួយបន្ទាន់", tl:"Matindi ang sakit ng tiyan ko, kailangan ko ng agarang tulong.", ms:"Saya mengalami sakit perut yang teruk, memerlukan bantuan segera.", np:"मलाई गम्भीर पेट दुखेको छ, तुरुन्तै मद्दत चाहिन्छ।", is:"Ég er með mikinn magaverk, þarf bráða aðstoð.", ar:"أشعر بألم شديد في المعدة، أحتاج مساعدة عاجلة.", sw:"Nina maumivu makali ya tumbo, nahitaji msaada wa haraka."},
+  S03:{vi:"Tôi buồn nôn nhẹ.", en:"I feel mildly nauseous.", es:"Tengo náuseas leves.", fr:"J'ai de légères nausées.", zh:"我有点恶心。", ja:"少し吐き気がします。", ko:"약간 메스꺼워요.", th:"คลื่นไส้เล็กน้อย", lo:"ຮູ້ສຶກປວດຮາກເລັກນ້ອຍ", km:"ចង់ក្អួតបន្តិច", tl:"Bahagya akong naduduwal.", ms:"Saya rasa sedikit loya.", np:"मलाई अलिकति वाकवाकी लागिरहेको छ।", is:"Mér er svolítið óglatt.", ar:"أشعر بغثيان خفيف.", sw:"Nina kichefuchefu kidogo."},
+  S04:{vi:"Tôi nôn liên tục, cần giúp đỡ.", en:"I'm vomiting repeatedly, I need help.", es:"Estoy vomitando repetidamente, necesito ayuda.", fr:"Je vomis sans arrêt, j'ai besoin d'aide.", zh:"我一直在呕吐,需要帮助。", ja:"何度も吐いています。助けが必要です。", ko:"계속 토하고 있어요. 도움이 필요해요.", th:"อาเจียนบ่อยครั้ง ต้องการความช่วยเหลือ", lo:"ຮາກເລື້ອຍໆ ຕ້ອງການຄວາມຊ່ວຍເຫຼືອ", km:"ក្អួតញឹកញាប់ ត្រូវការជំនួយ", tl:"Paulit-ulit akong nagsusuka, kailangan ko ng tulong.", ms:"Saya muntah berulang kali, saya perlukan bantuan.", np:"म बारम्बार बान्ता गरिरहेको छु, मद्दत चाहिन्छ।", is:"Ég er að kasta upp endurtekið, ég þarf hjálp.", ar:"أتقيأ بشكل متكرر، أحتاج إلى مساعدة.", sw:"Ninatapika mara kwa mara, nahitaji msaada."},
+  S05:{vi:"Tôi hơi khó thở.", en:"I'm slightly short of breath.", es:"Me falta un poco el aire.", fr:"J'ai un peu de mal à respirer.", zh:"我有点呼吸困难。", ja:"少し息苦しいです。", ko:"숨쉬기가 조금 힘들어요.", th:"หายใจลำบากเล็กน้อย", lo:"ຫາຍໃຈຍາກເລັກນ້ອຍ", km:"ដកដង្ហើមពិបាកបន្តិច", tl:"Bahagya akong nahihirapang huminga.", ms:"Saya rasa sedikit sesak nafas.", np:"मलाई सास फेर्न अलिकति गाह्रो भइरहेको छ।", is:"Mér finnst svolítið erfitt að anda.", ar:"أشعر بصعوبة خفيفة في التنفس.", sw:"Ninapata shida kidogo kupumua."},
+  S06:{vi:"Tôi rất khó thở, cần cấp cứu ngay.", en:"I can barely breathe, need emergency help now.", es:"Apenas puedo respirar, necesito ayuda de emergencia ahora.", fr:"J'ai beaucoup de mal à respirer, j'ai besoin d'aide d'urgence maintenant.", zh:"我几乎无法呼吸,现在需要紧急帮助。", ja:"ほとんど息ができません。今すぐ緊急の助けが必要です。", ko:"숨을 거의 쉴 수 없어요. 지금 긴급 도움이 필요해요.", th:"หายใจลำบากมาก ต้องการความช่วยเหลือฉุกเฉินทันที", lo:"ຫາຍໃຈຍາກຫຼາຍ ຕ້ອງການການຊ່ວຍເຫຼືອດ່ວນທັນທີ", km:"ដកដង្ហើមពិបាកខ្លាំង ត្រូវការជំនួយបន្ទាន់ឥឡូវនេះ", tl:"Halos hindi ako makahinga, kailangan ko ng agarang tulong ngayon.", ms:"Saya hampir tidak dapat bernafas, saya perlukan bantuan kecemasan sekarang.", np:"मलाई सास फेर्न धेरै गाह्रो भइरहेको छ, अहिले नै आपतकालीन मद्दत चाहिन्छ।", is:"Ég á mjög erfitt með að anda, þarf neyðaraðstoð núna.", ar:"بالكاد أستطيع التنفس، أحتاج مساعدة طارئة الآن.", sw:"Ninashindwa kabisa kupumua, nahitaji msaada wa dharura sasa hivi."},
+  S07:{vi:"Tôi bị tức ngực nhẹ.", en:"I have mild chest tightness.", es:"Tengo opresión leve en el pecho.", fr:"J'ai une légère oppression dans la poitrine.", zh:"我胸口有点闷。", ja:"胸が少し苦しいです。", ko:"가슴이 약간 답답해요.", th:"แน่นหน้าอกเล็กน้อย", lo:"ແໜ້ນເອິກເລັກນ້ອຍ", km:"តឹងទ្រូងបន្តិច", tl:"May bahagyang paninikip sa dibdib ko.", ms:"Saya rasa sedikit sesak di dada.", np:"मेरो छातीमा हल्का जकडाहट छ।", is:"Ég finn fyrir vægum þrýstingi í brjósti.", ar:"أشعر بضيق خفيف في الصدر.", sw:"Nina msongo kidogo kifuani."},
+  S08:{vi:"Tôi đau tức ngực dữ dội.", en:"I have severe chest pain.", es:"Tengo dolor de pecho severo.", fr:"J'ai une douleur thoracique sévère.", zh:"我胸口剧烈疼痛。", ja:"胸がひどく痛いです。", ko:"가슴이 심하게 아파요.", th:"เจ็บหน้าอกอย่างรุนแรง", lo:"ເຈັບເອິກຢ່າງແຮງ", km:"ឈឺទ្រូងខ្លាំង", tl:"Matindi ang sakit sa dibdib ko.", ms:"Saya mengalami sakit dada yang teruk.", np:"मेरो छातीमा गम्भीर पीडा छ।", is:"Ég er með mikinn brjóstverk.", ar:"أشعر بألم شديد في الصدر.", sw:"Nina maumivu makali kifuani."},
+  S09:{vi:"Da tôi nổi mẩn nhẹ, có thể dị ứng.", en:"I have a mild rash, possibly allergic.", es:"Tengo una erupción leve, posiblemente alérgica.", fr:"J'ai une légère éruption cutanée, peut-être allergique.", zh:"我皮肤有点起疹子,可能是过敏。", ja:"軽い発疹があります。アレルギーかもしれません。", ko:"가벼운 발진이 있어요. 알레르기일 수 있어요.", th:"มีผื่นเล็กน้อย อาจแพ้", lo:"ມີຜື່ນເລັກນ້ອຍ ອາດແພ້", km:"មានកន្ទួលបន្តិច ប្រហែលអាឡែស៊ី", tl:"May bahagyang pantal sa balat ko, maaaring alerdyi.", ms:"Kulit saya mempunyai ruam ringan, mungkin alahan.", np:"मेरो छालामा हल्का दाग देखिएको छ, एलर्जी हुन सक्छ।", is:"Ég er með væg útbrot á húðinni, hugsanlega ofnæmi.", ar:"لدي طفح جلدي خفيف، ربما بسبب حساسية.", sw:"Nina upele mdogo kwenye ngozi, huenda ni mzio."},
+  S10:{vi:"Tôi bị dị ứng nặng, khó thở kèm nổi mẩn.", en:"I'm having a severe allergic reaction with breathing trouble.", es:"Tengo una reacción alérgica severa con dificultad para respirar.", fr:"J'ai une réaction allergique sévère avec des difficultés respiratoires.", zh:"我有严重过敏反应,并伴有呼吸困难。", ja:"重いアレルギー反応が出ていて、呼吸が苦しいです。", ko:"심한 알레르기 반응과 호흡 곤란이 있어요.", th:"แพ้อย่างรุนแรง หายใจลำบากร่วมกับผื่น", lo:"ແພ້ຢ່າງແຮງ ຫາຍໃຈຍາກຮ່ວມກັບຜື່ນ", km:"អាឡែស៊ីធ្ងន់ធ្ងរ ដកដង្ហើមពិបាកជាមួយកន្ទួល", tl:"Matindi ang aking allergic reaction, may kahirapan sa paghinga.", ms:"Saya mengalami tindak balas alahan yang teruk disertai kesukaran bernafas.", np:"मलाई सास फेर्न गाह्रो हुने गम्भीर एलर्जी प्रतिक्रिया भइरहेको छ।", is:"Ég er með alvarleg ofnæmisviðbrögð með öndunarerfiðleikum.", ar:"لدي رد فعل تحسسي شديد مصحوب بصعوبة في التنفس.", sw:"Nina mmenyuko mkali wa mzio pamoja na shida ya kupumua."},
+  S11:{vi:"Tôi có vết thương hở nhỏ.", en:"I have a small open wound.", es:"Tengo una pequeña herida abierta.", fr:"J'ai une petite plaie ouverte.", zh:"我有一个小的开放性伤口。", ja:"小さな開いた傷があります。", ko:"작은 열린 상처가 있어요.", th:"มีแผลเปิดเล็กน้อย", lo:"ມີບາດແຜເປີດເລັກນ້ອຍ", km:"មានរបួសបើកតូច", tl:"May maliit akong bukas na sugat.", ms:"Saya ada luka terbuka yang kecil.", np:"मलाई सानो खुला घाउ छ।", is:"Ég er með lítið opið sár.", ar:"لدي جرح مفتوح صغير.", sw:"Nina jeraha dogo lililo wazi."},
+  S12:{vi:"Tôi bị chảy máu nhiều từ vết thương.", en:"I'm bleeding heavily from a wound.", es:"Estoy sangrando mucho por una herida.", fr:"Je saigne abondamment d'une blessure.", zh:"我的伤口大量出血。", ja:"傷から大量に出血しています。", ko:"상처에서 피가 많이 나요.", th:"เลือดออกมากจากบาดแผล", lo:"ເລືອດອອກຫຼາຍຈາກບາດແຜ", km:"ហូរឈាមច្រើនពីរបួស", tl:"Malakas ang pagdugo ng aking sugat.", ms:"Saya mengalami pendarahan teruk daripada luka.", np:"मेरो घाउबाट धेरै रगत बगिरहेको छ।", is:"Ég er að blæða mikið úr sári.", ar:"ينزف الجرح بشدة.", sw:"Ninatoka damu nyingi kutoka kwenye jeraha."},
+  S13:{vi:"Tôi hơi chóng mặt.", en:"I feel slightly dizzy.", es:"Me siento un poco mareado.", fr:"Je me sens un peu étourdi.", zh:"我有点头晕。", ja:"少しめまいがします。", ko:"약간 어지러워요.", th:"รู้สึกวิงเวียนเล็กน้อย", lo:"ຮູ້ສຶກວິນຫົວເລັກນ້ອຍ", km:"វិលមុខបន្តិច", tl:"Bahagya akong nahihilo.", ms:"Saya rasa sedikit pening.", np:"मलाई अलिकति टाउको घुमेको जस्तो लागिरहेको छ।", is:"Mér finnst ég svolítið svimandi.", ar:"أشعر بدوار خفيف.", sw:"Ninahisi kizunguzungu kidogo."},
+  S14:{vi:"Tôi chóng mặt dữ dội, sắp ngất.", en:"I'm severely dizzy, about to faint.", es:"Estoy muy mareado, a punto de desmayarme.", fr:"Je suis très étourdi, je vais m'évanouir.", zh:"我头晕得很严重,快要晕倒了。", ja:"めまいがひどく、倒れそうです。", ko:"심하게 어지럽고 기절할 것 같아요.", th:"วิงเวียนอย่างรุนแรง ใกล้จะเป็นลม", lo:"ວິນຫົວແຮງ ໃກ້ຊິເປັນລົມ", km:"វិលមុខខ្លាំង ជិតដួល", tl:"Matindi ang pagkahilo ko, muntik na akong mahimatay.", ms:"Saya sangat pening, hampir pengsan.", np:"मलाई धेरै टाउको घुमिरहेको छ, बेहोश हुन लागेको छु।", is:"Mér er mjög svima, ég er að fara að líða yfir mig.", ar:"أشعر بدوار شديد، أوشك على الإغماء.", sw:"Ninahisi kizunguzungu sana, karibu nizirai."},
+  S15:{vi:"Tôi đau đầu nhẹ.", en:"I have a mild headache.", es:"Tengo un dolor de cabeza leve.", fr:"J'ai un léger mal de tête.", zh:"我有点头痛。", ja:"少し頭痛がします。", ko:"두통이 약간 있어요.", th:"ปวดหัวเล็กน้อย", lo:"ເຈັບຫົວເລັກນ້ອຍ", km:"ឈឺក្បាលបន្តិច", tl:"Bahagyang sumasakit ang ulo ko.", ms:"Saya mengalami sakit kepala ringan.", np:"मलाई हल्का टाउको दुखेको छ।", is:"Ég er með vægan höfuðverk.", ar:"أشعر بصداع خفيف.", sw:"Nina maumivu kidogo ya kichwa."},
+  S16:{vi:"Tôi đau đầu dữ dội, chưa từng đau như vậy.", en:"I have a severe headache, worst I've ever had.", es:"Tengo un dolor de cabeza severo, el peor que he tenido.", fr:"J'ai un mal de tête sévère, le pire que j'aie jamais eu.", zh:"我头痛得很严重,是我经历过最严重的一次。", ja:"ひどい頭痛です。今まで経験した中で一番ひどいです。", ko:"두통이 심해요. 지금까지 겪은 것 중 가장 심해요.", th:"ปวดหัวอย่างรุนแรง ไม่เคยเป็นแบบนี้มาก่อน", lo:"ເຈັບຫົວແຮງ ບໍ່ເຄີຍເປັນແບບນີ້ມາກ່ອນ", km:"ឈឺក្បាលខ្លាំង មិនធ្លាប់ឈឺបែបនេះពីមុនមក", tl:"Matindi ang sakit ng ulo ko, ito ang pinakamasakit na naranasan ko.", ms:"Saya mengalami sakit kepala yang teruk, paling teruk pernah saya alami.", np:"मलाई गम्भीर टाउको दुखेको छ, यो मैले भोगेको सबैभन्दा नराम्रो हो।", is:"Ég er með mikinn höfuðverk, þann versta sem ég hef fengið.", ar:"أشعر بصداع شديد، وهو الأسوأ الذي أصابني على الإطلاق.", sw:"Nina maumivu makali ya kichwa, ni maumivu makali zaidi niliyowahi kupata."},
+  S17:{vi:"Tôi nghi ngờ bị nứt xương nhẹ ở tay.", en:"I suspect a minor crack in my arm bone.", es:"Sospecho que tengo una fisura leve en el hueso del brazo.", fr:"Je soupçonne une légère fissure osseuse au bras.", zh:"我怀疑手臂骨头轻微裂伤。", ja:"腕の骨に軽いひびが入っている疑いがあります。", ko:"팔 뼈에 가벼운 실금이 의심돼요.", th:"สงสัยว่ากระดูกแขนร้าวเล็กน้อย", lo:"ສົງໄສວ່າກະດູກແຂນຮ້າວເລັກນ້ອຍ.", km:"ខ្ញុំសង្ស័យថាមានស្នាមប្រេះតូចនៅឆ្អឹងដៃ។", tl:"Pinaghihinalaan kong bahagyang nabasag ang buto ng braso ko.", ms:"Saya syak terdapat retak kecil pada tulang lengan.", np:"मलाई हातको हड्डीमा हल्का चिरा परेको शंका छ।", is:"Ég held að ég sé með lítinn brest í handleggsbeini.", ar:"أشك في وجود شرخ بسيط في عظم الذراع.", sw:"Nashuku kuna ufa mdogo kwenye mfupa wa mkono."},
+  S18:{vi:"Tôi bị gãy xương tay rõ ràng, cần cấp cứu ngay.", en:"I have a clear broken bone in my arm, need emergency help now.", es:"Tengo una fractura clara en el brazo, necesito ayuda urgente.", fr:"J'ai une fracture évidente au bras, besoin d'aide urgente.", zh:"我的手臂明显骨折,需要紧急帮助。", ja:"腕が明らかに骨折しています。緊急の助けが必要です。", ko:"팔이 명백히 골절됐어요. 긴급 도움이 필요해요.", th:"กระดูกแขนหักชัดเจน ต้องการความช่วยเหลือฉุกเฉิน", lo:"ກະດູກແຂນຫັກຢ່າງຈະແຈ້ງ ຕ້ອງການຄວາມຊ່ວຍເຫຼືອດ່ວນ.", km:"ដៃរបស់ខ្ញុំបាក់ឆ្អឹងច្បាស់ ត្រូវការជំនួយបន្ទាន់។", tl:"May malinaw na baling buto ang braso ko, kailangan ko ng agarang tulong.", ms:"Lengan saya jelas patah, memerlukan bantuan segera.", np:"मेरो हात स्पष्ट रूपमा भाँचिएको छ, तुरुन्तै मद्दत चाहिन्छ।", is:"Ég er greinilega beinbrotinn á handlegg, þarf bráða aðstoð.", ar:"لدي كسر واضح في الذراع، أحتاج مساعدة عاجلة.", sw:"Mkono wangu umevunjika wazi, nahitaji msaada wa haraka."},
+  S19:{vi:"Tôi bị đau nhức, mỏi tay nhẹ.", en:"I have mild arm soreness and aching.", es:"Tengo dolor y molestias leves en el brazo.", fr:"J'ai de légères douleurs et courbatures au bras.", zh:"我的手臂有轻微酸痛。", ja:"腕に軽い痛みとだるさがあります。", ko:"팔에 가벼운 통증과 결림이 있어요.", th:"ปวดเมื่อยแขนเล็กน้อย", lo:"ເຈັບເມື່ອຍແຂນເລັກນ້ອຍ.", km:"ខ្ញុំឈឺនិងហត់ដៃបន្តិច។", tl:"May bahagyang sakit at pananakit ang braso ko.", ms:"Saya mengalami kesakitan dan keletihan ringan pada lengan.", np:"मलाई हातमा हल्का दुखाइ र थकान छ।", is:"Ég er með væga verki og eymsli í handlegg.", ar:"أشعر بألم وتعب خفيف في الذراع.", sw:"Nina maumivu na uchovu kidogo kwenye mkono."},
+  S20:{vi:"Tôi bị đau nhức tay dữ dội, không cử động được.", en:"I have severe arm pain and can't move it.", es:"Tengo un dolor severo en el brazo y no puedo moverlo.", fr:"J'ai une douleur sévère au bras et je ne peux pas le bouger.", zh:"我的手臂剧烈疼痛,无法移动。", ja:"腕にひどい痛みがあり、動かせません。", ko:"팔에 심한 통증이 있고 움직일 수 없어요.", th:"ปวดแขนอย่างรุนแรง ขยับไม่ได้", lo:"ເຈັບແຂນຢ່າງຮຸນແຮງ ຂະຫຍັບບໍ່ໄດ້.", km:"ខ្ញុំឈឺដៃខ្លាំង ថ្កល់មិនកើត។", tl:"Matinding sakit ang braso ko at hindi ko magalaw.", ms:"Saya mengalami kesakitan teruk pada lengan dan tidak dapat menggerakkannya.", np:"मलाई हातमा गम्भीर दुखाइ छ र चलाउन सक्दिन।", is:"Ég er með mikinn verk í handlegg og get ekki hreyft hann.", ar:"أشعر بألم شديد في الذراع ولا أستطيع تحريكها.", sw:"Nina maumivu makali kwenye mkono na siwezi kuusogeza."},
+  S21:{vi:"Tôi bị bong gân nhẹ ở tay.", en:"I have a mild sprain in my arm.", es:"Tengo un esguince leve en el brazo.", fr:"J'ai une légère entorse au bras.", zh:"我的手臂轻微扭伤。", ja:"腕に軽い捻挫があります。", ko:"팔에 가벼운 염좌가 있어요.", th:"ข้อเคล็ดเล็กน้อยที่แขน", lo:"ຂໍ້ແພງເລັກນ້ອຍທີ່ແຂນ.", km:"ខ្ញុំមានការខ្សាច់សន្លាក់បន្តិចនៅដៃ។", tl:"May bahagyang pilay ang braso ko.", ms:"Saya mengalami terseliuh ringan pada lengan.", np:"मलाई हातमा हल्का मोच लागेको छ।", is:"Ég er með væga tognun í handlegg.", ar:"لدي التواء خفيف في الذراع.", sw:"Nina kuteguka kidogo kwenye mkono."},
+  S22:{vi:"Tôi bị bong gân nặng, sưng to và rất đau.", en:"I have a severe sprain, badly swollen and very painful.", es:"Tengo un esguince severo, muy hinchado y muy doloroso.", fr:"J'ai une entorse sévère, très enflée et très douloureuse.", zh:"我严重扭伤,肿得很厉害,非常疼痛。", ja:"ひどい捻挫で、大きく腫れて激しく痛みます。", ko:"심한 염좌로 많이 부었고 매우 아파요.", th:"ข้อเคล็ดรุนแรง บวมมากและปวดมาก", lo:"ຂໍ້ແພງຮຸນແຮງ ບວມຫຼາຍ ແລະ ເຈັບຫຼາຍ.", km:"ខ្ញុំមានការខ្សាច់សន្លាក់ធ្ងន់ធ្ងរ ហើមខ្លាំង និងឈឺខ្លាំង។", tl:"May matinding pilay ako, lubhang namamaga at masakit na masakit.", ms:"Saya mengalami terseliuh teruk, bengkak besar dan sangat sakit.", np:"मलाई गम्भीर मोच लागेको छ, धेरै सुन्निएको र निकै दुखेको छ।", is:"Ég er með alvarlega tognun, mikið bólgin og mjög sársaukafull.", ar:"لدي التواء شديد، تورم كبير وألم شديد جداً.", sw:"Nina kuteguka vibaya, kumevimba sana na kuna maumivu makali."},
+  S23:{vi:"Tôi bị chuột rút nhẹ ở tay.", en:"I have a mild cramp in my arm.", es:"Tengo un calambre leve en el brazo.", fr:"J'ai une légère crampe au bras.", zh:"我的手臂轻微抽筋。", ja:"腕に軽いけいれんがあります。", ko:"팔에 가벼운 경련이 있어요.", th:"เป็นตะคริวเล็กน้อยที่แขน", lo:"ເປັນຕະຄິວເລັກນ້ອຍທີ່ແຂນ.", km:"ខ្ញុំមានការឆន់សាច់ដុំបន្តិចនៅដៃ។", tl:"May bahagyang pulikat ang braso ko.", ms:"Saya mengalami kekejangan ringan pada lengan.", np:"मलाई हातमा हल्का तानिने समस्या छ।", is:"Ég er með vægan krampa í handlegg.", ar:"لدي تشنج خفيف في الذراع.", sw:"Nina mkakamao mdogo kwenye mkono."},
+  S24:{vi:"Tôi bị chuột rút dữ dội, không duỗi thẳng tay được.", en:"I have a severe cramp, can't straighten my arm.", es:"Tengo un calambre severo, no puedo estirar el brazo.", fr:"J'ai une crampe sévère, je ne peux pas redresser mon bras.", zh:"我严重抽筋,手臂无法伸直。", ja:"ひどいけいれんで、腕を伸ばせません。", ko:"심한 경련으로 팔을 펼 수 없어요.", th:"เป็นตะคริวรุนแรง เหยียดแขนไม่ได้", lo:"ເປັນຕະຄິວຮຸນແຮງ ຢືດແຂນບໍ່ໄດ້.", km:"ខ្ញុំមានការឆន់សាច់ដុំធ្ងន់ធ្ងរ លាតដៃមិនកើត។", tl:"May matinding pulikat ako, hindi ko maituwid ang braso.", ms:"Saya mengalami kekejangan teruk, tidak dapat meluruskan lengan.", np:"मलाई गम्भीर तानिने समस्या छ, हात सोझो पार्न सक्दिन।", is:"Ég er með alvarlegan krampa, get ekki rétt úr handleggnum.", ar:"لدي تشنج شديد، لا أستطيع فرد الذراع.", sw:"Nina mkakamao mkali, siwezi kunyoosha mkono."},
+  S25:{vi:"Tôi nghi ngờ bị nứt xương nhẹ ở chân.", en:"I suspect a minor crack in my leg bone.", es:"Sospecho que tengo una fisura leve en el hueso de la pierna.", fr:"Je soupçonne une légère fissure osseuse à la jambe.", zh:"我怀疑腿部骨头轻微裂伤。", ja:"脚の骨に軽いひびが入っている疑いがあります。", ko:"다리 뼈에 가벼운 실금이 의심돼요.", th:"สงสัยว่ากระดูกขาร้าวเล็กน้อย", lo:"ສົງໄສວ່າກະດູກຂາຮ້າວເລັກນ້ອຍ.", km:"ខ្ញុំសង្ស័យថាមានស្នាមប្រេះតូចនៅឆ្អឹងជើង។", tl:"Pinaghihinalaan kong bahagyang nabasag ang buto ng binti ko.", ms:"Saya syak terdapat retak kecil pada tulang kaki.", np:"मलाई खुट्टाको हड्डीमा हल्का चिरा परेको शंका छ।", is:"Ég held að ég sé með lítinn brest í fótleggsbeini.", ar:"أشك في وجود شرخ بسيط في عظم الساق.", sw:"Nashuku kuna ufa mdogo kwenye mfupa wa mguu."},
+  S26:{vi:"Tôi bị gãy xương chân rõ ràng, cần cấp cứu ngay.", en:"I have a clear broken bone in my leg, need emergency help now.", es:"Tengo una fractura clara en la pierna, necesito ayuda urgente.", fr:"J'ai une fracture évidente à la jambe, besoin d'aide urgente.", zh:"我的腿明显骨折,需要紧急帮助。", ja:"脚が明らかに骨折しています。緊急の助けが必要です。", ko:"다리가 명백히 골절됐어요. 긴급 도움이 필요해요.", th:"กระดูกขาหักชัดเจน ต้องการความช่วยเหลือฉุกเฉิน", lo:"ກະດູກຂາຫັກຢ່າງຈະແຈ້ງ ຕ້ອງການຄວາມຊ່ວຍເຫຼືອດ່ວນ.", km:"ជើងរបស់ខ្ញុំបាក់ឆ្អឹងច្បាស់ ត្រូវការជំនួយបន្ទាន់។", tl:"May malinaw na baling buto ang binti ko, kailangan ko ng agarang tulong.", ms:"Kaki saya jelas patah, memerlukan bantuan segera.", np:"मेरो खुट्टा स्पष्ट रूपमा भाँचिएको छ, तुरुन्तै मद्दत चाहिन्छ।", is:"Ég er greinilega beinbrotinn á fótlegg, þarf bráða aðstoð.", ar:"لدي كسر واضح في الساق، أحتاج مساعدة عاجلة.", sw:"Mguu wangu umevunjika wazi, nahitaji msaada wa haraka."},
+  S27:{vi:"Tôi bị đau nhức, mỏi chân nhẹ.", en:"I have mild leg soreness and aching.", es:"Tengo dolor y molestias leves en la pierna.", fr:"J'ai de légères douleurs et courbatures à la jambe.", zh:"我的腿有轻微酸痛。", ja:"脚に軽い痛みとだるさがあります。", ko:"다리에 가벼운 통증과 결림이 있어요.", th:"ปวดเมื่อยขาเล็กน้อย", lo:"ເຈັບເມື່ອຍຂາເລັກນ້ອຍ.", km:"ខ្ញុំឈឺនិងហត់ជើងបន្តិច។", tl:"May bahagyang sakit at pananakit ang binti ko.", ms:"Saya mengalami kesakitan dan keletihan ringan pada kaki.", np:"मलाई खुट्टामा हल्का दुखाइ र थकान छ।", is:"Ég er með væga verki og eymsli í fótlegg.", ar:"أشعر بألم وتعب خفيف في الساق.", sw:"Nina maumivu na uchovu kidogo kwenye mguu."},
+  S28:{vi:"Tôi bị đau nhức chân dữ dội, không cử động được.", en:"I have severe leg pain and can't move it.", es:"Tengo un dolor severo en la pierna y no puedo moverla.", fr:"J'ai une douleur sévère à la jambe et je ne peux pas la bouger.", zh:"我的腿剧烈疼痛,无法移动。", ja:"脚にひどい痛みがあり、動かせません。", ko:"다리에 심한 통증이 있고 움직일 수 없어요.", th:"ปวดขาอย่างรุนแรง ขยับไม่ได้", lo:"ເຈັບຂາຢ່າງຮຸນແຮງ ຂະຫຍັບບໍ່ໄດ້.", km:"ខ្ញុំឈឺជើងខ្លាំង ថ្កល់មិនកើត។", tl:"Matinding sakit ang binti ko at hindi ko magalaw.", ms:"Saya mengalami kesakitan teruk pada kaki dan tidak dapat menggerakkannya.", np:"मलाई खुट्टामा गम्भीर दुखाइ छ र चलाउन सक्दिन।", is:"Ég er með mikinn verk í fótlegg og get ekki hreyft hann.", ar:"أشعر بألم شديد في الساق ولا أستطيع تحريكها.", sw:"Nina maumivu makali kwenye mguu na siwezi kuusogeza."},
+  S29:{vi:"Tôi bị bong gân nhẹ ở chân.", en:"I have a mild sprain in my leg.", es:"Tengo un esguince leve en la pierna.", fr:"J'ai une légère entorse à la jambe.", zh:"我的腿轻微扭伤。", ja:"脚に軽い捻挫があります。", ko:"다리에 가벼운 염좌가 있어요.", th:"ข้อเคล็ดเล็กน้อยที่ขา", lo:"ຂໍ້ແພງເລັກນ້ອຍທີ່ຂາ.", km:"ខ្ញុំមានការខ្សាច់សន្លាក់បន្តិចនៅជើង។", tl:"May bahagyang pilay ang binti ko.", ms:"Saya mengalami terseliuh ringan pada kaki.", np:"मलाई खुट्टामा हल्का मोच लागेको छ।", is:"Ég er með væga tognun í fótlegg.", ar:"لدي التواء خفيف في الساق.", sw:"Nina kuteguka kidogo kwenye mguu."},
+  S30:{vi:"Tôi bị chuột rút nhẹ ở chân.", en:"I have a mild cramp in my leg.", es:"Tengo un calambre leve en la pierna.", fr:"J'ai une légère crampe à la jambe.", zh:"我的腿轻微抽筋。", ja:"脚に軽いけいれんがあります。", ko:"다리에 가벼운 경련이 있어요.", th:"เป็นตะคริวเล็กน้อยที่ขา", lo:"ເປັນຕະຄິວເລັກນ້ອຍທີ່ຂາ.", km:"ខ្ញុំមានការឆន់សាច់ដុំបន្តិចនៅជើង។", tl:"May bahagyang pulikat ang binti ko.", ms:"Saya mengalami kekejangan ringan pada kaki.", np:"मलाई खुट्टामा हल्का तानिने समस्या छ।", is:"Ég er með vægan krampa í fótlegg.", ar:"لدي تشنج خفيف في الساق.", sw:"Nina mkakamao mdogo kwenye mguu."},
+  S31:{vi:"Tôi bị chuột rút dữ dội, không duỗi thẳng chân được.", en:"I have a severe cramp, can't straighten my leg.", es:"Tengo un calambre severo, no puedo estirar la pierna.", fr:"J'ai une crampe sévère, je ne peux pas redresser ma jambe.", zh:"我严重抽筋,腿无法伸直。", ja:"ひどいけいれんで、脚を伸ばせません。", ko:"심한 경련으로 다리를 펼 수 없어요.", th:"เป็นตะคริวรุนแรง เหยียดขาไม่ได้", lo:"ເປັນຕະຄິວຮຸນແຮງ ຢືດຂາບໍ່ໄດ້.", km:"ខ្ញុំមានការឆន់សាច់ដុំធ្ងន់ធ្ងរ លាតជើងមិនកើត។", tl:"May matinding pulikat ako, hindi ko maituwid ang binti.", ms:"Saya mengalami kekejangan teruk, tidak dapat meluruskan kaki.", np:"मलाई गम्भीर तानिने समस्या छ, खुट्टा सोझो पार्न सक्दिन।", is:"Ég er með alvarlegan krampa, get ekki rétt úr fætinum.", ar:"لدي تشنج شديد، لا أستطيع فرد الساق.", sw:"Nina mkakamao mkali, siwezi kunyoosha mguu."}
+};
+let treeState = { part:null, symptom:null, severity:null };
+function toBinary(str){ return str.split('').map(c=>c.charCodeAt(0).toString(2).padStart(8,'0')).join(' '); }
+function renderStep1(){
+  const wrap = document.getElementById('step1'); wrap.innerHTML = '';
+  Object.keys(tree).forEach(part=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (treeState.part===part ? ' picked':'');
+    b.textContent = part;
+    b.onclick = ()=>{ treeState.part=part; treeState.symptom=null; treeState.severity=null; renderAll(); };
+    wrap.appendChild(b);
+  });
+}
+function renderStep2(){
+  const card = document.getElementById('step2card'); const wrap = document.getElementById('step2');
+  if(!treeState.part){ card.style.display='none'; return; }
+  card.style.display='block'; wrap.innerHTML='';
+  Object.keys(tree[treeState.part]).forEach(sym=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (treeState.symptom===sym ? ' picked':'');
+    b.textContent = sym;
+    b.onclick = ()=>{ treeState.symptom=sym; treeState.severity=null; renderAll(); };
+    wrap.appendChild(b);
+  });
+}
+function renderStep3(){
+  const card = document.getElementById('step3card'); const wrap = document.getElementById('step3');
+  if(!treeState.symptom){ card.style.display='none'; return; }
+  card.style.display='block'; wrap.innerHTML='';
+  Object.keys(tree[treeState.part][treeState.symptom]).forEach(sev=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (treeState.severity===sev ? ' picked':'');
+    b.textContent = sev;
+    b.onclick = ()=>{ treeState.severity=sev; renderAll(); queueSync(); };
+    wrap.appendChild(b);
+  });
+}
+// Bảng ánh xạ: tên ngôn ngữ người dùng gõ (hoặc mã) -> mã ngôn ngữ dùng tra bảng "phrases"
+/** Ánh xạ quốc gia -> mã ngôn ngữ bản địa — dùng chung cho MOD.01 và MOD.06, đồng bộ với danh sách quốc gia của MOD.03 */
+const countryToLang = {
+  vn:"vi", la:"lo", th:"th", kh:"km", ph:"tl", sg:"en", my:"ms", cn:"zh", jp:"ja", kr:"ko", np:"np",
+  au:"en", uk:"en", es:"es", is:"is", us:"en", mx:"es", co:"es", pe:"es", ma:"ar", ke:"sw"
+};
+/** Danh sách quốc gia dùng chung (mã + tên hiển thị) cho MOD.01, MOD.03, MOD.06 — cùng nguồn dữ liệu với datalist#countryList */
+const COUNTRY_LIST = [
+  {code:"vn",name:"Việt Nam"}, {code:"la",name:"Lào"}, {code:"th",name:"Thái Lan"}, {code:"kh",name:"Campuchia"},
+  {code:"ph",name:"Philippines"}, {code:"sg",name:"Singapore"}, {code:"my",name:"Malaysia"}, {code:"cn",name:"Trung Quốc"},
+  {code:"jp",name:"Nhật Bản"}, {code:"kr",name:"Hàn Quốc"}, {code:"np",name:"Nepal"}, {code:"au",name:"Australia"},
+  {code:"uk",name:"Vương quốc Anh"}, {code:"es",name:"Tây Ban Nha"}, {code:"is",name:"Iceland"}, {code:"us",name:"Hoa Kỳ"},
+  {code:"mx",name:"Mexico"}, {code:"co",name:"Colombia"}, {code:"pe",name:"Peru"}, {code:"ma",name:"Morocco"}, {code:"ke",name:"Kenya"}
+];
+/** Nhận diện mã quốc gia từ chuỗi người dùng gõ tay — khớp mã, khớp tên chính xác (bỏ dấu), rồi khớp gần đúng */
+function findCountryCode(raw){
+  const norm = s => (s||"").trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const target = norm(raw);
+  if(!target) return null;
+  let hit = COUNTRY_LIST.find(c => c.code === target);
+  if(hit) return hit.code;
+  hit = COUNTRY_LIST.find(c => norm(c.name) === target);
+  if(hit) return hit.code;
+  hit = COUNTRY_LIST.find(c => norm(c.name).includes(target) || target.includes(norm(c.name)));
+  return hit ? hit.code : null;
+}
+function renderPhrase(){
+  const card = document.getElementById('resultCard');
+  if(!treeState.severity){ card.style.display='none'; return; }
+  const id = tree[treeState.part][treeState.symptom][treeState.severity];
+  const countryCode = findCountryCode(document.getElementById('targetCountry').value);
+  const lang = countryToLang[countryCode];
+  card.style.display='block';
+  if(!countryCode){
+    document.getElementById('phraseOut').textContent = '⚠ Không nhận diện được quốc gia này. Hãy gõ đúng tên hoặc chọn từ danh sách gợi ý.';
+    document.getElementById('phraseMeta').textContent = '';
+    document.getElementById('phraseBin').textContent = '';
+    return;
+  }
+  if(!lang || !phrases[id][lang]){
+    document.getElementById('phraseOut').textContent = '⚠ Chưa có gói dữ liệu offline cho quốc gia này.';
+    document.getElementById('phraseMeta').textContent = '';
+    document.getElementById('phraseBin').textContent = '';
+    return;
+  }
+  document.getElementById('phraseOut').textContent = phrases[id][lang];
+  document.getElementById('phraseMeta').textContent = `Mã triệu chứng: ${id} · Đường đi: ${treeState.part} → ${treeState.symptom} → ${treeState.severity}`;
+  document.getElementById('phraseBin').textContent = 'Mã hóa nhị phân: ' + toBinary(id);
+}
+function renderAll(){ renderStep1(); renderStep2(); renderStep3(); renderPhrase(); }
+function resetTree(){ treeState = {part:null,symptom:null,severity:null}; renderAll(); }
+renderAll();
+
+/* ============ MOD 2: RESCUE MAP (Haversine) ============ */
+const facilities = [
+  // Đông Nam Á
+  {name:"BV Chợ Rẫy", type:"Bệnh viện", country:"Việt Nam", lat:10.7539, lng:106.6579},
+  {name:"BV Mahosot", type:"Bệnh viện", country:"Lào", lat:17.9667, lng:102.6000},
+  {name:"Bangkok Hospital", type:"Bệnh viện", country:"Thái Lan", lat:13.7563, lng:100.5018},
+  {name:"BV Calmette", type:"Bệnh viện", country:"Campuchia", lat:11.5564, lng:104.9282},
+  {name:"Philippine General Hospital", type:"Bệnh viện", country:"Philippines", lat:14.5789, lng:120.9862},
+  {name:"Singapore General Hospital", type:"Bệnh viện", country:"Singapore", lat:1.2789, lng:103.8355},
+  {name:"Kuala Lumpur Hospital", type:"Bệnh viện", country:"Malaysia", lat:3.1725, lng:101.6952},
+  // Đông Á & Nam Á
+  {name:"Peking Union Medical College Hospital", type:"Bệnh viện", country:"Trung Quốc", lat:39.9139, lng:116.4136},
+  {name:"St. Luke's International Hospital", type:"Bệnh viện", country:"Nhật Bản", lat:35.6685, lng:139.7797},
+  {name:"Seoul National University Hospital", type:"Bệnh viện", country:"Hàn Quốc", lat:37.5796, lng:127.0034},
+  {name:"Khunde Hospital", type:"Bệnh viện", country:"Nepal (Himalaya)", lat:27.8270, lng:86.7180},
+  {name:"Lukla Health Post", type:"Trạm y tế", country:"Nepal (Himalaya)", lat:27.6869, lng:86.7314},
+  // Châu Đại Dương
+  {name:"Royal Melbourne Hospital", type:"Bệnh viện", country:"Australia", lat:-37.7986, lng:144.9559},
+  // Châu Âu
+  {name:"NHS Raigmore Hospital", type:"Bệnh viện", country:"Scotland (Highlands)", lat:57.4715, lng:-4.2296},
+  {name:"St Thomas' Hospital", type:"Bệnh viện", country:"Anh (London)", lat:51.4980, lng:-0.1195},
+  {name:"Hospital Clínico San Carlos", type:"Bệnh viện", country:"Tây Ban Nha", lat:40.4459, lng:-3.7136},
+  {name:"Landspítali Reykjavík", type:"Bệnh viện", country:"Iceland", lat:64.1400, lng:-21.9330},
+  // Châu Mỹ
+  {name:"Denver Health Medical Center", type:"Bệnh viện", country:"Hoa Kỳ", lat:39.7295, lng:-104.9686},
+  {name:"Hospital General de México", type:"Bệnh viện", country:"Mexico", lat:19.4237, lng:-99.1590},
+  {name:"Hospital San Ignacio", type:"Bệnh viện", country:"Colombia", lat:4.6294, lng:-74.0656},
+  {name:"Hospital Regional Cusco", type:"Bệnh viện", country:"Peru (Andes)", lat:-13.5226, lng:-71.9673},
+  {name:"Posta de Salud Ollantaytambo", type:"Trạm y tế", country:"Peru (Andes)", lat:-13.2588, lng:-72.2632},
+  // Châu Phi
+  {name:"Hôpital Provincial Ouarzazate", type:"Bệnh viện", country:"Morocco (Sahara)", lat:30.9189, lng:-6.9107},
+  {name:"Nairobi Hospital", type:"Bệnh viện", country:"Kenya", lat:-1.2921, lng:36.8219}
+];
+/** Dữ liệu mô phỏng vị trí: mỗi quốc gia có 1 điểm "hẻo lánh, ít/không có sóng" và 1 điểm "đô thị lớn, phủ sóng đầy đủ" */
+/** Dữ liệu mô phỏng vị trí: mỗi quốc gia có 3-5 địa điểm "hẻo lánh" và 3-5 địa điểm "đô thị lớn" để đa dạng lựa chọn */
+const countryLocations = {
+  vn:{ remote:[
+      {name:"Đèo Mã Pí Lèng, Hà Giang", lat:23.2333, lng:105.3667},
+      {name:"Cột cờ Lũng Cú, Hà Giang", lat:23.3833, lng:105.3167},
+      {name:"Bản Giốc, Cao Bằng", lat:22.8500, lng:106.7167},
+      {name:"Y Tý, Lào Cai", lat:22.6167, lng:103.6167}
+    ], urban:[
+      {name:"Trung tâm TP.HCM", lat:10.7769, lng:106.7009},
+      {name:"Trung tâm Hà Nội", lat:21.0285, lng:105.8542},
+      {name:"Trung tâm Đà Nẵng", lat:16.0544, lng:108.2022},
+      {name:"Trung tâm Cần Thơ", lat:10.0452, lng:105.7469}
+    ] },
+  la:{ remote:[
+      {name:"Cao nguyên Bolaven", lat:15.1200, lng:106.3500},
+      {name:"Phongsaly, Bắc Lào", lat:21.6833, lng:102.1000},
+      {name:"Vieng Xai", lat:20.6833, lng:104.1333},
+      {name:"Nong Khiaw", lat:20.2667, lng:102.1500}
+    ], urban:[
+      {name:"Trung tâm Vientiane", lat:17.9757, lng:102.6331},
+      {name:"Luang Prabang", lat:19.8845, lng:102.1348},
+      {name:"Pakse", lat:15.1202, lng:105.7989},
+      {name:"Savannakhet", lat:16.5560, lng:104.7500}
+    ] },
+  th:{ remote:[
+      {name:"Doi Inthanon, Chiang Mai", lat:18.5883, lng:98.4867},
+      {name:"Mae Hong Son", lat:19.3020, lng:97.9654},
+      {name:"Đảo Koh Tarutao", lat:6.6333, lng:99.6500},
+      {name:"Umphang, Tak", lat:15.9667, lng:98.8500}
+    ], urban:[
+      {name:"Trung tâm Bangkok", lat:13.7563, lng:100.5018},
+      {name:"Chiang Mai (thành phố)", lat:18.7883, lng:98.9853},
+      {name:"Phuket Town", lat:7.8804, lng:98.3923},
+      {name:"Pattaya", lat:12.9236, lng:100.8825}
+    ] },
+  kh:{ remote:[
+      {name:"Cao nguyên Mondulkiri", lat:12.4500, lng:107.2000},
+      {name:"Ratanakiri", lat:13.7300, lng:106.9800},
+      {name:"Đảo Koh Rong", lat:10.7167, lng:103.2333},
+      {name:"Preah Vihear", lat:14.3900, lng:104.6800}
+    ], urban:[
+      {name:"Trung tâm Phnom Penh", lat:11.5564, lng:104.9282},
+      {name:"Siem Reap", lat:13.3633, lng:103.8564},
+      {name:"Battambang", lat:13.0957, lng:103.2022},
+      {name:"Sihanoukville", lat:10.6104, lng:103.5300}
+    ] },
+  ph:{ remote:[
+      {name:"Đảo Batanes (cực Bắc)", lat:20.4500, lng:121.9700},
+      {name:"Đảo Siargao", lat:9.8482, lng:126.0458},
+      {name:"El Nido, Palawan", lat:11.1949, lng:119.4079},
+      {name:"Núi Apo, Mindanao", lat:6.9875, lng:125.2722}
+    ], urban:[
+      {name:"Trung tâm Manila", lat:14.5995, lng:120.9842},
+      {name:"Cebu City", lat:10.3157, lng:123.8854},
+      {name:"Davao City", lat:7.1907, lng:125.4553},
+      {name:"Quezon City", lat:14.6760, lng:121.0437}
+    ] },
+  sg:{ remote:[
+      {name:"Đảo Pulau Ubin", lat:1.4043, lng:103.9615},
+      {name:"Đảo St. John's", lat:1.2233, lng:103.8467},
+      {name:"Rừng Bukit Timah", lat:1.3547, lng:103.7764},
+      {name:"Coney Island Park", lat:1.4130, lng:103.9330}
+    ], urban:[
+      {name:"Marina Bay", lat:1.2839, lng:103.8607},
+      {name:"Orchard Road", lat:1.3048, lng:103.8318},
+      {name:"Jurong East", lat:1.3329, lng:103.7436},
+      {name:"Changi", lat:1.3644, lng:103.9915}
+    ] },
+  my:{ remote:[
+      {name:"Núi Kinabalu, Sabah", lat:6.0754, lng:116.5580},
+      {name:"Cao nguyên Cameron", lat:4.4700, lng:101.3800},
+      {name:"Đảo Redang, Terengganu", lat:5.7833, lng:103.0167},
+      {name:"Mulu, Sarawak", lat:4.0483, lng:114.8144}
+    ], urban:[
+      {name:"Trung tâm Kuala Lumpur", lat:3.1390, lng:101.6869},
+      {name:"George Town, Penang", lat:5.4141, lng:100.3288},
+      {name:"Johor Bahru", lat:1.4927, lng:103.7414},
+      {name:"Kota Kinabalu", lat:5.9804, lng:116.0735}
+    ] },
+  cn:{ remote:[
+      {name:"Cao nguyên Tây Tạng, Ngari", lat:32.5000, lng:80.1000},
+      {name:"Sa mạc Taklamakan, Tân Cương", lat:39.0000, lng:83.0000},
+      {name:"Jiuzhaigou (Cửu Trại Câu)", lat:33.2667, lng:103.9167},
+      {name:"Shangri-La, Vân Nam", lat:27.8300, lng:99.7000}
+    ], urban:[
+      {name:"Trung tâm Bắc Kinh", lat:39.9042, lng:116.4074},
+      {name:"Thượng Hải", lat:31.2304, lng:121.4737},
+      {name:"Quảng Châu", lat:23.1291, lng:113.2644},
+      {name:"Thành Đô", lat:30.5728, lng:104.0668}
+    ] },
+  jp:{ remote:[
+      {name:"Đảo Yakushima", lat:30.3585, lng:130.5031},
+      {name:"Khu vực núi Phú Sĩ", lat:35.3606, lng:138.7274},
+      {name:"Đảo Rebun, Hokkaido", lat:45.4167, lng:141.0333},
+      {name:"Kamikochi, dãy Alps Nhật Bản", lat:36.2544, lng:137.6425}
+    ], urban:[
+      {name:"Trung tâm Tokyo", lat:35.6762, lng:139.6503},
+      {name:"Osaka", lat:34.6937, lng:135.5023},
+      {name:"Kyoto", lat:35.0116, lng:135.7681},
+      {name:"Sapporo", lat:43.0618, lng:141.3545}
+    ] },
+  kr:{ remote:[
+      {name:"Đảo Ulleungdo", lat:37.4844, lng:130.9057},
+      {name:"Núi Seorak", lat:38.1197, lng:128.4656},
+      {name:"Vùng núi đảo Jeju (Halla)", lat:33.3617, lng:126.5292},
+      {name:"Yanggu, gần khu phi quân sự", lat:38.1078, lng:128.0958}
+    ], urban:[
+      {name:"Trung tâm Seoul", lat:37.5665, lng:126.9780},
+      {name:"Busan", lat:35.1796, lng:129.0756},
+      {name:"Incheon", lat:37.4563, lng:126.7052},
+      {name:"Daegu", lat:35.8714, lng:128.6014}
+    ] },
+  np:{ remote:[
+      {name:"Everest Base Camp", lat:28.0026, lng:86.8528},
+      {name:"Annapurna Base Camp", lat:28.5300, lng:83.8800},
+      {name:"Upper Mustang", lat:29.1833, lng:83.9667},
+      {name:"Langtang Valley", lat:28.2139, lng:85.5350}
+    ], urban:[
+      {name:"Trung tâm Kathmandu", lat:27.7172, lng:85.3240},
+      {name:"Pokhara", lat:28.2096, lng:83.9856},
+      {name:"Lalitpur (Patan)", lat:27.6667, lng:85.3167},
+      {name:"Biratnagar", lat:26.4525, lng:87.2718}
+    ] },
+  au:{ remote:[
+      {name:"Sa mạc Outback, Alice Springs", lat:-23.6980, lng:133.8807},
+      {name:"Uluru", lat:-25.3444, lng:131.0369},
+      {name:"Kakadu National Park", lat:-12.6500, lng:132.8300},
+      {name:"Cradle Mountain, Tasmania", lat:-41.6800, lng:145.9500}
+    ], urban:[
+      {name:"Trung tâm Sydney", lat:-33.8688, lng:151.2093},
+      {name:"Melbourne", lat:-37.8136, lng:144.9631},
+      {name:"Brisbane", lat:-27.4698, lng:153.0251},
+      {name:"Perth", lat:-31.9505, lng:115.8605}
+    ] },
+  uk:{ remote:[
+      {name:"Cao nguyên Scotland (Highlands)", lat:57.2000, lng:-4.6000},
+      {name:"Đảo Skye", lat:57.2736, lng:-6.2155},
+      {name:"Vườn quốc gia Lake District", lat:54.4609, lng:-3.0886},
+      {name:"Quần đảo Shetland", lat:60.3500, lng:-1.2833}
+    ], urban:[
+      {name:"Trung tâm London", lat:51.5074, lng:-0.1278},
+      {name:"Manchester", lat:53.4808, lng:-2.2426},
+      {name:"Edinburgh", lat:55.9533, lng:-3.1883},
+      {name:"Birmingham", lat:52.4862, lng:-1.8904}
+    ] },
+  es:{ remote:[
+      {name:"Dãy Pyrenees, Aragón", lat:42.6300, lng:0.5300},
+      {name:"Sierra Nevada, Granada", lat:37.0900, lng:-3.3900},
+      {name:"Đảo El Hierro, Canary", lat:27.7500, lng:-18.0000},
+      {name:"Picos de Europa", lat:43.1900, lng:-4.8300}
+    ], urban:[
+      {name:"Trung tâm Madrid", lat:40.4168, lng:-3.7038},
+      {name:"Barcelona", lat:41.3851, lng:2.1734},
+      {name:"Valencia", lat:39.4699, lng:-0.3763},
+      {name:"Seville", lat:37.3891, lng:-5.9845}
+    ] },
+  is:{ remote:[
+      {name:"Cao nguyên trung tâm Iceland", lat:64.8333, lng:-18.0000},
+      {name:"Vestrahorn, Đông Nam Iceland", lat:64.2500, lng:-14.9800},
+      {name:"Landmannalaugar", lat:63.9931, lng:-19.0575},
+      {name:"Hornstrandir, Vestfirðir", lat:66.2000, lng:-22.5000}
+    ], urban:[
+      {name:"Trung tâm Reykjavík", lat:64.1466, lng:-21.9426},
+      {name:"Akureyri", lat:65.6885, lng:-18.1262},
+      {name:"Keflavík", lat:63.9994, lng:-22.5590},
+      {name:"Selfoss", lat:63.9333, lng:-20.9833}
+    ] },
+  us:{ remote:[
+      {name:"Vùng núi Rocky, Yellowstone", lat:44.4280, lng:-110.5885},
+      {name:"Death Valley, California", lat:36.5323, lng:-116.9325},
+      {name:"Denali, Alaska", lat:63.0692, lng:-151.0070},
+      {name:"Big Bend, Texas", lat:29.1275, lng:-103.2425}
+    ], urban:[
+      {name:"Trung tâm New York", lat:40.7128, lng:-74.0060},
+      {name:"Los Angeles", lat:34.0522, lng:-118.2437},
+      {name:"Chicago", lat:41.8781, lng:-87.6298},
+      {name:"San Francisco", lat:37.7749, lng:-122.4194}
+    ] },
+  mx:{ remote:[
+      {name:"Copper Canyon, Chihuahua", lat:27.3167, lng:-107.6167},
+      {name:"Rừng Lacandon, Chiapas", lat:16.7500, lng:-92.6333},
+      {name:"Bán đảo Baja California", lat:27.5000, lng:-113.0000},
+      {name:"Sierra Norte, Oaxaca", lat:17.0700, lng:-96.7200}
+    ], urban:[
+      {name:"Trung tâm Mexico City", lat:19.4326, lng:-99.1332},
+      {name:"Guadalajara", lat:20.6597, lng:-103.3496},
+      {name:"Monterrey", lat:25.6866, lng:-100.3161},
+      {name:"Cancún", lat:21.1619, lng:-86.8515}
+    ] },
+  co:{ remote:[
+      {name:"Rừng Amazon, Leticia", lat:-4.2153, lng:-69.9406},
+      {name:"Sierra Nevada de Santa Marta", lat:10.8300, lng:-73.6500},
+      {name:"Chocó, bờ biển Thái Bình Dương", lat:5.6947, lng:-76.6583},
+      {name:"La Guajira", lat:12.0000, lng:-72.0000}
+    ], urban:[
+      {name:"Trung tâm Bogotá", lat:4.7110, lng:-74.0721},
+      {name:"Medellín", lat:6.2442, lng:-75.5812},
+      {name:"Cali", lat:3.4516, lng:-76.5320},
+      {name:"Cartagena", lat:10.3910, lng:-75.4794}
+    ] },
+  pe:{ remote:[
+      {name:"Ausangate, dãy Andes", lat:-13.7667, lng:-71.1667},
+      {name:"Rừng Amazon, gần Iquitos", lat:-3.7437, lng:-73.2516},
+      {name:"Đường mòn Inca, Machu Picchu", lat:-13.1631, lng:-72.5450},
+      {name:"Altiplano, Puno", lat:-15.8402, lng:-70.0219}
+    ], urban:[
+      {name:"Trung tâm Lima", lat:-12.0464, lng:-77.0428},
+      {name:"Cusco (thành phố)", lat:-13.5319, lng:-71.9675},
+      {name:"Arequipa", lat:-16.4090, lng:-71.5375},
+      {name:"Trujillo", lat:-8.1116, lng:-79.0290}
+    ] },
+  ma:{ remote:[
+      {name:"Sa mạc Sahara, Merzouga", lat:31.0801, lng:-4.0133},
+      {name:"Dãy núi Atlas, Toubkal", lat:31.0595, lng:-7.9147},
+      {name:"Chefchaouen, dãy núi Rif", lat:35.1688, lng:-5.2636},
+      {name:"Sa mạc Zagora", lat:30.3297, lng:-5.8372}
+    ], urban:[
+      {name:"Trung tâm Casablanca", lat:33.5731, lng:-7.5898},
+      {name:"Marrakech", lat:31.6295, lng:-7.9811},
+      {name:"Rabat", lat:34.0209, lng:-6.8417},
+      {name:"Fès", lat:34.0181, lng:-5.0078}
+    ] },
+  ke:{ remote:[
+      {name:"Sa mạc Chalbi, Bắc Kenya", lat:3.0500, lng:37.5667},
+      {name:"Maasai Mara", lat:-1.5000, lng:35.1500},
+      {name:"Khu vực núi Kenya", lat:-0.1521, lng:37.3084},
+      {name:"Hồ Turkana", lat:3.5000, lng:36.0000}
+    ], urban:[
+      {name:"Trung tâm Nairobi", lat:-1.2921, lng:36.8219},
+      {name:"Mombasa", lat:-4.0435, lng:39.6682},
+      {name:"Kisumu", lat:-0.0917, lng:34.7680},
+      {name:"Nakuru", lat:-0.3031, lng:36.0800}
+    ] }
+};
+let advSelectedCountry = null;
+/** Chuẩn hóa chuỗi để so khớp gần đúng (bỏ dấu, chữ thường) */
+function normalizeText(s){ return (s||"").trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+/** Khi gõ tay hoặc chọn tên quốc gia từ gợi ý (ô đã gộp làm một) */
+function onAdvCountryInputChange(){
+  const code = findCountryCode(document.getElementById('advCountryInput').value);
+  showAdvLocationOptions(code);
+}
+/** Hiện danh sách địa điểm "hẻo lánh" / "đô thị lớn" tương ứng quốc gia vừa chọn — cả gợi ý gõ tay lẫn chip một chạm */
+function showAdvLocationOptions(code){
+  const card = document.getElementById('advLocationCard');
+  if(!code || !countryLocations[code]){ card.style.display='none'; advSelectedCountry=null; return; }
+  advSelectedCountry = code;
+  const loc = countryLocations[code];
+  const countryName = (COUNTRY_LIST.find(c=>c.code===code)||{}).name || code;
+  document.getElementById('advCountryName').textContent = countryName;
+  buildLocationPicker('remote', loc.remote);
+  buildLocationPicker('urban', loc.urban);
+  card.style.display = 'block';
+}
+/** Dựng datalist gợi ý gõ tay cho 1 nhóm địa điểm ("remote" hoặc "urban") */
+function buildLocationPicker(kind, list){
+  const cap = kind === 'remote' ? 'Remote' : 'Urban';
+  const input = document.getElementById('adv'+cap+'Input');
+  const datalist = document.getElementById('adv'+cap+'List');
+  input.value = '';
+  datalist.innerHTML = list.map(l => `<option value="${l.name}">`).join('');
+}
+/** Khi người dùng gõ tay tên địa điểm — khớp gần đúng trong danh sách của nhóm đó */
+function onAdvLocationInput(kind){
+  if(!advSelectedCountry) return;
+  const cap = kind === 'remote' ? 'Remote' : 'Urban';
+  const typed = normalizeText(document.getElementById('adv'+cap+'Input').value);
+  if(!typed) return;
+  const list = countryLocations[advSelectedCountry][kind];
+  let match = list.find(l => normalizeText(l.name) === typed);
+  if(!match) match = list.find(l => normalizeText(l.name).includes(typed) && typed.length >= 2);
+  if(match) applyLocation(match);
+}
+/** Áp dụng tọa độ của địa điểm đã chọn (chip hoặc gõ tay khớp) rồi tìm cơ sở gần nhất luôn */
+function applyLocation(loc){
+  document.getElementById('userLat').value = loc.lat;
+  document.getElementById('userLng').value = loc.lng;
+  findNearest();
+}
+
+/** Tự động xác định vị trí thật của người dùng bằng Geolocation API của trình duyệt.
+ *  Không cần người dùng nhập bất kỳ thông tin nào — thành công thì tự gọi findNearest(). */
+function detectUserLocation(){
+  const statusEl = document.getElementById('geoStatus');
+  if(!('geolocation' in navigator)){
+    statusEl.textContent = '⚠ Thiết bị/trình duyệt không hỗ trợ định vị GPS. Hãy dùng mục "Nâng cao" bên dưới để mô phỏng vị trí.';
+    return;
+  }
+  statusEl.textContent = '📍 Đang tự động xác định vị trí của bạn...';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      document.getElementById('userLat').value = pos.coords.latitude.toFixed(4);
+      document.getElementById('userLng').value = pos.coords.longitude.toFixed(4);
+      statusEl.textContent = `✅ Đã tự động xác định vị trí (độ chính xác ~${Math.round(pos.coords.accuracy)}m). Đang tìm cơ sở y tế gần nhất...`;
+      findNearest();
+    },
+    err=>{
+      statusEl.textContent = `⚠ Không lấy được vị trí tự động (${err.message}). Hãy mở mục "Nâng cao" bên dưới để mô phỏng vị trí, hoặc cấp quyền định vị rồi nhấn "Xác định lại vị trí GPS".`;
+    },
+    { enableHighAccuracy:true, timeout:10000, maximumAge:60000 }
+  );
+}
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371; const toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+/** Tính góc phương vị (bearing, độ) từ điểm 1 tới điểm 2 */
+function computeBearing(lat1,lng1,lat2,lng2){
+  const toRad=d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
+  const dLng = toRad(lng2-lng1);
+  const y = Math.sin(dLng)*Math.cos(toRad(lat2));
+  const x = Math.cos(toRad(lat1))*Math.sin(toRad(lat2)) - Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(dLng);
+  return (toDeg(Math.atan2(y,x))+360)%360;
+}
+/** Quy đổi góc độ sang 8 hướng la bàn tiếng Việt */
+function bearingToCompass(deg){
+  const dirs=['Bắc','Đông Bắc','Đông','Đông Nam','Nam','Tây Nam','Tây','Tây Bắc'];
+  return dirs[Math.round(deg/45)%8];
+}
+
+/* ---- Thời tiết theo vị trí hiện tại (Open-Meteo — miễn phí, không cần API key) ---- */
+let lastWeatherLat = null, lastWeatherLng = null;
+async function fetchWeather(lat, lng){
+  lastWeatherLat = lat; lastWeatherLng = lng;
+  const label = document.getElementById('weatherLabel');
+  if(!label) return;
+  try{
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
+    if(!res.ok) throw new Error('Không lấy được dữ liệu thời tiết');
+    const data = await res.json();
+    const c = data.current_weather.temperature;
+    const f = c * 9/5 + 32;
+    label.textContent = `${c.toFixed(1)}°C / ${f.toFixed(1)}°F`;
+  } catch(err){
+    label.textContent = 'Chưa có dữ liệu thời tiết (cần mạng)';
+  }
+}
+/** Làm mới lại nhiệt độ mỗi 10 phút cho cùng 1 vị trí, để bắt kịp thời tiết thay đổi theo thời gian */
+function refreshWeather(){ if(lastWeatherLat!==null) fetchWeather(lastWeatherLat, lastWeatherLng); }
+setInterval(refreshWeather, 10*60*1000);
+
+let lastDirectionSteps = [];
+function findNearest(){
+  const lat=parseFloat(document.getElementById('userLat').value), lng=parseFloat(document.getElementById('userLng').value);
+  fetchWeather(lat, lng);
+  const ranked = facilities.map(f=>({...f, dist:haversine(lat,lng,f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist);
+  const top3 = ranked.slice(0,3);
+  const list = document.getElementById('facilityList'); list.innerHTML='';
+  top3.forEach(f=>{
+    const d = document.createElement('div'); d.className='facility-item';
+    d.innerHTML = `<div><div>${f.name}</div><div class="type">${f.type} · ${f.country}</div></div><div class="dist">${f.dist.toFixed(1)} km</div>`;
+    list.appendChild(d);
+  });
+  const dest = top3[0];
+  // Tạo điểm trung gian (waypoint) lệch nhẹ để mô phỏng một tuyến đường thực tế thay vì đường thẳng tuyệt đối
+  const mid = { lat:(lat+dest.lat)/2 + (dest.lng-lng)*0.06, lng:(lng+dest.lng)/2 - (dest.lat-lat)*0.06 };
+  drawMap(lat,lng,top3,{mid,dest});
+
+  const leg1Dist = haversine(lat,lng,mid.lat,mid.lng), leg1Bear = computeBearing(lat,lng,mid.lat,mid.lng);
+  const leg2Dist = haversine(mid.lat,mid.lng,dest.lat,dest.lng), leg2Bear = computeBearing(mid.lat,mid.lng,dest.lat,dest.lng);
+  lastDirectionSteps = [
+    `Cơ sở y tế gần nhất là ${dest.name}, cách bạn khoảng ${dest.dist.toFixed(1)} kilômét.`,
+    `Bước 1: di chuyển khoảng ${leg1Dist.toFixed(1)} kilômét theo hướng ${bearingToCompass(leg1Bear)}.`,
+    `Bước 2: tiếp tục khoảng ${leg2Dist.toFixed(1)} kilômét theo hướng ${bearingToCompass(leg2Bear)} để đến ${dest.name}.`,
+    `Bạn đã đến nơi. Hãy tìm nhân viên y tế để được hỗ trợ ngay.`
+  ];
+  document.getElementById('directionsCard').style.display='block';
+  const stepsDiv = document.getElementById('directionSteps'); stepsDiv.innerHTML='';
+  lastDirectionSteps.forEach((s,i)=>{
+    const seg = document.createElement('div'); seg.className='route-seg';
+    seg.innerHTML = `<span class="seg-badge ok">${i===0?'ĐÍCH':'B.'+i}</span><span>${s}</span>`;
+    stepsDiv.appendChild(seg);
+  });
+  queueSync();
+}
+function speakDirections(){
+  if(!('speechSynthesis' in window)){ alert('Trình duyệt này không hỗ trợ đọc chỉ đường bằng giọng nói.'); return; }
+  window.speechSynthesis.cancel();
+  lastDirectionSteps.forEach(s=>{
+    const u = new SpeechSynthesisUtterance(s);
+    u.lang = 'vi-VN'; u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  });
+}
+function stopSpeaking(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+
+/* ---- Zoom (phóng to/thu nhỏ) & Pan (kéo/lướt) cho bản đồ vector ---- */
+/* Khai báo TRƯỚC drawMap() vì drawMap() sẽ gọi resetMapView() mỗi lần vẽ lại dữ liệu mới */
+const MAP_W = 600, MAP_H = 220;
+const MAP_ZOOM_MIN_W = 120; // giới hạn phóng to tối đa (~5x)
+let mapViewBox = { x:0, y:0, w:MAP_W, h:MAP_H };
+function applyMapViewBox(){
+  const svgEl = document.getElementById('mapSvg');
+  if(svgEl) svgEl.setAttribute('viewBox', `${mapViewBox.x} ${mapViewBox.y} ${mapViewBox.w} ${mapViewBox.h}`);
+}
+function clampMapViewBox(){
+  mapViewBox.w = Math.min(MAP_W, Math.max(MAP_ZOOM_MIN_W, mapViewBox.w));
+  mapViewBox.h = mapViewBox.w * (MAP_H / MAP_W);
+  mapViewBox.x = Math.min(Math.max(mapViewBox.x, 0), Math.max(0, MAP_W - mapViewBox.w));
+  mapViewBox.y = Math.min(Math.max(mapViewBox.y, 0), Math.max(0, MAP_H - mapViewBox.h));
+}
+/** factor < 1 = phóng to (zoom in), factor > 1 = thu nhỏ (zoom out) — giữ nguyên tâm khung nhìn hiện tại */
+function zoomMap(factor){
+  const cx = mapViewBox.x + mapViewBox.w/2, cy = mapViewBox.y + mapViewBox.h/2;
+  mapViewBox.w *= factor;
+  mapViewBox.w = Math.min(MAP_W, Math.max(MAP_ZOOM_MIN_W, mapViewBox.w));
+  mapViewBox.h = mapViewBox.w * (MAP_H / MAP_W);
+  mapViewBox.x = cx - mapViewBox.w/2;
+  mapViewBox.y = cy - mapViewBox.h/2;
+  clampMapViewBox();
+  applyMapViewBox();
+}
+function resetMapView(){ mapViewBox = { x:0, y:0, w:MAP_W, h:MAP_H }; applyMapViewBox(); }
+
+function drawMap(userLat,userLng,highlighted,routeInfo){
+  const svg = document.getElementById('mapSvg');
+  const allLats = facilities.map(f=>f.lat).concat(userLat), allLngs = facilities.map(f=>f.lng).concat(userLng);
+  if(routeInfo){ allLats.push(routeInfo.mid.lat, routeInfo.dest.lat); allLngs.push(routeInfo.mid.lng, routeInfo.dest.lng); }
+  const minLat=Math.min(...allLats), maxLat=Math.max(...allLats), minLng=Math.min(...allLngs), maxLng=Math.max(...allLngs);
+  const pad=20, W=600, H=220;
+  const x = lng => pad + (lng-minLng)/(maxLng-minLng||1) * (W-2*pad);
+  const y = lat => H-pad - (lat-minLat)/(maxLat-minLat||1) * (H-2*pad);
+  let s='';
+  facilities.forEach(f=>{
+    const isTop = highlighted && highlighted.some(h=>h.name===f.name);
+    s += `<circle cx="${x(f.lng)}" cy="${y(f.lat)}" r="${isTop?6:4}" class="dot-fac" opacity="${isTop?1:0.5}"/>`;
+    if(isTop) s += `<text x="${x(f.lng)+8}" y="${y(f.lat)+4}" fill="#8992a0" font-size="10">${f.name}</text>`;
+  });
+  if(routeInfo){
+    const ux=x(userLng), uy=y(userLat), mx=x(routeInfo.mid.lng), my=y(routeInfo.mid.lat), dx=x(routeInfo.dest.lng), dy=y(routeInfo.dest.lat);
+    s += `<polyline points="${ux},${uy} ${mx},${my} ${dx},${dy}" fill="none" stroke="#ff5a2b" stroke-width="2.2" stroke-dasharray="6 4"/>`;
+    s += `<circle cx="${mx}" cy="${my}" r="3" fill="#ff5a2b"/>`;
+  }
+  s += `<circle cx="${x(userLng)}" cy="${y(userLat)}" r="7" class="dot-user"/><text x="${x(userLng)+9}" y="${y(userLat)-8}" fill="#ff5a2b" font-size="11" font-weight="bold">BẠN</text>`;
+  svg.innerHTML = s;
+  resetMapView(); // mỗi lần vẽ lại dữ liệu mới thì đưa khung nhìn về mặc định
+}
+
+(function initMapPanZoom(){
+  const svg = document.getElementById('mapSvg');
+  const pointers = new Map(); // pointerId -> {x, y}
+  let dragStart = null;      // {x, y, vb} — dùng khi chỉ có 1 điểm chạm/chuột (kéo/lướt)
+  let pinchStartDist = null; // khoảng cách giữa 2 ngón lúc bắt đầu chụm (dùng khi có 2 điểm chạm)
+
+  function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
+  function currentPoints(){ return [...pointers.values()]; }
+
+  function onPointerDown(e){
+    svg.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if(pointers.size === 1){
+      dragStart = { x: e.clientX, y: e.clientY, vb: { ...mapViewBox } };
+      pinchStartDist = null;
+    } else if(pointers.size === 2){
+      const [a, b] = currentPoints();
+      pinchStartDist = dist(a, b);
+      dragStart = null;
+    }
+  }
+  function onPointerMove(e){
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if(pointers.size === 1 && dragStart){
+      // Kéo/lướt bằng 1 ngón tay hoặc chuột — trái/phải/lên/xuống
+      const rect = svg.getBoundingClientRect();
+      const scaleX = mapViewBox.w / rect.width, scaleY = mapViewBox.h / rect.height;
+      mapViewBox.x = dragStart.vb.x - (e.clientX - dragStart.x) * scaleX;
+      mapViewBox.y = dragStart.vb.y - (e.clientY - dragStart.y) * scaleY;
+      clampMapViewBox();
+      applyMapViewBox();
+    } else if(pointers.size === 2 && pinchStartDist !== null){
+      // Chụm/xòe 2 ngón tay để zoom out/in trên điện thoại, máy tính bảng
+      const [a, b] = currentPoints();
+      const newDist = dist(a, b);
+      if(newDist > 0 && pinchStartDist > 0){
+        zoomMap(pinchStartDist / newDist); // 2 ngón tách xa nhau -> newDist lớn hơn -> factor<1 -> phóng to
+        pinchStartDist = newDist; // cập nhật liên tục để zoom mượt theo từng khung hình
+      }
+    }
+    e.preventDefault();
+  }
+  function onPointerUp(e){
+    pointers.delete(e.pointerId);
+    if(pointers.size === 1){
+      const [p] = currentPoints();
+      dragStart = { x: p.x, y: p.y, vb: { ...mapViewBox } };
+      pinchStartDist = null;
+    } else {
+      dragStart = null;
+      pinchStartDist = null;
+    }
+  }
+
+  svg.addEventListener('pointerdown', onPointerDown);
+  svg.addEventListener('pointermove', onPointerMove, { passive:false });
+  svg.addEventListener('pointerup', onPointerUp);
+  svg.addEventListener('pointercancel', onPointerUp);
+
+  // Lăn chuột (bánh xe) để zoom trên desktop
+  svg.addEventListener('wheel', e => { e.preventDefault(); zoomMap(e.deltaY > 0 ? 1.15 : 0.87); }, { passive:false });
+})();
+
+drawMap(27.8,86.7,null); // vẽ tạm trong lúc chờ GPS
+detectUserLocation(); // tự động xác định vị trí ngay khi tải trang, không cần thao tác
+
+/* ============ MOD 3: SURVIVAL QR ============ */
+/** Nhãn hiển thị 14 trường hồ sơ, theo TỪNG NGÔN NGỮ (dùng chung countryToLang để tra quốc gia -> ngôn ngữ) */
+const qrLabels = {
+  vi:{fullName:"Họ và Tên",dob:"Ngày sinh",idNumber:"CCCD/Mã định danh",nationality:"Quốc tịch",hometown:"Quê quán",residence:"Nơi ở hiện tại",phone:"Số điện thoại",blood:"Nhóm máu",allergy:"Dị ứng",allergyMed:"Dị ứng thuốc",history:"Tiền sử bệnh",vaccination:"Lịch sử tiêm chủng",contactName:"Tên người liên hệ",contactPhone:"SĐT khẩn cấp"},
+  en:{fullName:"Full Name",dob:"Date of Birth",idNumber:"National ID Number",nationality:"Nationality",hometown:"Hometown",residence:"Current Residence",phone:"Phone Number",blood:"Blood Type",allergy:"Allergies",allergyMed:"Drug Allergies",history:"Medical History",vaccination:"Vaccination History",contactName:"Emergency Contact Name",contactPhone:"Emergency Contact Phone"},
+  es:{fullName:"Nombre Completo",dob:"Fecha de Nacimiento",idNumber:"Número de Identificación",nationality:"Nacionalidad",hometown:"Ciudad Natal",residence:"Residencia Actual",phone:"Número de Teléfono",blood:"Grupo Sanguíneo",allergy:"Alergias",allergyMed:"Alergias a Medicamentos",history:"Historial Médico",vaccination:"Historial de Vacunación",contactName:"Nombre de Contacto de Emergencia",contactPhone:"Teléfono de Contacto de Emergencia"},
+  th:{fullName:"ชื่อ-นามสกุล",dob:"วันเดือนปีเกิด",idNumber:"เลขบัตรประชาชน",nationality:"สัญชาติ",hometown:"บ้านเกิด",residence:"ที่อยู่ปัจจุบัน",phone:"เบอร์โทรศัพท์",blood:"กรุ๊ปเลือด",allergy:"อาการแพ้",allergyMed:"แพ้ยา",history:"ประวัติการเจ็บป่วย",vaccination:"ประวัติการฉีดวัคซีน",contactName:"ชื่อผู้ติดต่อฉุกเฉิน",contactPhone:"เบอร์โทรผู้ติดต่อฉุกเฉิน"},
+  lo:{fullName:"ຊື່ ແລະ ນາມສະກຸນ",dob:"ວັນເດືອນປີເກີດ",idNumber:"ເລກບັດປະຈຳຕົວ",nationality:"ສັນຊາດ",hometown:"ບ້ານເກີດ",residence:"ທີ່ຢູ່ປັດຈຸບັນ",phone:"ເບີໂທລະສັບ",blood:"ໝູ່ເລືອດ",allergy:"ອາການແພ້",allergyMed:"ແພ້ຢາ",history:"ປະຫວັດການເຈັບປ່ວຍ",vaccination:"ປະຫວັດການສັກຢາກັນພະຍາດ",contactName:"ຊື່ຜູ້ຕິດຕໍ່ສຸກເສີນ",contactPhone:"ເບີໂທຜູ້ຕິດຕໍ່ສຸກເສີນ"},
+  km:{fullName:"ឈ្មោះ និងនាមត្រកូល",dob:"ថ្ងៃខែឆ្នាំកំណើត",idNumber:"លេខអត្តសញ្ញាណប័ណ្ណ",nationality:"សញ្ជាតិ",hometown:"ស្រុកកំណើត",residence:"ទីលំនៅបច្ចុប្បន្ន",phone:"លេខទូរស័ព្ទ",blood:"ក្រុមឈាម",allergy:"អាឡែស៊ី",allergyMed:"អាឡែស៊ីនឹងថ្នាំ",history:"ប្រវត្តិជំងឺ",vaccination:"ប្រវត្តិចាក់វ៉ាក់សាំង",contactName:"ឈ្មោះទំនាក់ទំនងបន្ទាន់",contactPhone:"លេខទូរស័ព្ទទំនាក់ទំនងបន្ទាន់"},
+  tl:{fullName:"Buong Pangalan",dob:"Petsa ng Kapanganakan",idNumber:"Numero ng National ID",nationality:"Nasyonalidad",hometown:"Bayang Sinilangan",residence:"Kasalukuyang Tirahan",phone:"Numero ng Telepono",blood:"Grupo ng Dugo",allergy:"Allergy",allergyMed:"Allergy sa Gamot",history:"Kasaysayang Medikal",vaccination:"Kasaysayan ng Bakuna",contactName:"Pangalan ng Emergency Contact",contactPhone:"Numero ng Emergency Contact"},
+  ms:{fullName:"Nama Penuh",dob:"Tarikh Lahir",idNumber:"Nombor Kad Pengenalan",nationality:"Kewarganegaraan",hometown:"Kampung Halaman",residence:"Tempat Tinggal Sekarang",phone:"Nombor Telefon",blood:"Kumpulan Darah",allergy:"Alahan",allergyMed:"Alahan Ubat",history:"Sejarah Perubatan",vaccination:"Sejarah Vaksinasi",contactName:"Nama Hubungan Kecemasan",contactPhone:"Nombor Hubungan Kecemasan"},
+  zh:{fullName:"姓名",dob:"出生日期",idNumber:"身份证号码",nationality:"国籍",hometown:"籍贯",residence:"现居住地",phone:"电话号码",blood:"血型",allergy:"过敏",allergyMed:"药物过敏",history:"病史",vaccination:"疫苗接种史",contactName:"紧急联系人姓名",contactPhone:"紧急联系人电话"},
+  ja:{fullName:"氏名",dob:"生年月日",idNumber:"身分証明書番号",nationality:"国籍",hometown:"出身地",residence:"現在の居住地",phone:"電話番号",blood:"血液型",allergy:"アレルギー",allergyMed:"薬物アレルギー",history:"既往歴",vaccination:"予防接種歴",contactName:"緊急連絡先氏名",contactPhone:"緊急連絡先電話番号"},
+  ko:{fullName:"성명",dob:"생년월일",idNumber:"신분증 번호",nationality:"국적",hometown:"고향",residence:"현재 거주지",phone:"전화번호",blood:"혈액형",allergy:"알레르기",allergyMed:"약물 알레르기",history:"병력",vaccination:"예방접종 이력",contactName:"비상 연락처 이름",contactPhone:"비상 연락처 전화번호"},
+  np:{fullName:"पूरा नाम",dob:"जन्म मिति",idNumber:"परिचयपत्र नम्बर",nationality:"राष्ट्रियता",hometown:"पैतृक थलो",residence:"हालको ठेगाना",phone:"फोन नम्बर",blood:"रक्त समूह",allergy:"एलर्जी",allergyMed:"औषधि एलर्जी",history:"रोगको इतिहास",vaccination:"खोप इतिहास",contactName:"आपतकालीन सम्पर्क नाम",contactPhone:"आपतकालीन सम्पर्क फोन नम्बर"},
+  is:{fullName:"Fullt Nafn",dob:"Fæðingardagur",idNumber:"Kennitala",nationality:"Þjóðerni",hometown:"Fæðingarstaður",residence:"Núverandi Búseta",phone:"Símanúmer",blood:"Blóðflokkur",allergy:"Ofnæmi",allergyMed:"Lyfjaofnæmi",history:"Sjúkrasaga",vaccination:"Bólusetningarsaga",contactName:"Nafn Neyðartengiliðar",contactPhone:"Símanúmer Neyðartengiliðar"},
+  ar:{fullName:"الاسم الكامل",dob:"تاريخ الميلاد",idNumber:"رقم الهوية الوطنية",nationality:"الجنسية",hometown:"مسقط الرأس",residence:"مكان الإقامة الحالي",phone:"رقم الهاتف",blood:"فصيلة الدم",allergy:"الحساسية",allergyMed:"حساسية الدواء",history:"التاريخ المرضي",vaccination:"تاريخ التطعيم",contactName:"اسم جهة الاتصال في حالات الطوارئ",contactPhone:"رقم هاتف جهة الاتصال في حالات الطوارئ"},
+  sw:{fullName:"Jina Kamili",dob:"Tarehe ya Kuzaliwa",idNumber:"Nambari ya Kitambulisho",nationality:"Uraia",hometown:"Mji wa Kuzaliwa",residence:"Makazi ya Sasa",phone:"Nambari ya Simu",blood:"Kundi la Damu",allergy:"Mzio",allergyMed:"Mzio wa Dawa",history:"Historia ya Matibabu",vaccination:"Historia ya Chanjo",contactName:"Jina la Mawasiliano ya Dharura",contactPhone:"Nambari ya Simu ya Dharura"}
+};
+function generateQR(){
+  const payload = {
+    fullName: document.getElementById('fullName').value,
+    dob: document.getElementById('dob').value,
+    idNumber: document.getElementById('idNumber').value,
+    nationality: document.getElementById('nationality').value,
+    hometown: document.getElementById('hometown').value,
+    residence: document.getElementById('currentResidence').value,
+    phone: document.getElementById('phoneNumber').value,
+    blood: document.getElementById('bloodType').value,
+    allergy: document.getElementById('allergyGeneral').value,
+    allergyMed: document.getElementById('allergyInput').value,
+    history: document.getElementById('historyInput').value,
+    vaccination: document.getElementById('vaccination').value,
+    contactName: document.getElementById('contactName').value,
+    contactPhone: document.getElementById('contactInput').value,
+    ts: new Date().toISOString()
+  };
+  const country = findCountryCode(document.getElementById('qrCountry').value);
+  const lang = countryToLang[country];
+  if(!country || !qrLabels[lang]){
+    document.getElementById('qrResultCard').style.display='block';
+    document.getElementById('qrbox').innerHTML = '';
+    document.getElementById('qrPayload').textContent = '';
+    document.getElementById('qrTranslated').innerHTML = '⚠ Không nhận diện được quốc gia này. Hãy gõ đúng tên hoặc chọn từ danh sách gợi ý.';
+    return;
+  }
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  document.getElementById('qrResultCard').style.display='block';
+  document.getElementById('qrPayload').textContent = 'Payload (Base64): ' + encoded;
+  const box = document.getElementById('qrbox'); box.innerHTML = '';
+  new QRCode(box, { text: encoded, width:150, height:150 });
+  const L = qrLabels[lang];
+  const fieldOrder = ['fullName','dob','idNumber','nationality','hometown','residence','phone','blood','allergy','allergyMed','history','vaccination','contactName','contactPhone'];
+  document.getElementById('qrTranslated').innerHTML = fieldOrder.map(k => `<b>${L[k]}:</b> ${payload[k] || '—'}`).join('<br>');
+  queueSync();
+}
+
+/* ============ MOD 4: SAFE ROUTE PREDICTOR (Dijkstra, đồ thị động theo từng quốc gia) ============ */
+let routeSelectedCountry = null;
+let graph = {};
+let edgeSignal = {};
+/** Khoảng cách "đường thực tế" ước tính = đường chim bay x hệ số đường đi, làm tròn 1 số thập phân */
+function haversineRoad(lat1,lng1,lat2,lng2){ return +(haversine(lat1,lng1,lat2,lng2) * 1.15).toFixed(1); }
+/** Sắp xếp 8 địa điểm thành 1 chuỗi lộ trình theo nguyên tắc "lân cận gần nhất" (nearest-neighbor),
+ *  để khoảng cách giữa các chặng liên tiếp thực tế thay vì nhảy lung tung khắp quốc gia */
+function buildNearestNeighborChain(nodes){
+  const remaining = nodes.slice();
+  const order = [remaining.shift()];
+  while(remaining.length){
+    const last = order[order.length-1];
+    let bestIdx = 0, bestDist = Infinity;
+    remaining.forEach((n,i)=>{ const d = haversine(last.lat,last.lng,n.lat,n.lng); if(d<bestDist){ bestDist=d; bestIdx=i; } });
+    order.push(remaining.splice(bestIdx,1)[0]);
+  }
+  return order;
+}
+function getSignal(a,b){ return edgeSignal[a+"-"+b] || edgeSignal[b+"-"+a] || "ok"; }
+function dijkstra(graph,start,end){
+  const dist={}, prev={}, visited=new Set();
+  Object.keys(graph).forEach(n=>dist[n]=Infinity); dist[start]=0;
+  while(true){
+    let u=null,best=Infinity;
+    for(const n in dist){ if(!visited.has(n) && dist[n]<best){ best=dist[n]; u=n; } }
+    if(u===null||u===end) break;
+    visited.add(u);
+    for(const v in graph[u]){ const alt=dist[u]+graph[u][v]; if(alt<dist[v]){ dist[v]=alt; prev[v]=u; } }
+  }
+  const path=[]; let cur=end; while(cur){ path.unshift(cur); cur=prev[cur]; }
+  return { path, total: dist[end] };
+}
+/** Khi người dùng gõ/chọn quốc gia — dùng chung dữ liệu địa điểm với MOD.02 (countryLocations) */
+function onRouteCountryChange(){
+  const code = findCountryCode(document.getElementById('routeCountryInput').value);
+  buildRouteGraphForCountry(code);
+}
+/** Dựng đồ thị 8 địa điểm (4 đô thị + 4 hẻo lánh) của quốc gia, xen kẽ thành 1 chuỗi lộ trình để Dijkstra có nhiều chặng để tính */
+function buildRouteGraphForCountry(code){
+  const card = document.getElementById('routePickerCard');
+  document.getElementById('routeResult').style.display = 'none';
+  if(!code || !countryLocations[code]){ card.style.display='none'; routeSelectedCountry=null; return; }
+  routeSelectedCountry = code;
+  const loc = countryLocations[code];
+  const countryName = (COUNTRY_LIST.find(c=>c.code===code)||{}).name || code;
+  document.getElementById('routeCountryName').textContent = countryName;
+
+  const nodes = [];
+  loc.urban.forEach(u => nodes.push({ ...u, type:'urban' }));
+  loc.remote.forEach(r => nodes.push({ ...r, type:'remote' }));
+  const order = buildNearestNeighborChain(nodes);
+  graph = {}; edgeSignal = {};
+  order.forEach(n=>{ graph[n.name] = {}; });
+  for(let i=0;i<order.length-1;i++){
+    const a = order[i], b = order[i+1];
+    const km = haversineRoad(a.lat,a.lng,b.lat,b.lng);
+    graph[a.name][b.name] = km; graph[b.name][a.name] = km;
+    edgeSignal[a.name+'-'+b.name] = (a.type==='urban' && b.type==='urban') ? 'ok' : 'dead';
+  }
+
+  const dl = document.getElementById('routeNodesList');
+  dl.innerHTML = order.map(n=>`<option value="${n.name}">`).join('');
+  document.getElementById('routeFrom').value = order[0].name;
+  document.getElementById('routeTo').value = order[order.length-1].name;
+  card.style.display = 'block';
+}
+/** Khớp tên địa điểm người dùng gõ với node có sẵn trong đồ thị của quốc gia đang chọn */
+function findGraphNode(input){
+  const norm = s=>s.trim().toLowerCase();
+  const target = norm(input);
+  if(!target) return null;
+  const keys = Object.keys(graph);
+  let match = keys.find(k=>norm(k)===target);
+  if(!match) match = keys.find(k=>norm(k).includes(target) || target.includes(norm(k)));
+  return match || null;
+}
+function computeRoute(){
+  if(!routeSelectedCountry) return;
+  const fromInput = document.getElementById('routeFrom').value, toInput = document.getElementById('routeTo').value;
+  const from = findGraphNode(fromInput), to = findGraphNode(toInput);
+  document.getElementById('routeResult').style.display='block';
+  const segsDiv = document.getElementById('routeSegs'); segsDiv.innerHTML='';
+  const warnDiv = document.getElementById('routeWarn'); warnDiv.innerHTML='';
+  if(!from || !to){
+    warnDiv.innerHTML = `<div class="warn-banner">⚠ Không tìm thấy "${!from?fromInput:toInput}" trong danh sách địa điểm của quốc gia này. Hãy chọn đúng tên từ gợi ý.</div>`;
+    return;
+  }
+  if(from===to){
+    warnDiv.innerHTML = `<div class="warn-banner">⚠ Điểm đi và điểm đến đang trùng nhau. Hãy chọn 2 địa điểm khác nhau.</div>`;
+    return;
+  }
+  const { path, total } = dijkstra(graph, from, to);
+  let deadKm = 0;
+  for(let i=0;i<path.length-1;i++){
+    const a=path[i], b=path[i+1], km=graph[a][b], sig=getSignal(a,b);
+    if(sig==='dead') deadKm += km;
+    const seg = document.createElement('div'); seg.className='route-seg'; seg.style.flexWrap='wrap';
+    seg.innerHTML = `<span class="seg-badge ${sig==='ok'?'ok':'dead'}">${sig==='ok'?'CÓ SÓNG':'MẤT SÓNG'}</span><span>${a} → ${b}</span><span style="color:var(--text-muted);margin-left:auto;">${km.toFixed(1)} km</span>`;
+    if(sig==='dead'){
+      const btn = document.createElement('button');
+      btn.className = 'ghost'; btn.style.marginLeft = '8px'; btn.style.fontSize = '12px';
+      btn.textContent = '⬇ Tải dữ liệu offline (cơ sở y tế + bản đồ)';
+      btn.onclick = () => downloadOfflinePack(btn);
+      seg.appendChild(btn);
+    }
+    segsDiv.appendChild(seg);
+  }
+  warnDiv.innerHTML = `<p style="color:var(--text-muted);font-size:13px;margin-top:10px;">Tổng quãng đường: ${total.toFixed(1)} km</p>`;
+  if(deadKm>0) warnDiv.innerHTML += `<div class="warn-banner">⚠ Lộ trình có ${deadKm.toFixed(1)} km mất sóng. Nên tải trước dữ liệu offline cho các đoạn được đánh dấu bên trên trước khi khởi hành.</div>`;
+}
+/** Mô phỏng tải gói dữ liệu offline (cơ sở y tế + bản đồ vector) cho 1 chặng mất sóng */
+function downloadOfflinePack(btn){
+  btn.disabled = true;
+  btn.textContent = '✓ Đã tải xong (~5MB)';
+  queueSync();
+}
+
+/* ============ MOD 5: BUDDY CHECK-IN ============ */
+/** Đồng bộ công tắc + nhật ký MOD.05 theo đúng trạng thái mạng thật (biến connected) — gọi mỗi khi mạng đổi */
+function syncBuddyCheckinUI(){
+  const track = document.getElementById('sigTrack');
+  if(!track) return;
+  const signalLost = !connected;
+  track.classList.toggle('on', signalLost);
+  document.getElementById('sigLabel').textContent = signalLost ? 'Đã mất tín hiệu data' : 'Đang có tín hiệu data';
+  document.getElementById('sosCard').classList.toggle('urgent', signalLost);
+  document.getElementById('sosBtn').classList.toggle('urgent', signalLost);
+  document.getElementById('sosHint').textContent = signalLost
+    ? '⚠ Bạn đang ở vùng MẤT SÓNG. Nếu gặp nguy hiểm, nhấn nút bên dưới — tín hiệu SOS sẽ được gửi qua SMS ngay cả khi không có data.'
+    : 'Nếu bạn gặp nguy hiểm, chỉ cần nhấn nút bên dưới — tín hiệu SOS kèm tọa độ GPS sẽ được gửi ngay tới máy chủ hệ thống NomadCare và liên hệ khẩn cấp (người thân/hostel), kể cả khi đang mất sóng data (qua SMS).';
+  if(lastSyncedSignalLost === signalLost) return; // tránh ghi log lặp khi chưa thực sự đổi trạng thái
+  lastSyncedSignalLost = signalLost;
+  const log = document.getElementById('buddyLog');
+  if(log.children.length===1 && log.children[0].textContent.includes('Chưa có')) log.innerHTML='';
+  const now = new Date().toLocaleTimeString('vi-VN');
+  if(signalLost){
+    addLog(`📡 <b>${now}</b> — Mất tín hiệu data. Chuyển sang chế độ offline.`, 'warn');
+    setTimeout(()=>{ addLog(`✉️ <b>${now}</b> — Đã gửi SMS định vị tới liên hệ khẩn cấp đã đăng ký (người thân/hostel): Tọa độ cuối 27.8270, 86.7180.`, 'warn'); queueSync(); }, 1000);
+  } else {
+    addLog(`🔄 <b>${now}</b> — Có mạng trở lại. Đồng bộ lịch sử GPS &amp; tin nhắn lên máy chủ bảo mật hoàn tất.`, 'ok');
+  }
+}
+/** Nút SOS: chỉ 1 lần nhấn, gửi ngay tọa độ khẩn cấp — hoạt động cả khi mất sóng data (qua kênh SMS/vệ tinh tầm ngắn) */
+function sendSOS(){
+  const btn = document.getElementById('sosBtn');
+  btn.disabled = true;
+  const now = new Date().toLocaleTimeString('vi-VN');
+  const channel = !connected ? 'qua SMS/kênh tín hiệu tầm ngắn (không cần data)' : 'qua Internet (kết nối trực tiếp máy chủ)';
+  addLog(`🆘 <b>${now}</b> — ĐÃ GỬI TÍN HIỆU SOS KHẨN CẤP ${channel}! Tọa độ hiện tại đã gửi tới máy chủ hệ thống NomadCare và liên hệ khẩn cấp (người thân/hostel).`, 'warn');
+  queueSync();
+  setTimeout(()=>{ btn.disabled = false; }, 6000);
+}
+function addLog(html, cls){ const log = document.getElementById('buddyLog'); const d = document.createElement('div'); d.className='log-entry '+cls; d.innerHTML=html; log.prepend(d); }
+
+/* ============ MOD 6: OFFLINE FIRST AID ============ */
+// CSDL chấn thương — mỗi mục có id, tên, từ khóa tìm kiếm (tags) và các bước sơ cứu.
+// "special:'cpr'" trỏ tới panel hoạt ảnh riêng; các mục còn lại dùng bộ hiển thị chung (generic).
+const firstAidDB = {
+  cpr: {
+    name: "Ngừng tim / Ngừng thở (CPR)",
+    tags: ["ngừng tim","ngừng thở","hồi sức","cpr","bất tỉnh không thở","tim ngừng đập"],
+    icon: "❤️‍🩹", special: "cpr",
+    translations: {
+      en:{ name:"Cardiac / Respiratory arrest (CPR)", caption:"Press the center of the chest, about 5cm deep, letting the chest fully recoil between compressions. Call emergency services before starting if possible." },
+      es:{ name:"Paro cardíaco / respiratorio (RCP)", caption:"Presione el centro del pecho, unos 5 cm de profundidad, dejando que el pecho se recupere por completo entre compresiones. Llame a emergencias antes de comenzar si es posible." },
+      fr:{ name:"Arrêt cardiaque / respiratoire (RCP)", caption:"Appuyez au centre de la poitrine, environ 5 cm de profondeur, en laissant la poitrine se relever complètement entre les compressions. Appelez les secours avant de commencer si possible." },
+      lo:{ name:"ຫົວໃຈ / ການຫາຍໃຈຢຸດເຕັ້ນ (CPR)", caption:"ກົດກາງເອິກ ເລິກປະມານ 5cm, ໃຫ້ເອິກຄືນສູ່ສະພາບເດີມລະຫວ່າງແຕ່ລະຄັ້ງ. ໂທຫາສຸກເສີນກ່ອນເລີ່ມຖ້າເປັນໄປໄດ້." },
+      th:{ name:"หัวใจ/การหายใจหยุด (CPR)", caption:"กดกลางหน้าอก ลึกประมาณ 5 ซม. ปล่อยให้หน้าอกคืนตัวเต็มที่ระหว่างการกด โทรขอความช่วยเหลือฉุกเฉินก่อนเริ่มถ้าเป็นไปได้" },
+      km:{ name:"បេះដូង/ការដកដង្ហើមឈប់ដំណើរការ (CPR)", caption:"សង្កត់កណ្តាលទ្រូង ជ្រៅប្រហែល 5cm ឲ្យទ្រូងលើកឡើងវិញពេញលេញរវាងការសង្កត់នីមួយៗ។ ទូរស័ព្ទសុំជំនួយបន្ទាន់មុនចាប់ផ្តើមប្រសិនបើអាចធ្វើបាន។" },
+      tl:{ name:"Cardiac / Respiratory Arrest (CPR)", caption:"Pindutin ang gitna ng dibdib, humigit-kumulang 5cm ang lalim, hayaang bumalik nang husto ang dibdib sa pagitan ng mga pindot. Tumawag sa emergency bago magsimula kung maaari." },
+      ms:{ name:"Serangan Jantung / Pernafasan Terhenti (CPR)", caption:"Tekan di tengah dada, sedalam kira-kira 5cm, biarkan dada kembali sepenuhnya antara setiap tekanan. Hubungi kecemasan sebelum memulakan jika boleh." },
+      zh:{ name:"心脏骤停 / 呼吸骤停 (心肺复苏)", caption:"按压胸部中央,深度约5厘米,每次按压之间让胸部完全回弹。如果可能,开始前先拨打急救电话。" },
+      ja:{ name:"心停止 / 呼吸停止 (CPR)", caption:"胸の中央を約5cmの深さで押し、圧迫の間に胸が完全に戻るようにしてください。可能であれば開始前に救急に連絡してください。" },
+      ko:{ name:"심정지 / 호흡정지 (CPR)", caption:"가슴 중앙을 약 5cm 깊이로 누르고, 압박 사이에 가슴이 완전히 되돌아오도록 하세요. 가능하다면 시작 전에 응급 서비스에 연락하세요." },
+      np:{ name:"मुटु / सास रोकिनु (CPR)", caption:"छातीको बीचमा करिब ५ सेमी गहिरो थिच्नुहोस्, प्रत्येक थिचाइबीच छाती पूर्ण रूपमा फर्कन दिनुहोस्। सम्भव भए सुरु गर्नु अघि आपतकालीन सेवा बोलाउनुहोस्।" },
+      is:{ name:"Hjarta- / Öndunarstopp (Hjartahnoð)", caption:"Þrýstið á miðjan brjóstkassann, um 5 cm djúpt, og leyfið brjóstkassanum að rétta sig alveg úr á milli þrýstinga. Hringið í neyðarþjónustu áður en þið byrjið ef mögulegt er." },
+      ar:{ name:"توقف القلب / التنفس (الإنعاش القلبي الرئوي)", caption:"اضغط على منتصف الصدر، بعمق حوالي 5 سم، مع السماح للصدر بالارتداد الكامل بين الضغطات. اتصل بالطوارئ قبل البدء إن أمكن." },
+      sw:{ name:"Kukoma kwa Moyo / Kupumua (CPR)", caption:"Bonyeza katikati ya kifua, kina cha sentimita 5, ukiruhusu kifua kurudi kikamilifu kati ya mibonyezo. Piga simu ya dharura kabla ya kuanza ikiwezekana." }
+    }
+  },
+  bandage: {
+    name: "Vết thương hở / Chảy máu",
+    tags: ["vết thương","chảy máu","đứt tay","rách da","trầy xước"],
+    icon: "🩹",
+    steps: [
+      "Rửa sạch vết thương bằng nước sạch, tránh chạm trực tiếp bằng tay.",
+      "Đặt gạc vô trùng phủ kín vết thương.",
+      "Quấn băng vòng quanh, lực vừa phải, không quá chặt.",
+      "Cố định đầu băng, kiểm tra tuần hoàn (ngón tay/chân vẫn hồng ấm)."
+    ],
+    translations: {
+      en:{ name:"Open wound / Bleeding", steps:[
+        "Rinse the wound with clean water; avoid touching it directly with bare hands.",
+        "Cover the wound completely with sterile gauze.",
+        "Wrap a bandage around it, firm but not too tight.",
+        "Secure the bandage end and check circulation (fingers/toes should stay warm and pink)."
+      ]},
+      es:{ name:"Herida abierta / Sangrado", steps:[
+        "Enjuague la herida con agua limpia; evite tocarla directamente con las manos.",
+        "Cubra la herida por completo con una gasa estéril.",
+        "Envuelva un vendaje alrededor, firme pero no demasiado apretado.",
+        "Asegure el extremo del vendaje y compruebe la circulación (los dedos deben mantenerse cálidos y rosados)."
+      ]},
+      fr:{ name:"Plaie ouverte / Saignement", steps:[
+        "Rincez la plaie à l'eau propre ; évitez de la toucher directement avec les mains.",
+        "Couvrez complètement la plaie avec une gaze stérile.",
+        "Enroulez un bandage autour, ferme mais pas trop serré.",
+        "Fixez l'extrémité du bandage et vérifiez la circulation (les doigts doivent rester chauds et roses)."
+      ]},
+      lo:{ name:"ບາດແຜເປີດ / ເລືອດອອກ", steps:[
+        "ລ້າງບາດແຜດ້ວຍນ້ຳສະອາດ ຫຼີກລ່ຽງການສຳຜັດໂດຍກົງດ້ວຍມືເປົ່າ.",
+        "ປົກປິດບາດແຜໃຫ້ມິດຊິດດ້ວຍຜ້າກອສປອດເຊື້ອ.",
+        "ພັນຜ້າພັນແຜອ້ອມແຜ ໃຫ້ແໜ້ນພໍດີ ບໍ່ແໜ້ນເກີນໄປ.",
+        "ຍຶດປາຍຜ້າພັນແຜໃຫ້ແໜ້ນ ກວດເບິ່ງການໄຫຼວຽນເລືອດ (ນິ້ວມື/ຕີນຄວນອຸ່ນ ແລະ ມີສີບົວ)."
+      ]},
+      th:{ name:"บาดแผลเปิด / เลือดออก", steps:[
+        "ล้างแผลด้วยน้ำสะอาด หลีกเลี่ยงการสัมผัสโดยตรงด้วยมือเปล่า",
+        "ปิดแผลให้มิดชิดด้วยผ้าก๊อซปลอดเชื้อ",
+        "พันผ้าพันแผลรอบแผล ให้แน่นพอดี ไม่แน่นเกินไป",
+        "ยึดปลายผ้าพันแผลให้แน่น ตรวจสอบการไหลเวียนเลือด (นิ้วมือ/เท้าควรอุ่นและมีสีชมพู)"
+      ]},
+      km:{ name:"របួសបើក / ការហូរឈាម", steps:[
+        "លាងសម្អាតរបួសដោយទឹកស្អាត ជៀសវាងការប៉ះដោយផ្ទាល់ដៃទទេ។",
+        "គ្របដណ្តប់របួសអោយបានពេញលេញដោយកំបោរស្អាត។",
+        "រុំបង់ជុំវិញ ឲ្យតឹងល្មម មិនតឹងពេក។",
+        "ចងចុងបង់ឲ្យជាប់ ពិនិត្យលំហូរឈាម (ម្រាមដៃ/ជើងគួរតែក្តៅនិងមានពណ៌ផ្កាឈូក)។"
+      ]},
+      tl:{ name:"Bukas na Sugat / Pagdurugo", steps:[
+        "Banlawan ang sugat gamit ang malinis na tubig; iwasang hawakan ito nang direkta gamit ang hubad na kamay.",
+        "Takpan nang buo ang sugat gamit ang sterile na gasa.",
+        "Balutin ng bendahe, mahigpit pero hindi masyadong mahigpit.",
+        "Ayusin ang dulo ng bendahe at tingnan ang sirkulasyon (dapat mainit at may kulay rosas ang mga daliri)."
+      ]},
+      ms:{ name:"Luka Terbuka / Pendarahan", steps:[
+        "Bilas luka dengan air bersih; elakkan menyentuhnya secara terus dengan tangan kosong.",
+        "Tutup luka sepenuhnya dengan kain kasa steril.",
+        "Balut dengan pembalut, kemas tetapi tidak terlalu ketat.",
+        "Kukuhkan hujung pembalut dan periksa peredaran darah (jari tangan/kaki harus kekal hangat dan berwarna merah jambu)."
+      ]},
+      zh:{ name:"开放性伤口 / 出血", steps:[
+        "用干净的水冲洗伤口,避免直接用手触摸。",
+        "用无菌纱布完全覆盖伤口。",
+        "用绷带缠绕,松紧适度,不要太紧。",
+        "固定绷带末端,检查血液循环(手指/脚趾应保持温暖和红润)。"
+      ]},
+      ja:{ name:"開放創 / 出血", steps:[
+        "きれいな水で傷口を洗い流してください。素手で直接触れないようにしてください。",
+        "滅菌ガーゼで傷口を完全に覆ってください。",
+        "包帯を巻いてください。きつすぎないようにしっかりと巻きます。",
+        "包帯の端を固定し、血流を確認してください(指先が温かくピンク色であること)。"
+      ]},
+      ko:{ name:"열린 상처 / 출혈", steps:[
+        "깨끗한 물로 상처를 씻으세요. 맨손으로 직접 만지지 마세요.",
+        "멸균 거즈로 상처를 완전히 덮으세요.",
+        "붕대를 감으세요. 너무 조이지 않게 적당히 감습니다.",
+        "붕대 끝을 고정하고 혈액 순환을 확인하세요(손가락/발가락이 따뜻하고 분홍빛이어야 합니다)."
+      ]},
+      np:{ name:"खुला घाउ / रगत बग्नु", steps:[
+        "सफा पानीले घाउ धुनुहोस्; खाली हातले सीधै नछुनुहोस्।",
+        "स्टेराइल गज पट्टीले घाउलाई पूर्ण रूपमा छोप्नुहोस्।",
+        "पट्टी बाँध्नुहोस्, बलियो तर धेरै कस्नु नपर्ने।",
+        "पट्टीको छेउ सुरक्षित गर्नुहोस् र रक्त संचार जाँच्नुहोस् (औंला/खुट्टा तातो र गुलाबी रहनुपर्छ)।"
+      ]},
+      is:{ name:"Opið sár / Blæðing", steps:[
+        "Skolið sárið með hreinu vatni; forðist að snerta það beint með berum höndum.",
+        "Hyljið sárið alveg með sæfðri grisju.",
+        "Vefjið sárabindi utan um, þétt en ekki of stíft.",
+        "Festið enda sárabindisins og athugið blóðflæði (fingur/tær ættu að vera hlý og bleik)."
+      ]},
+      ar:{ name:"جرح مفتوح / نزيف", steps:[
+        "اشطف الجرح بماء نظيف؛ تجنب لمسه مباشرة بيد عارية.",
+        "غطِّ الجرح بالكامل بشاش معقم.",
+        "لُف ضمادة حوله، بإحكام دون أن تكون ضيقة جداً.",
+        "ثبّت طرف الضمادة وتحقق من الدورة الدموية (يجب أن تبقى الأصابع دافئة ووردية اللون)."
+      ]},
+      sw:{ name:"Jeraha Wazi / Kutokwa na Damu", steps:[
+        "Osha jeraha kwa maji safi; epuka kugusa moja kwa moja kwa mkono mtupu.",
+        "Funika jeraha kabisa kwa chachi tasa.",
+        "Zungusha bandeji, kwa uimara lakini si kubana sana.",
+        "Kaza ncha ya bandeji na angalia mzunguko wa damu (vidole vinapaswa kubaki na joto na rangi ya waridi)."
+      ]}
+    }
+  },
+  splint: {
+    name: "Gãy xương / Trật khớp",
+    tags: ["gãy xương","trật khớp","gãy tay","gãy chân","biến dạng chi"],
+    icon: "🦴",
+    steps: [
+      "Không cố nắn thẳng xương gãy. Giữ nguyên tư thế bị thương.",
+      "Đặt vật cứng (que gỗ, thanh nẹp) dọc hai bên chi bị gãy.",
+      "Cố định nẹp bằng băng/vải ở phía trên và dưới vị trí gãy.",
+      "Kiểm tra không quấn quá chặt, di chuyển nạn nhân đến cơ sở y tế gần nhất."
+    ],
+    translations: {
+      en:{ name:"Broken bone / Dislocation", steps:[
+        "Do not try to straighten the broken bone. Keep the injured position as it is.",
+        "Place a rigid object (stick, splint) along both sides of the injured limb.",
+        "Secure the splint with bandage or cloth above and below the fracture site.",
+        "Check it isn't wrapped too tight, then move the victim to the nearest medical facility."
+      ]},
+      es:{ name:"Fractura / Dislocación", steps:[
+        "No intente enderezar el hueso roto. Mantenga la posición de la lesión tal como está.",
+        "Coloque un objeto rígido (palo, férula) a ambos lados de la extremidad lesionada.",
+        "Asegure la férula con vendas o tela por encima y por debajo del punto de fractura.",
+        "Verifique que no esté demasiado apretado y traslade a la víctima al centro médico más cercano."
+      ]},
+      fr:{ name:"Fracture / Luxation", steps:[
+        "N'essayez pas de redresser l'os cassé. Gardez la position de la blessure telle quelle.",
+        "Placez un objet rigide (bâton, attelle) de chaque côté du membre blessé.",
+        "Fixez l'attelle avec un bandage ou un tissu au-dessus et en dessous du site de fracture.",
+        "Vérifiez qu'elle n'est pas trop serrée, puis transportez la victime vers le centre médical le plus proche."
+      ]},
+      lo:{ name:"ກະດູກຫັກ / ຂໍ້ຫຼຸດ", steps:[
+        "ຢ່າພະຍາຍາມດັດກະດູກທີ່ຫັກໃຫ້ຊື່. ຮັກສາທ່າທາງບາດເຈັບໄວ້ຄືເດີມ.",
+        "ວາງວັດຖຸແຂງ (ໄມ້, ແຜ່ນເຝືອກ) ຕາມແຕ່ລະຂ້າງຂອງແຂນຂາທີ່ບາດເຈັບ.",
+        "ຍຶດແຜ່ນເຝືອກດ້ວຍຜ້າພັນແຜຫຼືຜ້າ ຢູ່ເທິງ ແລະ ລຸ່ມຈຸດຫັກ.",
+        "ກວດເບິ່ງບໍ່ໃຫ້ພັນແໜ້ນເກີນໄປ, ຈາກນັ້ນເຄື່ອນຍ້າຍຜູ້ບາດເຈັບໄປສະຖານທີ່ແພດໃກ້ທີ່ສຸດ."
+      ]},
+      th:{ name:"กระดูกหัก / ข้อเคลื่อน", steps:[
+        "อย่าพยายามดัดกระดูกที่หักให้ตรง คงท่าทางบาดเจ็บไว้ตามเดิม",
+        "วางวัตถุแข็ง (ไม้ เฝือก) ไว้ทั้งสองข้างของแขนขาที่บาดเจ็บ",
+        "ยึดเฝือกด้วยผ้าพันแผลหรือผ้า เหนือและใต้จุดที่หัก",
+        "ตรวจสอบว่าไม่พันแน่นเกินไป แล้วนำผู้บาดเจ็บส่งสถานพยาบาลที่ใกล้ที่สุด"
+      ]},
+      km:{ name:"ឆ្អឹងបាក់ / សន្លាក់ធ្លាក់", steps:[
+        "កុំព្យាយាមធ្វើឲ្យត្រង់ឆ្អឹងដែលបាក់។ រក្សាទីតាំងរបួសដដែល។",
+        "ដាក់វត្ថុរឹង (ដំបង ឬបន្ទះឈើ) នៅសងខាងអវយវៈដែលរបួស។",
+        "ចងបន្ទះនោះជាមួយបង់ ឬក្រណាត់ នៅលើនិងក្រោមចំណុចបាក់។",
+        "ពិនិត្យកុំឲ្យតឹងពេក រួចដឹកជញ្ជូនអ្នករបួសទៅមណ្ឌលសុខភាពជិតបំផុត។"
+      ]},
+      tl:{ name:"Baling Buto / Pagkalinsad", steps:[
+        "Huwag subukang ituwid ang baling buto. Panatilihin ang posisyon ng sugat.",
+        "Maglagay ng matigas na bagay (patpat, splint) sa magkabilang gilid ng nasaktang bahagi ng katawan.",
+        "Ayusin ang splint gamit ang bendahe o tela sa itaas at ibaba ng bali.",
+        "Tiyaking hindi masyadong mahigpit, pagkatapos ay dalhin ang biktima sa pinakamalapit na pasilidad medikal."
+      ]},
+      ms:{ name:"Tulang Patah / Terkehel", steps:[
+        "Jangan cuba meluruskan tulang yang patah. Kekalkan kedudukan kecederaan seperti sedia ada.",
+        "Letakkan objek tegar (kayu, splin) di kedua-dua belah anggota yang cedera.",
+        "Kukuhkan splin dengan pembalut atau kain di atas dan bawah lokasi patah.",
+        "Pastikan tidak terlalu ketat, kemudian bawa mangsa ke kemudahan perubatan terdekat."
+      ]},
+      zh:{ name:"骨折 / 脱臼", steps:[
+        "不要试图将断骨拉直。保持受伤姿势不变。",
+        "在受伤肢体两侧放置硬物(木棍、夹板)。",
+        "用绷带或布条在骨折处上下固定夹板。",
+        "检查是否包扎过紧,然后将伤者转移至最近的医疗机构。"
+      ]},
+      ja:{ name:"骨折 / 脱臼", steps:[
+        "折れた骨を無理に真っ直ぐにしようとしないでください。負傷した姿勢のまま保ってください。",
+        "負傷した手足の両側に硬い物(棒、添え木)を当ててください。",
+        "骨折箇所の上下を包帯や布で添え木を固定してください。",
+        "きつく巻きすぎていないか確認し、負傷者を最寄りの医療機関へ移送してください。"
+      ]},
+      ko:{ name:"골절 / 탈구", steps:[
+        "부러진 뼈를 억지로 펴려 하지 마세요. 다친 자세를 그대로 유지하세요.",
+        "다친 팔다리 양쪽에 단단한 물체(막대, 부목)를 대세요.",
+        "골절 부위 위아래를 붕대나 천으로 부목에 고정하세요.",
+        "너무 조이지 않았는지 확인한 후 부상자를 가장 가까운 의료 시설로 옮기세요."
+      ]},
+      np:{ name:"हड्डी भाँचिनु / जोर्नी उछिट्टिनु", steps:[
+        "भाँचिएको हड्डी सोझो पार्ने प्रयास नगर्नुहोस्। चोट लागेको अवस्था जस्ताको त्यस्तै राख्नुहोस्।",
+        "चोट लागेको अंगको दुवैतर्फ कडा वस्तु (लट्ठी, स्प्लिन्ट) राख्नुहोस्।",
+        "भाँचिएको ठाउँको माथि र तल पट्टी वा कपडाले स्प्लिन्ट बाँध्नुहोस्।",
+        "धेरै कसिएको छैन भनी जाँच गरी घाइतेलाई नजिकैको स्वास्थ्य केन्द्रमा लैजानुहोस्।"
+      ]},
+      is:{ name:"Beinbrot / Liðhlaup", steps:[
+        "Reynið ekki að rétta úr brotnu beini. Haldið meiðslastöðunni óbreyttri.",
+        "Setjið stífan hlut (staf, spelku) meðfram báðum hliðum útlimsins.",
+        "Festið spelkuna með sárabindi eða klæði fyrir ofan og neðan brotstaðinn.",
+        "Gætið þess að ekki sé of þétt vafið, flytjið síðan slasaða á næstu heilsugæslu."
+      ]},
+      ar:{ name:"كسر عظمي / خلع", steps:[
+        "لا تحاول تقويم العظم المكسور. حافظ على وضعية الإصابة كما هي.",
+        "ضع جسماً صلباً (عصا، جبيرة) على جانبي الطرف المصاب.",
+        "ثبّت الجبيرة بضمادة أو قماش فوق وتحت موضع الكسر.",
+        "تأكد من أنها ليست مربوطة بإحكام شديد، ثم انقل المصاب إلى أقرب مرفق طبي."
+      ]},
+      sw:{ name:"Mfupa Uliovunjika / Kutenguka kwa Kiungo", steps:[
+        "Usijaribu kunyoosha mfupa uliovunjika. Weka msimamo wa jeraha jinsi ulivyo.",
+        "Weka kitu kigumu (fimbo, banzi) pande zote mbili za kiungo kilichoumia.",
+        "Kaza banzi kwa bandeji au kitambaa juu na chini ya sehemu iliyovunjika.",
+        "Hakikisha halijafungwa kwa kubana sana, kisha msafirishe mgonjwa kituo cha afya kilicho karibu zaidi."
+      ]}
+    }
+  },
+  burn: {
+    name: "Bỏng (lửa / nước sôi / hóa chất)",
+    tags: ["bỏng","phỏng","bỏng lửa","bỏng nước sôi","bỏng hóa chất"],
+    icon: "🔥",
+    steps: [
+      "Làm mát vết bỏng dưới vòi nước mát (không dùng đá) trong 10–20 phút.",
+      "Tháo bỏ trang sức/quần áo gần vùng bỏng trước khi vết bỏng sưng lên.",
+      "Che vết bỏng bằng gạc sạch, không dính; không bôi kem đánh răng/bơ/dầu lên vết bỏng.",
+      "Nếu bỏng diện rộng, ở mặt/tay, hoặc bỏng sâu — tìm cấp cứu ngay."
+    ],
+    translations: {
+      en:{ name:"Burn (fire / hot water / chemical)", steps:[
+        "Cool the burn under cool running water (not ice) for 10–20 minutes.",
+        "Remove jewelry/clothing near the burn before it swells.",
+        "Cover the burn with clean, non-stick gauze; do not apply toothpaste, butter, or oil.",
+        "If the burn is large, on the face/hands, or deep — seek emergency help immediately."
+      ]},
+      es:{ name:"Quemadura (fuego / agua caliente / química)", steps:[
+        "Enfríe la quemadura con agua corriente fresca (no hielo) durante 10 a 20 minutos.",
+        "Retire joyas/ropa cerca de la quemadura antes de que se hinche.",
+        "Cubra la quemadura con gasa limpia y no adherente; no aplique pasta de dientes, mantequilla ni aceite.",
+        "Si la quemadura es extensa, está en la cara/manos, o es profunda, busque ayuda de emergencia de inmediato."
+      ]},
+      fr:{ name:"Brûlure (feu / eau chaude / chimique)", steps:[
+        "Refroidissez la brûlure sous l'eau courante fraîche (pas de glace) pendant 10 à 20 minutes.",
+        "Retirez bijoux/vêtements près de la brûlure avant qu'elle n'enfle.",
+        "Couvrez la brûlure avec une gaze propre non adhésive ; n'appliquez ni dentifrice, ni beurre, ni huile.",
+        "Si la brûlure est étendue, sur le visage/les mains, ou profonde — cherchez une aide d'urgence immédiatement."
+      ]},
+      lo:{ name:"ບາດແຜໄໝ້ (ໄຟ / ນ້ຳຮ້ອນ / ສານເຄມີ)", steps:[
+        "ເຮັດໃຫ້ບາດແຜໄໝ້ເຢັນລົງດ້ວຍນ້ຳໄຫຼເຢັນ (ບໍ່ໃຊ້ນ້ຳກ້ອນ) ເປັນເວລາ 10-20 ນາທີ.",
+        "ຖອດເຄື່ອງປະດັບ/ເສື້ອຜ້າໃກ້ບາດແຜກ່ອນມັນຈະບວມ.",
+        "ປົກປິດບາດແຜດ້ວຍຜ້າກອສສະອາດ ບໍ່ຕິດ; ຢ່າທາຢາສີແຂ້ວ, ເນີຍ, ຫຼືນ້ຳມັນ.",
+        "ຖ້າບາດແຜໄໝ້ກວ້າງ, ຢູ່ໃບໜ້າ/ມື, ຫຼືເລິກ — ຫາຄວາມຊ່ວຍເຫຼືອສຸກເສີນທັນທີ."
+      ]},
+      th:{ name:"แผลไหม้ (ไฟ / น้ำร้อน / สารเคมี)", steps:[
+        "ทำให้แผลไหม้เย็นลงด้วยน้ำไหลเย็น (ไม่ใช้น้ำแข็ง) เป็นเวลา 10-20 นาที",
+        "ถอดเครื่องประดับ/เสื้อผ้าใกล้แผลก่อนที่จะบวม",
+        "ปิดแผลด้วยผ้าก๊อซสะอาดชนิดไม่ติดแผล; ห้ามทายาสีฟัน เนย หรือน้ำมัน",
+        "หากแผลไหม้กว้าง อยู่ที่ใบหน้า/มือ หรือลึก ให้ไปพบแพทย์ฉุกเฉินทันที"
+      ]},
+      km:{ name:"ការដុតបំផ្លាញ (ភ្លើង / ទឹកក្តៅ / គីមី)", steps:[
+        "ធ្វើឲ្យត្រជាក់ដោយទឹកហូរត្រជាក់ (មិនប្រើទឹកកក) រយៈពេល ១០-២០ នាទី។",
+        "ដកចេញគ្រឿងអលង្ការ/សម្លៀកបំពាក់ជិតកន្លែងដុត មុននឹងវាហើម។",
+        "គ្របដណ្តប់ដោយកំបោរស្អាតមិនជាប់; កុំលាបថ្នាំដុសធ្មេញ ប៊ឺរ ឬប្រេង។",
+        "ប្រសិនបើដុតទូលំទូលាយ នៅមុខ/ដៃ ឬជ្រៅ សូមស្វែងរកជំនួយបន្ទាន់ភ្លាមៗ។"
+      ]},
+      tl:{ name:"Paso (apoy / mainit na tubig / kemikal)", steps:[
+        "Palamigin ang paso gamit ang malamig na umaagos na tubig (hindi yelo) sa loob ng 10–20 minuto.",
+        "Alisin ang alahas/damit malapit sa paso bago ito mamaga.",
+        "Takpan ang paso ng malinis, hindi dumidikit na gasa; huwag maglagay ng toothpaste, mantikilya, o langis.",
+        "Kung malawak ang paso, nasa mukha/kamay, o malalim — humingi agad ng emergency na tulong."
+      ]},
+      ms:{ name:"Luka Bakar (api / air panas / kimia)", steps:[
+        "Sejukkan luka bakar di bawah air mengalir yang sejuk (bukan ais) selama 10–20 minit.",
+        "Tanggalkan barang kemas/pakaian berhampiran luka bakar sebelum ia bengkak.",
+        "Tutup luka bakar dengan kain kasa bersih tidak melekat; jangan sapukan ubat gigi, mentega, atau minyak.",
+        "Jika luka bakar luas, di muka/tangan, atau dalam — dapatkan bantuan kecemasan segera."
+      ]},
+      zh:{ name:"烧伤(火 / 热水 / 化学品)", steps:[
+        "用凉水(不用冰)冲洗烧伤处10-20分钟降温。",
+        "在肿胀前取下烧伤附近的首饰/衣物。",
+        "用干净、不粘的纱布覆盖烧伤处;不要涂抹牙膏、黄油或油。",
+        "如果烧伤面积大、位于面部/手部,或较深——立即寻求紧急救助。"
+      ]},
+      ja:{ name:"火傷(火 / 熱湯 / 薬品)", steps:[
+        "冷たい流水(氷は使わない)で10〜20分間、火傷を冷やしてください。",
+        "腫れる前に火傷の近くの装飾品/衣類を外してください。",
+        "清潔で貼り付かないガーゼで覆ってください。歯磨き粉、バター、油は塗らないでください。",
+        "火傷が広範囲、顔や手にある、または深い場合はすぐに緊急の助けを求めてください。"
+      ]},
+      ko:{ name:"화상 (불 / 뜨거운 물 / 화학물질)", steps:[
+        "차가운 흐르는 물(얼음 사용 금지)로 10~20분간 화상 부위를 식히세요.",
+        "부어오르기 전에 화상 부위 근처의 장신구/옷을 제거하세요.",
+        "깨끗하고 들러붙지 않는 거즈로 덮으세요. 치약, 버터, 기름은 바르지 마세요.",
+        "화상이 넓거나 얼굴/손에 있거나 깊다면 즉시 응급 도움을 요청하세요."
+      ]},
+      np:{ name:"पोलेको घाउ (आगो / तातो पानी / रसायन)", steps:[
+        "१०-२० मिनेटसम्म चिसो बगिरहेको पानी (बरफ होइन) मुनि पोलेको ठाउँ चिसो पार्नुहोस्।",
+        "सुन्निनु अघि पोलेको ठाउँ नजिकका गहना/लुगा फुकाल्नुहोस्।",
+        "सफा, नटाँस्ने गजले छोप्नुहोस्; टुथपेस्ट, घिउ वा तेल नलगाउनुहोस्।",
+        "पोलेको ठाउँ ठूलो, अनुहार/हातमा, वा गहिरो भए तुरुन्तै आपतकालीन मद्दत लिनुहोस्।"
+      ]},
+      is:{ name:"Bruni (eldur / heitt vatn / efni)", steps:[
+        "Kælið brunann undir köldu rennandi vatni (ekki ís) í 10–20 mínútur.",
+        "Fjarlægið skartgripi/föt nálægt brunanum áður en hann bólgnar.",
+        "Hyljið brunann með hreinni, ekki límandi grisju; setjið hvorki tannkrem, smjör né olíu á brunann.",
+        "Ef bruninn er stór, á andliti/höndum, eða djúpur — leitið tafarlaust neyðaraðstoðar."
+      ]},
+      ar:{ name:"حرق (نار / ماء ساخن / مواد كيميائية)", steps:[
+        "برّد الحرق تحت ماء جارٍ بارد (وليس ثلجاً) لمدة 10-20 دقيقة.",
+        "أزل المجوهرات/الملابس القريبة من الحرق قبل أن يتورم.",
+        "غطِّ الحرق بشاش نظيف غير لاصق؛ لا تضع معجون أسنان أو زبدة أو زيتاً.",
+        "إذا كان الحرق واسعاً، أو في الوجه/اليدين، أو عميقاً — اطلب المساعدة الطارئة فوراً."
+      ]},
+      sw:{ name:"Kuungua (moto / maji ya moto / kemikali)", steps:[
+        "Poza sehemu iliyoungua kwa maji baridi yanayotiririka (si barafu) kwa dakika 10-20.",
+        "Ondoa vito/nguo karibu na eneo lililoungua kabla halijavimba.",
+        "Funika kwa chachi safi isiyoshikamana; usipake dawa ya meno, siagi, au mafuta.",
+        "Ikiwa kuungua ni kukubwa, kwenye uso/mikono, au kwa kina — tafuta msaada wa dharura mara moja."
+      ]}
+    }
+  },
+  foodpoison: {
+    name: "Ngộ độc thực phẩm",
+    tags: ["ngộ độc","ngộ độc thực phẩm","đau bụng nôn","tiêu chảy","nôn mửa"],
+    icon: "🤢",
+    steps: [
+      "Ngừng ăn thực phẩm nghi ngờ, giữ lại mẫu nếu có thể để xác định nguyên nhân.",
+      "Uống nước/dung dịch bù điện giải từng ngụm nhỏ để tránh mất nước.",
+      "Nghỉ ngơi, tránh đồ ăn đặc cho đến khi hết buồn nôn.",
+      "Nếu nôn/tiêu chảy kéo dài, sốt cao, hoặc có máu — tìm cấp cứu ngay."
+    ],
+    translations: {
+      en:{ name:"Food poisoning", steps:[
+        "Stop eating the suspected food; keep a sample if possible to identify the cause.",
+        "Sip water or oral rehydration solution slowly to avoid dehydration.",
+        "Rest and avoid solid food until nausea subsides.",
+        "If vomiting/diarrhea persists, high fever, or blood appears — seek emergency care immediately."
+      ]},
+      es:{ name:"Intoxicación alimentaria", steps:[
+        "Deje de comer el alimento sospechoso; guarde una muestra si es posible para identificar la causa.",
+        "Beba agua o suero de rehidratación oral a sorbos lentos para evitar la deshidratación.",
+        "Descanse y evite alimentos sólidos hasta que ceda la náusea.",
+        "Si el vómito o la diarrea persisten, hay fiebre alta o sangre, busque atención de emergencia de inmediato."
+      ]},
+      fr:{ name:"Intoxication alimentaire", steps:[
+        "Arrêtez de manger l'aliment suspect ; gardez un échantillon si possible pour identifier la cause.",
+        "Buvez de l'eau ou une solution de réhydratation orale lentement pour éviter la déshydratation.",
+        "Reposez-vous et évitez les aliments solides jusqu'à ce que les nausées cessent.",
+        "Si les vomissements/diarrhées persistent, forte fièvre, ou du sang apparaît — cherchez une aide d'urgence immédiatement."
+      ]},
+      lo:{ name:"ອາຫານເປັນພິດ", steps:[
+        "ຢຸດກິນອາຫານທີ່ສົງໄສ, ເກັບຕົວຢ່າງໄວ້ຖ້າເປັນໄປໄດ້ເພື່ອຊອກຫາສາເຫດ.",
+        "ດື່ມນ້ຳ ຫຼືນ້ຳເກືອແຮ່ເທື່ອລະໜ້ອຍ ເພື່ອປ້ອງກັນການຂາດນ້ຳ.",
+        "ພັກຜ່ອນ ແລະ ຫຼີກລ່ຽງອາຫານແຂງຈົນກວ່າອາການປວດຮາກຈະດີຂຶ້ນ.",
+        "ຖ້າຮາກ/ຖອກທ້ອງຕໍ່ເນື່ອງ, ໄຂ້ສູງ, ຫຼືມີເລືອດ — ຫາຄວາມຊ່ວຍເຫຼືອສຸກເສີນທັນທີ."
+      ]},
+      th:{ name:"อาหารเป็นพิษ", steps:[
+        "หยุดกินอาหารที่สงสัย เก็บตัวอย่างไว้หากเป็นไปได้เพื่อหาสาเหตุ",
+        "จิบน้ำหรือเกลือแร่ทีละน้อยเพื่อป้องกันการขาดน้ำ",
+        "พักผ่อนและหลีกเลี่ยงอาหารแข็งจนกว่าอาการคลื่นไส้จะดีขึ้น",
+        "หากอาเจียน/ท้องเสียต่อเนื่อง มีไข้สูง หรือมีเลือด ให้ไปพบแพทย์ฉุกเฉินทันที"
+      ]},
+      km:{ name:"ការពុលអាហារ", steps:[
+        "ឈប់ញ៉ាំអាហារដែលសង្ស័យ ទុកគំរូប្រសិនបើអាចដើម្បីរកមូលហេតុ។",
+        "ផឹកទឹក ឬសារធាតុរាវជំនួសទឹកបន្តិចម្តងៗ ដើម្បីជៀសវាងការខះជាតិទឹក។",
+        "សម្រាក និងជៀសវាងអាហាររឹងរហូតដល់អស់ចង់ក្អួត។",
+        "ប្រសិនបើក្អួត/រាគរូសបន្តរហូត គ្រុនក្តៅខ្លាំង ឬមានឈាម សូមស្វែងរកជំនួយបន្ទាន់ភ្លាមៗ។"
+      ]},
+      tl:{ name:"Pagkalason sa Pagkain", steps:[
+        "Itigil ang pagkain ng pinaghihinalaang pagkain; itago ang sample kung maaari upang matukoy ang sanhi.",
+        "Uminom ng tubig o oral rehydration solution nang dahan-dahan upang maiwasan ang dehydration.",
+        "Magpahinga at iwasan ang matigas na pagkain hanggang mawala ang pagkasuka.",
+        "Kung nagpapatuloy ang pagsusuka/pagtatae, may mataas na lagnat, o may dugo — humingi agad ng emergency na tulong."
+      ]},
+      ms:{ name:"Keracunan Makanan", steps:[
+        "Berhenti makan makanan yang disyaki; simpan sampel jika boleh untuk mengenal pasti punca.",
+        "Minum air atau larutan penggantian elektrolit sedikit demi sedikit untuk mengelakkan dehidrasi.",
+        "Berehat dan elakkan makanan pejal sehingga loya reda.",
+        "Jika muntah/cirit-birit berterusan, demam tinggi, atau terdapat darah — dapatkan bantuan kecemasan segera."
+      ]},
+      zh:{ name:"食物中毒", steps:[
+        "停止食用可疑食物;如可能保留样本以查明原因。",
+        "慢慢啜饮水或口服补液盐溶液,以防脱水。",
+        "休息并避免固体食物,直到恶心症状缓解。",
+        "如果呕吐/腹泻持续、高烧,或出现血便——立即寻求紧急救助。"
+      ]},
+      ja:{ name:"食中毒", steps:[
+        "疑わしい食品を食べるのをやめてください。可能であれば原因特定のためサンプルを保管してください。",
+        "脱水を防ぐため、水や経口補水液を少しずつ飲んでください。",
+        "吐き気が治まるまで休息し、固形物を避けてください。",
+        "嘔吐や下痢が続く、高熱、または血が混じる場合はすぐに緊急の助けを求めてください。"
+      ]},
+      ko:{ name:"식중독", steps:[
+        "의심되는 음식 섭취를 중단하고, 가능하면 원인 파악을 위해 샘플을 보관하세요.",
+        "탈수를 막기 위해 물이나 경구 수분보충액을 조금씩 천천히 마시세요.",
+        "메스꺼움이 가라앉을 때까지 휴식하고 고형 음식을 피하세요.",
+        "구토/설사가 계속되거나 고열, 혈변이 있으면 즉시 응급 도움을 요청하세요."
+      ]},
+      np:{ name:"खाना विषाक्तता", steps:[
+        "शंका लागेको खाना खान बन्द गर्नुहोस्; सम्भव भए कारण पत्ता लगाउन नमूना राख्नुहोस्।",
+        "निर्जलीकरण रोक्न पानी वा ओआरएस बिस्तारै घुट्को-घुट्को खानुहोस्।",
+        "वाकवाकी कम नभएसम्म आराम गर्नुहोस् र कडा खाना नखानुहोस्।",
+        "बान्ता/पखाला जारी रहे, धेरै ज्वरो आए, वा रगत देखिए तुरुन्तै आपतकालीन मद्दत लिनुहोस्।"
+      ]},
+      is:{ name:"Matareitrun", steps:[
+        "Hættið að borða grunsamlega matinn; geymið sýnishorn ef hægt er til að greina orsökina.",
+        "Drekkið vatn eða saltlausn hægt til að forðast ofþornun.",
+        "Hvílist og forðist fasta fæðu þar til ógleðin minnkar.",
+        "Ef uppköst/niðurgangur halda áfram, hár hiti, eða blóð sést — leitið tafarlaust neyðaraðstoðar."
+      ]},
+      ar:{ name:"تسمم غذائي", steps:[
+        "توقف عن تناول الطعام المشتبه به؛ احتفظ بعينة إن أمكن لتحديد السبب.",
+        "اشرب الماء أو محلول الإماهة الفموية ببطء لتجنب الجفاف.",
+        "استرح وتجنب الطعام الصلب حتى يخف الغثيان.",
+        "إذا استمر القيء/الإسهال، أو ارتفعت الحرارة، أو ظهر دم — اطلب الرعاية الطارئة فوراً."
+      ]},
+      sw:{ name:"Sumu ya Chakula", steps:[
+        "Acha kula chakula kinachoshukiwa; hifadhi sampuli ikiwezekana kubaini chanzo.",
+        "Kunywa maji au maji ya chumvi-sukari taratibu kuepuka upungufu wa maji mwilini.",
+        "Pumzika na epuka vyakula vigumu mpaka kichefuchefu kipungue.",
+        "Ikiwa kutapika/kuharisha kunaendelea, homa kali, au damu ionekane — tafuta msaada wa dharura mara moja."
+      ]}
+    }
+  },
+  heatstroke: {
+    name: "Sốc nhiệt / Say nắng",
+    tags: ["say nắng","sốc nhiệt","kiệt sức vì nóng","trúng nắng","cảm nắng"],
+    icon: "☀️",
+    steps: [
+      "Đưa nạn nhân vào bóng râm hoặc nơi mát ngay lập tức.",
+      "Cởi bớt quần áo, làm mát bằng khăn ướt hoặc quạt.",
+      "Cho uống nước mát nếu còn tỉnh táo, từng ngụm nhỏ.",
+      "Nếu lú lẫn, co giật, hoặc bất tỉnh — đây là cấp cứu, tìm trợ giúp ngay."
+    ],
+    translations: {
+      en:{ name:"Heat stroke / Sunstroke", steps:[
+        "Move the person into shade or a cool place immediately.",
+        "Remove excess clothing; cool with wet cloths or a fan.",
+        "Give cool water in small sips if the person is still conscious.",
+        "If confused, seizing, or unconscious — this is an emergency, get help immediately."
+      ]},
+      es:{ name:"Golpe de calor / Insolación", steps:[
+        "Traslade a la persona a la sombra o a un lugar fresco de inmediato.",
+        "Quítele el exceso de ropa; enfríe con paños húmedos o un ventilador.",
+        "Dele agua fresca en pequeños sorbos si sigue consciente.",
+        "Si está confundida, convulsiona o pierde el conocimiento, es una emergencia; busque ayuda de inmediato."
+      ]},
+      fr:{ name:"Coup de chaleur / Insolation", steps:[
+        "Déplacez la personne à l'ombre ou dans un endroit frais immédiatement.",
+        "Retirez l'excès de vêtements ; refroidissez avec des linges humides ou un ventilateur.",
+        "Donnez de l'eau fraîche par petites gorgées si la personne est encore consciente.",
+        "Si elle est confuse, convulse, ou inconsciente — c'est une urgence, cherchez de l'aide immédiatement."
+      ]},
+      lo:{ name:"ຮ້ອນແດດ / ຮ້ອນໃນ", steps:[
+        "ພານັກຮ້ຽນເຂົ້າຮົ່ມ ຫຼືບ່ອນເຢັນທັນທີ.",
+        "ຖອດເສື້ອຜ້າສ່ວນເກີນ; ເຮັດໃຫ້ເຢັນດ້ວຍຜ້າປຽກ ຫຼືພັດລົມ.",
+        "ໃຫ້ດື່ມນ້ຳເຢັນເທື່ອລະໜ້ອຍ ຖ້າຍັງມີສະຕິ.",
+        "ຖ້າສັບສົນ, ຊັກ, ຫຼືສະລົບ — ນີ້ແມ່ນສຸກເສີນ, ຫາຄວາມຊ່ວຍເຫຼືອທັນທີ."
+      ]},
+      th:{ name:"โรคลมแดด / เพลียแดด", steps:[
+        "พาผู้ป่วยเข้าที่ร่มหรือที่เย็นทันที",
+        "ถอดเสื้อผ้าส่วนเกิน เช็ดตัวด้วยผ้าเปียกหรือใช้พัดลม",
+        "ให้ดื่มน้ำเย็นทีละน้อยหากยังมีสติ",
+        "หากสับสน ชัก หรือหมดสติ นี่คือภาวะฉุกเฉิน ให้ขอความช่วยเหลือทันที"
+      ]},
+      km:{ name:"ការឆក់កំដៅ / ថ្ងៃរដូវក្តៅ", steps:[
+        "នាំអ្នកជំងឺទៅកន្លែងម្លប់ ឬត្រជាក់ភ្លាមៗ។",
+        "ដកសម្លៀកបំពាក់លើសចេញ ធ្វើឲ្យត្រជាក់ដោយក្រណាត់សើម ឬកង្ហារ។",
+        "ឲ្យផឹកទឹកត្រជាក់បន្តិចម្តងៗ ប្រសិនបើនៅមានស្មារតី។",
+        "ប្រសិនបើច្របូកច្របល់ ប្រកាច់ ឬសន្លប់ នេះជាអាសន្ន សូមស្វែងរកជំនួយភ្លាមៗ។"
+      ]},
+      tl:{ name:"Heat Stroke / Sunstroke", steps:[
+        "Ilipat kaagad ang tao sa lilim o malamig na lugar.",
+        "Alisin ang labis na damit; palamigin gamit ang basang tuwalya o electric fan.",
+        "Bigyan ng malamig na tubig nang paunti-unti kung malay pa.",
+        "Kung nalilito, may kombulsyon, o walang malay — ito ay emergency, humingi agad ng tulong."
+      ]},
+      ms:{ name:"Angin Panas / Sengatan Matahari", steps:[
+        "Alihkan mangsa ke tempat teduh atau sejuk dengan segera.",
+        "Tanggalkan pakaian berlebihan; sejukkan dengan kain lembap atau kipas.",
+        "Berikan air sejuk sedikit demi sedikit jika masih sedar.",
+        "Jika keliru, sawan, atau tidak sedarkan diri — ini kecemasan, dapatkan bantuan segera."
+      ]},
+      zh:{ name:"中暑", steps:[
+        "立即将患者移到阴凉或凉爽的地方。",
+        "脱去多余衣物;用湿毛巾或风扇降温。",
+        "如果患者仍清醒,让其小口喝凉水。",
+        "如果出现意识混乱、抽搐或昏迷——这是紧急情况,立即寻求帮助。"
+      ]},
+      ja:{ name:"熱中症 / 日射病", steps:[
+        "すぐに日陰や涼しい場所に移動させてください。",
+        "余分な衣服を脱がせ、濡れた布や扇風機で冷やしてください。",
+        "意識がある場合は、冷たい水を少しずつ飲ませてください。",
+        "混乱、けいれん、または意識不明の場合はすぐに緊急の助けを求めてください。"
+      ]},
+      ko:{ name:"열사병 / 일사병", steps:[
+        "즉시 그늘이나 시원한 곳으로 옮기세요.",
+        "여분의 옷을 벗기고 젖은 천이나 선풍기로 식히세요.",
+        "의식이 있으면 차가운 물을 조금씩 주세요.",
+        "혼란스러워하거나 경련, 의식 소실이 있으면 응급 상황이니 즉시 도움을 요청하세요."
+      ]},
+      np:{ name:"तापघात / लू लाग्नु", steps:[
+        "व्यक्तिलाई तुरुन्तै छायाँ वा चिसो ठाउँमा लैजानुहोस्।",
+        "अतिरिक्त लुगा फुकाल्नुहोस्; भिजेको कपडा वा पंखाले चिसो पार्नुहोस्।",
+        "होस मा भए चिसो पानी थोरै-थोरै दिनुहोस्।",
+        "भ्रमित, ऐंठन वा बेहोश भए यो आपतकालीन हो, तुरुन्तै मद्दत लिनुहोस्।"
+      ]},
+      is:{ name:"Hitaslag / Sólsting", steps:[
+        "Færið manneskjuna strax í skugga eða svalan stað.",
+        "Fjarlægið umframföt; kælið með rökum klútum eða viftu.",
+        "Gefið kalt vatn í litlum sopum ef manneskjan er enn með meðvitund.",
+        "Ef ruglingur, krampar, eða meðvitundarleysi — þetta er neyðartilvik, leitið tafarlaust hjálpar."
+      ]},
+      ar:{ name:"ضربة شمس / إجهاد حراري", steps:[
+        "انقل الشخص إلى الظل أو مكان بارد فوراً.",
+        "أزل الملابس الزائدة؛ برّده بقماش مبلل أو مروحة.",
+        "أعطه ماءً بارداً على شكل رشفات صغيرة إذا كان واعياً.",
+        "إذا كان مرتبكاً، أو يعاني تشنجات، أو فاقداً للوعي — هذه حالة طارئة، اطلب المساعدة فوراً."
+      ]},
+      sw:{ name:"Kiharusi cha Joto / Jua Kali", steps:[
+        "Mhamishe mtu kivulini au mahali penye baridi mara moja.",
+        "Ondoa nguo za ziada; poza kwa kitambaa chenye unyevu au feni.",
+        "Mpe maji baridi kidogo kidogo ikiwa bado ana fahamu.",
+        "Ikiwa amechanganyikiwa, ana degedege, au amepoteza fahamu — hii ni dharura, tafuta msaada mara moja."
+      ]}
+    }
+  },
+  bite: {
+    name: "Rắn cắn / Côn trùng cắn",
+    tags: ["rắn cắn","côn trùng cắn","ong đốt","bọ cạp cắn","kiến cắn"],
+    icon: "🐍",
+    steps: [
+      "Giữ bình tĩnh, hạn chế cử động vùng bị cắn/đốt để làm chậm lan độc.",
+      "Rửa sạch vết cắn bằng nước, tháo trang sức gần vùng bị cắn.",
+      "Cố định chi bị cắn ở vị trí thấp hơn tim; không rạch, hút hay garô vết thương.",
+      "Tìm cấp cứu y tế ngay; nếu có thể, ghi nhớ đặc điểm con vật để nhận diện."
+    ],
+    translations: {
+      en:{ name:"Snake / Insect bite or sting", steps:[
+        "Stay calm and limit movement of the bitten area to slow the spread of venom.",
+        "Wash the bite with water; remove jewelry near the area.",
+        "Keep the limb lower than the heart; do not cut, suck, or apply a tourniquet to the wound.",
+        "Seek medical help immediately; if possible, remember the animal's features for identification."
+      ]},
+      es:{ name:"Mordedura de serpiente / Picadura de insecto", steps:[
+        "Mantenga la calma y limite el movimiento de la zona afectada para retrasar la propagación del veneno.",
+        "Lave la mordedura con agua; retire joyas cercanas a la zona.",
+        "Mantenga la extremidad más baja que el corazón; no corte, succione ni aplique torniquete a la herida.",
+        "Busque ayuda médica de inmediato; si es posible, recuerde las características del animal para identificarlo."
+      ]},
+      fr:{ name:"Morsure de serpent / Piqûre d'insecte", steps:[
+        "Restez calme et limitez le mouvement de la zone mordue pour ralentir la propagation du venin.",
+        "Lavez la morsure à l'eau ; retirez les bijoux près de la zone.",
+        "Gardez le membre plus bas que le cœur ; ne coupez pas, n'aspirez pas, n'appliquez pas de garrot sur la plaie.",
+        "Cherchez une aide médicale immédiatement ; si possible, mémorisez les caractéristiques de l'animal pour l'identifier."
+      ]},
+      lo:{ name:"ງູກັດ / ແມງໄມ້ກັດ", steps:[
+        "ໃຈເຢັນ ແລະ ຈຳກັດການເຄື່ອນໄຫວຂອງບໍລິເວນທີ່ຖືກກັດ ເພື່ອຊ້າການແຜ່ພິດ.",
+        "ລ້າງບາດແຜດ້ວຍນ້ຳ; ຖອດເຄື່ອງປະດັບໃກ້ບໍລິເວນນັ້ນ.",
+        "ຮັກສາແຂນຂາໃຫ້ຕ່ຳກວ່າຫົວໃຈ; ຢ່າຕັດ, ດູດ, ຫຼືມັດແໜ້ນບາດແຜ.",
+        "ຫາຄວາມຊ່ວຍເຫຼືອທາງການແພດທັນທີ; ຖ້າເປັນໄປໄດ້ ຈື່ລັກສະນະຂອງສັດເພື່ອລະບຸຕົວ."
+      ]},
+      th:{ name:"งูกัด / แมลงกัดต่อย", steps:[
+        "ตั้งสติและจำกัดการเคลื่อนไหวบริเวณที่ถูกกัดเพื่อชะลอการแพร่พิษ",
+        "ล้างแผลด้วยน้ำ ถอดเครื่องประดับใกล้บริเวณนั้น",
+        "วางแขนขาให้ต่ำกว่าระดับหัวใจ ห้ามกรีด ดูด หรือรัดแผล",
+        "ไปพบแพทย์ทันที หากเป็นไปได้ให้จดจำลักษณะของสัตว์เพื่อระบุชนิด"
+      ]},
+      km:{ name:"ពស់ខាំ / សត្វល្អិតខាំ", steps:[
+        "នៅស្ងប់ស្ងាត់ និងកំណត់ចលនាកន្លែងខាំ ដើម្បីពន្យារពេលរាលដាលពិស។",
+        "លាងសម្អាតកន្លែងខាំដោយទឹក ដកគ្រឿងអលង្ការនៅជិតកន្លែងនោះ។",
+        "រក្សាអវយវៈឲ្យទាបជាងបេះដូង កុំកាត់ ជញ្ជក់ ឬចងតឹងលើរបួស។",
+        "ស្វែងរកជំនួយវេជ្ជសាស្ត្រភ្លាមៗ ប្រសិនបើអាចចាំលក្ខណៈសត្វដើម្បីកំណត់អត្តសញ្ញាណ។"
+      ]},
+      tl:{ name:"Kagat ng Ahas / Insekto", steps:[
+        "Manatiling kalmado at limitahan ang paggalaw ng nakagat na bahagi para mabagal ang pagkalat ng lason.",
+        "Hugasan ang kagat gamit ang tubig; alisin ang alahas malapit dito.",
+        "Panatilihing mas mababa sa puso ang bahaging nakagat; huwag hiwain, sipsipin, o igapos nang mahigpit ang sugat.",
+        "Humingi agad ng tulong medikal; kung maaari, tandaan ang hitsura ng hayop para sa pagkilala."
+      ]},
+      ms:{ name:"Gigitan Ular / Serangga", steps:[
+        "Kekal tenang dan hadkan pergerakan bahagian yang digigit untuk melambatkan penyebaran bisa.",
+        "Basuh gigitan dengan air; tanggalkan barang kemas berhampiran kawasan itu.",
+        "Pastikan anggota lebih rendah daripada jantung; jangan potong, sedut, atau ikat ketat luka.",
+        "Dapatkan bantuan perubatan segera; jika boleh, ingat ciri-ciri haiwan untuk pengenalan."
+      ]},
+      zh:{ name:"蛇咬伤 / 昆虫叮咬", steps:[
+        "保持冷静,限制被咬部位的活动,以减缓毒素扩散。",
+        "用水清洗咬伤处;取下附近的首饰。",
+        "使受伤肢体低于心脏位置;不要切开、吸吮或对伤口使用止血带。",
+        "立即寻求医疗帮助;如有可能,记住动物特征以便识别。"
+      ]},
+      ja:{ name:"蛇咬傷 / 虫刺され", steps:[
+        "落ち着いて、毒の広がりを遅らせるため咬まれた部位の動きを制限してください。",
+        "咬まれた部分を水で洗い流し、近くの装飾品を外してください。",
+        "手足を心臓より低い位置に保ってください。傷口を切ったり吸ったり、きつく縛ったりしないでください。",
+        "すぐに医療の助けを求めてください。可能であれば動物の特徴を覚えておいてください。"
+      ]},
+      ko:{ name:"뱀 물림 / 곤충 물림·쏘임", steps:[
+        "침착하게 있고 독의 확산을 늦추기 위해 물린 부위의 움직임을 제한하세요.",
+        "물린 부위를 물로 씻고 근처의 장신구를 제거하세요.",
+        "팔다리를 심장보다 낮게 유지하세요. 상처를 절개하거나 빨아내거나 꽉 묶지 마세요.",
+        "즉시 의료 도움을 요청하세요. 가능하면 동물의 특징을 기억해 두세요."
+      ]},
+      np:{ name:"सर्प टोकाइ / किरा टोकाइ", steps:[
+        "शान्त रहनुहोस् र विष फैलिन ढिलो गर्न टोकिएको ठाउँको चाल सीमित गर्नुहोस्।",
+        "टोकाइलाई पानीले धुनुहोस्; नजिकका गहना फुकाल्नुहोस्।",
+        "अंगलाई मुटुभन्दा तल राख्नुहोस्; घाउ नकाट्नुहोस्, नचुस्नुहोस्, वा कसेर नबाँध्नुहोस्।",
+        "तुरुन्तै चिकित्सा मद्दत लिनुहोस्; सम्भव भए जनावरको पहिचानका लागि विशेषता सम्झनुहोस्।"
+      ]},
+      is:{ name:"Snákabit / Skordýrabit", steps:[
+        "Haldið ró og takmarkið hreyfingu á bitna svæðinu til að hægja á útbreiðslu eiturs.",
+        "Þvoið bitið með vatni; fjarlægið skartgripi nálægt svæðinu.",
+        "Haldið útlimnum lægra en hjartað; skerið ekki, sjúgið ekki, og setjið ekki herðaband á sárið.",
+        "Leitið tafarlaust læknishjálpar; ef hægt er, munið eftir einkennum dýrsins til að bera kennsl á það."
+      ]},
+      ar:{ name:"لدغة ثعبان / حشرة", steps:[
+        "حافظ على الهدوء وقلل حركة المنطقة الملدوغة لإبطاء انتشار السم.",
+        "اغسل اللدغة بالماء؛ أزل المجوهرات القريبة من المنطقة.",
+        "حافظ على الطرف أدنى من مستوى القلب؛ لا تقطع أو تمص أو تربط الجرح بإحكام.",
+        "اطلب المساعدة الطبية فوراً؛ إن أمكن تذكر ملامح الحيوان للتعرف عليه."
+      ]},
+      sw:{ name:"Kuumwa na Nyoka / Wadudu", steps:[
+        "Kaa mtulivu na punguza mwendo wa eneo lililoumwa ili kupunguza kasi ya kuenea kwa sumu.",
+        "Osha eneo lililoumwa kwa maji; ondoa vito karibu na eneo hilo.",
+        "Weka kiungo chini ya kiwango cha moyo; usikate, usinyonye, au kufunga jeraha kwa nguvu.",
+        "Tafuta msaada wa matibabu mara moja; ikiwezekana, kumbuka sifa za mnyama kwa utambulisho."
+      ]}
+    }
+  },
+  drowning: {
+    name: "Đuối nước / Ngạt nước",
+    tags: ["đuối nước","ngạt nước","sặc nước","chết đuối"],
+    icon: "🌊",
+    steps: [
+      "Đưa nạn nhân ra khỏi nước, gọi cấp cứu ngay lập tức.",
+      "Kiểm tra hô hấp; nếu không thở, bắt đầu hồi sức tim phổi (xem mục CPR).",
+      "Nếu còn thở, đặt nạn nhân nằm nghiêng để nước/chất nôn thoát ra ngoài.",
+      "Giữ ấm cho nạn nhân, theo dõi liên tục cho đến khi có nhân viên y tế."
+    ],
+    translations: {
+      en:{ name:"Drowning / Near-drowning", steps:[
+        "Get the person out of the water and call for emergency help immediately.",
+        "Check breathing; if not breathing, begin CPR (see the CPR section).",
+        "If breathing, place the person in the recovery position so water/vomit can drain out.",
+        "Keep the person warm and monitor continuously until medical help arrives."
+      ]},
+      es:{ name:"Ahogamiento / Casi ahogamiento", steps:[
+        "Saque a la persona del agua y pida ayuda de emergencia de inmediato.",
+        "Compruebe la respiración; si no respira, inicie RCP (vea la sección de RCP).",
+        "Si respira, colóquela en posición de recuperación para que drene el agua o el vómito.",
+        "Manténgala abrigada y vigílela continuamente hasta que llegue ayuda médica."
+      ]},
+      fr:{ name:"Noyade / Quasi-noyade", steps:[
+        "Sortez la personne de l'eau et appelez de l'aide d'urgence immédiatement.",
+        "Vérifiez la respiration ; si elle ne respire pas, commencez la RCP (voir la section RCP).",
+        "Si elle respire, placez-la en position latérale de sécurité pour drainer l'eau/les vomissements.",
+        "Gardez-la au chaud et surveillez-la continuellement jusqu'à l'arrivée des secours."
+      ]},
+      zh:{ name:"溺水 / 险些溺水", steps:[
+        "立即将人从水中救出并呼叫紧急帮助。",
+        "检查呼吸;如果没有呼吸,开始心肺复苏(见CPR部分)。",
+        "如果有呼吸,让其侧卧以便排出水或呕吐物。",
+        "保持体温,持续观察直到医疗人员到达。"
+      ]},
+      ja:{ name:"溺水・溺れかけ", steps:[
+        "すぐに水から引き上げ、緊急の助けを呼んでください。",
+        "呼吸を確認してください。呼吸がなければCPRを開始してください(CPRの項参照)。",
+        "呼吸があれば、水や吐瀉物が出るように回復体位にしてください。",
+        "体を温かく保ち、医療の助けが来るまで継続的に見守ってください。"
+      ]},
+      ko:{ name:"익수 / 익수 직전", steps:[
+        "즉시 물 밖으로 꺼내고 응급 도움을 부르세요.",
+        "호흡을 확인하세요; 호흡이 없으면 CPR을 시작하세요 (CPR 항목 참조).",
+        "호흡이 있으면 물이나 토사물이 배출되도록 회복 자세를 취해주세요.",
+        "체온을 유지하고 의료진이 올 때까지 계속 관찰하세요."
+      ]},
+      th:{ name:"จมน้ำ / เกือบจมน้ำ", steps:[
+        "นำคนออกจากน้ำและเรียกความช่วยเหลือฉุกเฉินทันที",
+        "ตรวจสอบการหายใจ หากไม่หายใจให้เริ่ม CPR (ดูหัวข้อ CPR)",
+        "หากยังหายใจอยู่ ให้จัดท่านอนตะแคงเพื่อให้น้ำหรืออาเจียนไหลออก",
+        "ให้ความอบอุ่นและเฝ้าสังเกตอาการต่อเนื่องจนกว่าจะมีเจ้าหน้าที่การแพทย์มาถึง"
+      ]},
+      lo:{ name:"ຈົມນ້ຳ / ເກືອບຈົມນ້ຳ", steps:[
+        "ນຳຄົນອອກຈາກນ້ຳ ແລະ ໂທຫາຄວາມຊ່ວຍເຫຼືອດ່ວນທັນທີ.",
+        "ກວດເບິ່ງການຫາຍໃຈ ຖ້າບໍ່ຫາຍໃຈໃຫ້ເລີ່ມ CPR (ເບິ່ງຫົວຂໍ້ CPR).",
+        "ຖ້າຍັງຫາຍໃຈຢູ່ ໃຫ້ຈັດທ່ານອນຕະແຄງເພື່ອໃຫ້ນ້ຳ ຫຼື ຮາກອອກ.",
+        "ຮັກສາຄວາມອົບອຸ່ນ ແລະ ເຝົ້າສັງເກດຕໍ່ເນື່ອງຈົນກວ່າເຈົ້າໜ້າທີ່ແພດຈະມາເຖິງ."
+      ]},
+      km:{ name:"លង់ទឹក / ជិតលង់ទឹក", steps:[
+        "នាំមនុស្សចេញពីទឹកភ្លាមៗ ហើយហៅជំនួយបន្ទាន់។",
+        "ពិនិត្យការដកដង្ហើម ប្រសិនបើមិនដកដង្ហើមទេ ចាប់ផ្តើម CPR (សូមមើលផ្នែក CPR)។",
+        "ប្រសិនបើនៅតែដកដង្ហើម ដាក់ក្នុងទីតាំងផ្កាប់ម្ខាងដើម្បីឲ្យទឹក ឬក្អួតចេញ។",
+        "រក្សាកម្តៅកាយ និងតាមដានជាបន្តបន្ទាប់រហូតដល់មានជំនួយវេជ្ជសាស្ត្រមកដល់។"
+      ]},
+      tl:{ name:"Pagkalunod / Muntik nang Malunod", steps:[
+        "Alisin ang tao sa tubig at humingi kaagad ng tulong pang-emergency.",
+        "Tingnan ang paghinga; kung hindi humihinga, simulan ang CPR (tingnan ang seksyon ng CPR).",
+        "Kung humihinga pa, ilagay sa recovery position para makalabas ang tubig o suka.",
+        "Panatilihing mainit ang katawan at bantayan nang tuloy-tuloy hanggang dumating ang tulong medikal."
+      ]},
+      ms:{ name:"Lemas / Hampir Lemas", steps:[
+        "Keluarkan orang itu dari air dan hubungi bantuan kecemasan dengan segera.",
+        "Periksa pernafasan; jika tidak bernafas, mulakan CPR (lihat bahagian CPR).",
+        "Jika masih bernafas, letakkan dalam kedudukan pemulihan supaya air/muntah dapat keluar.",
+        "Pastikan tubuh kekal hangat dan pantau secara berterusan sehingga bantuan perubatan tiba."
+      ]},
+      np:{ name:"डुब्नु / डुब्न लाग्नु", steps:[
+        "व्यक्तिलाई पानीबाट निकाल्नुहोस् र तुरुन्तै आपतकालीन मद्दत बोलाउनुहोस्।",
+        "सास फेरिरहेको जाँच्नुहोस्; सास फेरिरहेको छैन भने CPR सुरु गर्नुहोस् (CPR खण्ड हेर्नुहोस्)।",
+        "सास फेरिरहेको छ भने, पानी वा बान्ता बाहिर निस्कनको लागि करवट फर्काएर सुताउनुहोस्।",
+        "न्यानो राख्नुहोस् र चिकित्सा सहायता नआउँदासम्म निरन्तर निगरानी गर्नुहोस्।"
+      ]},
+      is:{ name:"Drukknun / Næstum drukknun", steps:[
+        "Náið manneskjunni upp úr vatninu og hringið strax eftir neyðaraðstoð.",
+        "Athugið öndun; ef engin öndun er til staðar, byrjið endurlífgun (sjá CPR-kafla).",
+        "Ef viðkomandi andar enn, setjið í hliðarstöðu svo vatn/uppköst geti runnið út.",
+        "Haldið hita og fylgist stöðugt með þar til læknishjálp berst."
+      ]},
+      ar:{ name:"الغرق / اقتراب الغرق", steps:[
+        "أخرج الشخص من الماء واطلب المساعدة الطارئة فورًا.",
+        "تحقق من التنفس؛ إذا لم يكن يتنفس، ابدأ الإنعاش القلبي الرئوي (راجع قسم CPR).",
+        "إذا كان يتنفس، ضعه في وضعية الإفاقة الجانبية ليخرج الماء أو القيء.",
+        "حافظ على دفئه وراقبه باستمرار حتى وصول المساعدة الطبية."
+      ]},
+      sw:{ name:"Kuzama Majini / Karibu Kuzama", steps:[
+        "Mtoe mtu majini na piga simu ya dharura mara moja.",
+        "Angalia kupumua; ikiwa hapumui, anza CPR (angalia sehemu ya CPR).",
+        "Ikiwa anapumua, mlaze upande ili maji au matapishi yatoke.",
+        "Mweke joto na mfuatilie kila mara mpaka msaada wa matibabu ufike."
+      ]}
+    }
+  },
+  hypothermia: {
+    name: "Hạ thân nhiệt",
+    tags: ["hạ thân nhiệt","lạnh cóng","nhiễm lạnh","cóng lạnh"],
+    icon: "❄️",
+    steps: [
+      "Đưa nạn nhân vào nơi kín gió, thay quần áo ướt bằng đồ khô.",
+      "Làm ấm dần bằng chăn hoặc thân nhiệt người khác — tránh làm ấm đột ngột.",
+      "Cho uống nước ấm nếu còn tỉnh táo; không dùng rượu hoặc caffein.",
+      "Nếu run rẩy ngừng đột ngột hoặc lú lẫn — đây là dấu hiệu nặng, cần cấp cứu ngay."
+    ],
+    translations: {
+      en:{ name:"Hypothermia", steps:[
+        "Move the person to a sheltered place; replace wet clothing with dry clothing.",
+        "Warm up gradually with blankets or body heat — avoid rapid rewarming.",
+        "Give warm drinks if conscious; avoid alcohol or caffeine.",
+        "If shivering suddenly stops or confusion appears — this is severe, seek emergency help."
+      ]},
+      es:{ name:"Hipotermia", steps:[
+        "Traslade a la persona a un lugar resguardado; cambie la ropa mojada por ropa seca.",
+        "Caliéntela gradualmente con mantas o calor corporal; evite el recalentamiento rápido.",
+        "Dele bebidas calientes si está consciente; evite el alcohol o la cafeína.",
+        "Si los escalofríos cesan de repente o aparece confusión, es grave; busque ayuda de emergencia."
+      ]},
+      fr:{ name:"Hypothermie", steps:[
+        "Déplacez la personne dans un endroit abrité ; remplacez les vêtements mouillés par des vêtements secs.",
+        "Réchauffez-la progressivement avec des couvertures ou la chaleur corporelle — évitez un réchauffement rapide.",
+        "Donnez des boissons chaudes si elle est consciente ; évitez l'alcool ou la caféine.",
+        "Si les frissons s'arrêtent soudainement ou qu'une confusion apparaît — c'est grave, cherchez une aide d'urgence."
+      ]},
+      zh:{ name:"体温过低", steps:[
+        "将人转移到避风处;把湿衣服换成干衣服。",
+        "用毯子或体温逐渐使其暖和——避免快速复温。",
+        "如果清醒,给予温热饮料;避免酒精或咖啡因。",
+        "如果颤抖突然停止或出现意识混乱,情况严重,请立即寻求紧急帮助。"
+      ]},
+      ja:{ name:"低体温症", steps:[
+        "風のない場所に移動させ、濡れた服を乾いた服に着替えさせてください。",
+        "毛布や体温でゆっくり温めてください——急激な加温は避けてください。",
+        "意識があれば温かい飲み物を与えてください;アルコールやカフェインは避けてください。",
+        "震えが急に止まったり、錯乱が見られる場合は重篤なサインです。すぐに緊急の助けを求めてください。"
+      ]},
+      ko:{ name:"저체온증", steps:[
+        "바람이 없는 곳으로 옮기고 젖은 옷을 마른 옷으로 갈아입히세요.",
+        "담요나 체온으로 서서히 따뜻하게 하세요 — 급격한 재가온은 피하세요.",
+        "의식이 있으면 따뜻한 음료를 주세요; 술이나 카페인은 피하세요.",
+        "떨림이 갑자기 멈추거나 혼란스러워하면 심각한 상태이니 즉시 응급 도움을 구하세요."
+      ]},
+      th:{ name:"ภาวะอุณหภูมิร่างกายต่ำ", steps:[
+        "นำผู้ป่วยไปยังที่กำบังลม เปลี่ยนเสื้อผ้าเปียกเป็นเสื้อผ้าแห้ง",
+        "ทำให้อบอุ่นขึ้นทีละน้อยด้วยผ้าห่มหรือความอบอุ่นจากร่างกายผู้อื่น หลีกเลี่ยงการทำให้อุ่นเร็วเกินไป",
+        "ให้ดื่มเครื่องดื่มอุ่นหากยังมีสติ หลีกเลี่ยงแอลกอฮอล์หรือคาเฟอีน",
+        "หากตัวสั่นหยุดกะทันหันหรือเริ่มสับสน ถือเป็นอาการรุนแรง ให้ขอความช่วยเหลือฉุกเฉินทันที"
+      ]},
+      lo:{ name:"ອຸນຫະພູມຮ່າງກາຍຕ່ຳ", steps:[
+        "ນຳຜູ້ປ່ວຍໄປບ່ອນກຳບັງລົມ ປ່ຽນເສື້ອຜ້າປຽກເປັນເສື້ອຜ້າແຫ້ງ.",
+        "ເຮັດໃຫ້ອົບອຸ່ນຂຶ້ນເທື່ອລະໜ້ອຍດ້ວຍຜ້າຫົ່ມ ຫຼື ຄວາມອົບອຸ່ນຈາກຮ່າງກາຍຄົນອື່ນ ຫຼີກລ່ຽງການເຮັດໃຫ້ອຸ່ນໄວເກີນໄປ.",
+        "ໃຫ້ດື່ມເຄື່ອງດື່ມອຸ່ນຖ້າຍັງມີສະຕິ ຫຼີກລ່ຽງເຫຼົ້າ ຫຼື ຄາເຟອີນ.",
+        "ຖ້າອາການສັ່ນຢຸດກະທັນຫັນ ຫຼືເລີ່ມສັບສົນ ຖືເປັນອາການໜັກ ໃຫ້ຂໍຄວາມຊ່ວຍເຫຼືອດ່ວນທັນທີ."
+      ]},
+      km:{ name:"ជំងឺស្ទះកម្តៅរាងកាយ", steps:[
+        "នាំអ្នកជំងឺទៅកន្លែងបាំងខ្យល់ ប្តូរសម្លៀកបំពាក់សើមទៅជាស្ងួត។",
+        "ធ្វើឲ្យកក់ក្តៅបន្តិចម្ដងៗដោយភួយ ឬកម្តៅរាងកាយអ្នកដទៃ ជៀសវាងការធ្វើឲ្យក្តៅលឿនពេក។",
+        "ឲ្យផឹកភេសជ្ជៈក្តៅប្រសិនបើនៅមានស្មារតី ជៀសវាងគ្រឿងស្រវឹង ឬកាហ្វេអ៊ីន។",
+        "ប្រសិនបើញ័រឈប់ភ្លាមៗ ឬច្រឡំស្មារតី នេះជាសញ្ញាធ្ងន់ធ្ងរ សូមស្វែងរកជំនួយបន្ទាន់ភ្លាមៗ។"
+      ]},
+      tl:{ name:"Hypothermia", steps:[
+        "Ilipat sa lugar na walang hangin; palitan ang basang damit ng tuyo.",
+        "Painitin nang unti-unti gamit ang kumot o init ng katawan — iwasan ang biglaang pagpainit.",
+        "Bigyan ng mainit na inumin kung malay; iwasan ang alkohol o caffeine.",
+        "Kung biglang tumigil ang panginginig o may pagkalito — malubha ito, humingi kaagad ng tulong pang-emergency."
+      ]},
+      ms:{ name:"Hipotermia", steps:[
+        "Pindahkan ke tempat terlindung; tukar pakaian basah dengan pakaian kering.",
+        "Panaskan secara beransur-ansur dengan selimut atau haba badan — elakkan pemanasan semula secara mendadak.",
+        "Berikan minuman panas jika sedar; elakkan alkohol atau kafein.",
+        "Jika menggigil tiba-tiba berhenti atau timbul kekeliruan — ini serius, dapatkan bantuan kecemasan segera."
+      ]},
+      np:{ name:"हाइपोथर्मिया (शरीरको तापक्रम घट्नु)", steps:[
+        "हावा नलाग्ने ठाउँमा लैजानुहोस्; भिजेको लुगा सुकेकोमा बदल्नुहोस्।",
+        "कम्बल वा अर्को शरीरको तापले बिस्तारै न्यानो पार्नुहोस् — छिटो न्यानो पार्न नहुने।",
+        "होश छ भने न्यानो पेय दिनुहोस्; रक्सी वा क्याफिन नदिनुहोस्।",
+        "काम्ने अचानक रोकिएमा वा भ्रमित भएमा यो गम्भीर हो, तुरुन्तै आपतकालीन मद्दत लिनुहोस्।"
+      ]},
+      is:{ name:"Ofkæling", steps:[
+        "Færið í skjól; skiptið um blaut föt fyrir þurr.",
+        "Hitið smám saman með teppum eða líkamshita — forðist skyndilega upphitun.",
+        "Gefið heita drykki ef viðkomandi er með meðvitund; forðist áfengi eða koffín.",
+        "Ef skjálfti stöðvast skyndilega eða rugl kemur fram — þetta er alvarlegt, leitið neyðaraðstoðar strax."
+      ]},
+      ar:{ name:"انخفاض حرارة الجسم", steps:[
+        "انقله إلى مكان محمي من الرياح؛ استبدل الملابس المبللة بملابس جافة.",
+        "دفّئه تدريجيًا ببطانيات أو حرارة الجسم — تجنب التدفئة السريعة.",
+        "أعطه مشروبات دافئة إذا كان واعيًا؛ تجنب الكحول أو الكافيين.",
+        "إذا توقفت الرعشة فجأة أو ظهر ارتباك — هذه علامة خطيرة، اطلب المساعدة الطارئة فورًا."
+      ]},
+      sw:{ name:"Hipothermia (Kupungua kwa Joto la Mwili)", steps:[
+        "Mhamishe mahali penye kizuizi cha upepo; badilisha nguo za mvua kwa kavu.",
+        "Mpashe joto pole pole kwa blanketi au joto la mwili — epuka kupasha joto haraka.",
+        "Mpe vinywaji vya moto ikiwa ana fahamu; epuka pombe au kafeini.",
+        "Ikiwa kutetemeka kunasimama ghafla au kuchanganyikiwa kunatokea — hii ni hatari, tafuta msaada wa dharura mara moja."
+      ]}
+    }
+  },
+  anaphylaxis: {
+    name: "Sốc phản vệ / Dị ứng nặng",
+    tags: ["sốc phản vệ","dị ứng nặng","khó thở dị ứng","phản ứng dị ứng"],
+    icon: "⚠️",
+    steps: [
+      "Nếu nạn nhân có bút tiêm epinephrine tự động, hỗ trợ họ sử dụng theo hướng dẫn trên bút.",
+      "Gọi cấp cứu ngay lập tức — đây là tình huống đe dọa tính mạng.",
+      "Đặt nạn nhân nằm ngửa, kê cao chân (trừ khi khó thở thì cho ngồi).",
+      "Theo dõi hô hấp liên tục; sẵn sàng hồi sức tim phổi (CPR) nếu ngừng thở."
+    ],
+    translations: {
+      en:{ name:"Anaphylaxis / Severe allergic reaction", steps:[
+        "If the person has an epinephrine auto-injector, help them use it as directed on the device.",
+        "Call for emergency help immediately — this is a life-threatening situation.",
+        "Lay the person on their back with legs raised (unless breathing is difficult, then let them sit).",
+        "Monitor breathing continuously; be ready to perform CPR if breathing stops."
+      ]},
+      es:{ name:"Anafilaxia / Reacción alérgica grave", steps:[
+        "Si la persona tiene un autoinyector de epinefrina, ayúdela a usarlo según las instrucciones del dispositivo.",
+        "Pida ayuda de emergencia de inmediato: es una situación que pone en peligro la vida.",
+        "Recuéstela boca arriba con las piernas elevadas (a menos que le cueste respirar, en cuyo caso siéntela).",
+        "Vigile la respiración continuamente; esté listo para realizar RCP si deja de respirar."
+      ]},
+      fr:{ name:"Anaphylaxie / Réaction allergique grave", steps:[
+        "Si la personne a un auto-injecteur d'épinéphrine, aidez-la à l'utiliser selon les instructions de l'appareil.",
+        "Appelez de l'aide d'urgence immédiatement — c'est une situation qui met la vie en danger.",
+        "Allongez-la sur le dos avec les jambes surélevées (sauf en cas de difficulté respiratoire, alors laissez-la assise).",
+        "Surveillez la respiration en continu ; soyez prêt à faire une RCP si la respiration s'arrête."
+      ]},
+      lo:{ name:"ອາການແພ້ຢ່າງຮຸນແຮງ (Anaphylaxis)", steps:[
+        "ຖ້ານັກຮ້ຽນມີເຂັມສີດ epinephrine ອັດຕະໂນມັດ, ຊ່ວຍລາວໃຊ້ຕາມຄຳແນະນຳເທິງອຸປະກອນ.",
+        "ໂທຫາສຸກເສີນທັນທີ — ນີ້ແມ່ນສະຖານະການອັນຕະລາຍເຖິງຊີວິດ.",
+        "ໃຫ້ນອນຫງາຍ ຍົກຂາສູງ (ເວັ້ນເສຍແຕ່ຫາຍໃຈຍາກໃຫ້ນັ່ງແທນ).",
+        "ຕິດຕາມການຫາຍໃຈຢ່າງຕໍ່ເນື່ອງ; ກຽມພ້ອມເຮັດ CPR ຖ້າຢຸດຫາຍໃຈ."
+      ]},
+      th:{ name:"ภาวะช็อกจากภูมิแพ้รุนแรง (Anaphylaxis)", steps:[
+        "หากผู้ป่วยมีปากกาฉีดยา epinephrine อัตโนมัติ ช่วยให้เขาใช้ตามคำแนะนำบนอุปกรณ์",
+        "โทรขอความช่วยเหลือฉุกเฉินทันที นี่คือสถานการณ์ที่อันตรายถึงชีวิต",
+        "ให้นอนหงาย ยกขาสูง (ยกเว้นหายใจลำบากให้นั่งแทน)",
+        "เฝ้าติดตามการหายใจอย่างต่อเนื่อง เตรียมพร้อมทำ CPR หากหยุดหายใจ"
+      ]},
+      km:{ name:"ការឆក់ដោយអាឡែស៊ីធ្ងន់ធ្ងរ (Anaphylaxis)", steps:[
+        "ប្រសិនបើអ្នកជំងឺមានម្ជុលចាក់ epinephrine ស្វ័យប្រវត្តិ ជួយគាត់ប្រើវាតាមការណែនាំនៅលើឧបករណ៍។",
+        "ទូរស័ព្ទសុំជំនួយបន្ទាន់ភ្លាមៗ — នេះជាស្ថានភាពគំរាមកំហែងដល់អាយុជីវិត។",
+        "ដាក់គាត់ផ្ងារ លើកជើងខ្ពស់ (លើកលែងតែពិបាកដកដង្ហើមឲ្យអង្គុយជំនួសវិញ)។",
+        "តាមដានការដកដង្ហើមជាបន្តបន្ទាប់ ត្រៀមខ្លួនធ្វើ CPR ប្រសិនបើឈប់ដកដង្ហើម។"
+      ]},
+      tl:{ name:"Anaphylaxis / Matinding Allergic Reaction", steps:[
+        "Kung may epinephrine auto-injector ang tao, tulungan siyang gamitin ito ayon sa tagubilin sa device.",
+        "Tumawag agad ng emergency help — ito ay banta sa buhay.",
+        "Ihiga siya nang patalikod na nakataas ang mga binti (maliban kung nahihirapang huminga, paupuin na lang).",
+        "Bantayan nang tuloy-tuloy ang paghinga; humanda gumawa ng CPR kung tumigil sa paghinga."
+      ]},
+      ms:{ name:"Anafilaksis / Tindak Balas Alahan Teruk", steps:[
+        "Jika mangsa mempunyai auto-injektor epinefrin, bantu dia menggunakannya mengikut arahan pada alat.",
+        "Hubungi bantuan kecemasan dengan segera — ini adalah situasi yang mengancam nyawa.",
+        "Baringkan mangsa terlentang dengan kaki ditinggikan (kecuali sukar bernafas, biarkan dia duduk).",
+        "Pantau pernafasan secara berterusan; bersedia melakukan CPR jika pernafasan berhenti."
+      ]},
+      zh:{ name:"过敏性休克 / 严重过敏反应", steps:[
+        "如果患者有肾上腺素自动注射笔,协助他们按照设备说明使用。",
+        "立即拨打急救电话——这是危及生命的情况。",
+        "让患者仰卧,抬高双腿(除非呼吸困难,此时应让其坐起)。",
+        "持续监测呼吸;如果停止呼吸,准备进行心肺复苏(CPR)。"
+      ]},
+      ja:{ name:"アナフィラキシー / 重度のアレルギー反応", steps:[
+        "本人がエピネフリン自己注射器を持っている場合、器具の指示に従って使用を手伝ってください。",
+        "すぐに救急に連絡してください——これは命に関わる状況です。",
+        "仰向けに寝かせ、足を高くしてください(呼吸が苦しい場合は座らせてください)。",
+        "呼吸を継続的に観察し、呼吸が止まったらCPRを行う準備をしてください。"
+      ]},
+      ko:{ name:"아나필락시스 / 심한 알레르기 반응", steps:[
+        "환자에게 에피네프린 자동주사기가 있다면 기기 사용법에 따라 사용하도록 도와주세요.",
+        "즉시 응급 도움을 요청하세요 — 생명을 위협하는 상황입니다.",
+        "환자를 눕히고 다리를 높이세요 (호흡이 곤란하면 앉게 하세요).",
+        "호흡을 계속 관찰하고, 호흡이 멈추면 CPR을 시행할 준비를 하세요."
+      ]},
+      np:{ name:"एनाफिलेक्सिस / गम्भीर एलर्जी प्रतिक्रिया", steps:[
+        "यदि व्यक्तिसँग इपिनेफ्रिन अटो-इन्जेक्टर छ भने, उपकरणमा दिइएको निर्देशन अनुसार प्रयोग गर्न मद्दत गर्नुहोस्।",
+        "तुरुन्तै आपतकालीन मद्दत बोलाउनुहोस् — यो जीवनलाई खतरा पुर्‍याउने अवस्था हो।",
+        "व्यक्तिलाई पछाडि सुताउनुहोस्, खुट्टा माथि उठाउनुहोस् (सास फेर्न गाह्रो भए बस्न दिनुहोस्)।",
+        "सास निरन्तर निगरानी गर्नुहोस्; सास रोकिए CPR गर्न तयार रहनुहोस्।"
+      ]},
+      is:{ name:"Ofnæmislost / Alvarleg ofnæmisviðbrögð", steps:[
+        "Ef manneskjan er með adrenalínpenna (epinephrine), hjálpið henni að nota hann samkvæmt leiðbeiningum á tækinu.",
+        "Hringið strax í neyðaraðstoð — þetta er lífshættulegt ástand.",
+        "Leggið manneskjuna á bakið með fæturna upphækkaða (nema öndun sé erfið, þá skal hún sitja).",
+        "Fylgist stöðugt með öndun; verið tilbúin að framkvæma hjartahnoð (CPR) ef öndun stöðvast."
+      ]},
+      ar:{ name:"الحساسية المفرطة / رد فعل تحسسي شديد", steps:[
+        "إذا كان لدى الشخص حقنة إبينفرين تلقائية، ساعده على استخدامها حسب التعليمات الموجودة على الجهاز.",
+        "اطلب المساعدة الطارئة فوراً — هذا وضع يهدد الحياة.",
+        "ضع الشخص على ظهره مع رفع الساقين (إلا إذا كان يعاني صعوبة في التنفس، فدعه يجلس).",
+        "راقب التنفس باستمرار؛ كن مستعداً لإجراء الإنعاش القلبي الرئوي إذا توقف التنفس."
+      ]},
+      sw:{ name:"Mshtuko wa Mzio / Mmenyuko Mkali wa Mzio", steps:[
+        "Ikiwa mtu ana sindano ya epinephrine ya kujitolea, msaidie kuitumia kulingana na maelekezo kwenye kifaa.",
+        "Piga simu ya dharura mara moja — hali hii ni hatari kwa maisha.",
+        "Mlaze mgongo chini na miguu ikiwa juu (isipokuwa akiwa na shida ya kupumua, mwache akae).",
+        "Fuatilia upumuaji kwa kuendelea; kuwa tayari kufanya CPR ikiwa atakoma kupumua."
+      ]}
+    }
+  },
+  sprain: {
+    name: "Bong gân (Cổ tay / Cổ chân / Đầu gối)",
+    tags: ["bong gân","trật khớp nhẹ","đau cổ chân","đau cổ tay","đau đầu gối","lật cổ chân","sưng khớp"],
+    icon: "🦵",
+    steps: [
+      "Để nạn nhân nghỉ ngơi, ngừng vận động vùng bị bong gân ngay lập tức.",
+      "Chườm lạnh (đá bọc khăn) lên vùng bị thương khoảng 15-20 phút; không đặt đá trực tiếp lên da.",
+      "Băng ép nhẹ nhàng quanh vùng bị bong gân để giảm sưng, không băng quá chặt.",
+      "Kê cao vùng bị thương cao hơn tim nếu có thể; tìm cơ sở y tế nếu sưng đau nhiều hoặc không thể chịu lực."
+    ],
+    translations: {
+      en:{ name:"Sprain (Wrist / Ankle / Knee)", steps:[
+        "Have the person rest and stop moving the sprained area immediately.",
+        "Apply a cold pack (ice wrapped in cloth) to the area for about 15-20 minutes; never place ice directly on skin.",
+        "Wrap a gentle compression bandage around the area to reduce swelling; don't wrap too tightly.",
+        "Elevate the injured area above heart level if possible; seek medical care if swelling/pain is severe or the person can't bear weight."
+      ]},
+      es:{ name:"Esguince (Muñeca / Tobillo / Rodilla)", steps:[
+        "Haga que la persona descanse y deje de mover la zona lesionada de inmediato.",
+        "Aplique una compresa fría (hielo envuelto en tela) durante unos 15-20 minutos; nunca coloque hielo directamente sobre la piel.",
+        "Envuelva un vendaje de compresión suave alrededor de la zona para reducir la hinchazón; no lo apriete demasiado.",
+        "Eleve la zona lesionada por encima del nivel del corazón si es posible; busque atención médica si la hinchazón/dolor es severo."
+      ]},
+      fr:{ name:"Entorse (Poignet / Cheville / Genou)", steps:[
+        "Faites reposer la personne et arrêtez immédiatement de bouger la zone blessée.",
+        "Appliquez une compresse froide (glace enveloppée dans un tissu) pendant environ 15-20 minutes ; ne placez jamais la glace directement sur la peau.",
+        "Enroulez un bandage de compression doux autour de la zone pour réduire l'enflure ; ne serrez pas trop.",
+        "Surélevez la zone blessée au-dessus du niveau du cœur si possible ; cherchez une aide médicale si l'enflure/douleur est sévère."
+      ]},
+      lo:{ name:"ຂໍ້ແພງ (ຂໍ້ມື / ຂໍ້ຕີນ / ເຂົ່າ)", steps:[
+        "ໃຫ້ນັກຮ້ຽນພັກຜ່ອນ ແລະ ຢຸດເຄື່ອນໄຫວບໍລິເວນທີ່ບາດເຈັບທັນທີ.",
+        "ປະຄົບເຢັນ (ນ້ຳກ້ອນຫໍ່ຜ້າ) ໃສ່ບໍລິເວນທີ່ບາດເຈັບປະມານ 15-20 ນາທີ ຫ້າມວາງນ້ຳກ້ອນສຳຜັດຜິວໜັງໂດຍກົງ.",
+        "ພັນຜ້າພັນແຜກົດເບົາໆອ້ອມບໍລິເວນນັ້ນເພື່ອຫຼຸດອາການບວມ ຢ່າພັນແໜ້ນເກີນໄປ.",
+        "ຍົກບໍລິເວນທີ່ບາດເຈັບໃຫ້ສູງກວ່າລະດັບຫົວໃຈຖ້າເປັນໄປໄດ້ ຫາກບວມ/ເຈັບຫຼາຍ ໃຫ້ໄປພົບແພດ."
+      ]},
+      th:{ name:"ข้อเคล็ด (ข้อมือ / ข้อเท้า / เข่า)", steps:[
+        "ให้ผู้ป่วยพักและหยุดเคลื่อนไหวบริเวณที่บาดเจ็บทันที",
+        "ประคบเย็น (น้ำแข็งห่อผ้า) บริเวณที่บาดเจ็บประมาณ 15-20 นาที ห้ามวางน้ำแข็งสัมผัสผิวหนังโดยตรง",
+        "พันผ้าพันแผลกดเบาๆ รอบบริเวณนั้นเพื่อลดบวม อย่าพันแน่นเกินไป",
+        "ยกบริเวณที่บาดเจ็บให้สูงกว่าระดับหัวใจถ้าทำได้ หากบวม/ปวดมากให้ไปพบแพทย์"
+      ]},
+      km:{ name:"ការខ្សាច់សន្លាក់ (កដៃ / កជើង / ជង្គង់)", steps:[
+        "ឲ្យអ្នកជំងឺសម្រាក ហើយឈប់ធ្វើចលនាកន្លែងរបួសភ្លាមៗ។",
+        "ដាក់ទឹកកកខ្ចប់ក្នុងក្រណាត់លើកន្លែងរបួសប្រហែល ១៥-២០ នាទី កុំដាក់ទឹកកកប៉ះស្បែកដោយផ្ទាល់។",
+        "រុំបង់សង្កត់ស្រាលៗជុំវិញកន្លែងនោះដើម្បីកាត់បន្ថយហើម កុំរុំតឹងពេក។",
+        "លើកកន្លែងរបួសខ្ពស់ជាងកម្រិតបេះដូងប្រសិនបើអាចធ្វើបាន ប្រសិនបើហើម/ឈឺខ្លាំង សូមស្វែងរកជំនួយពេទ្យ។"
+      ]},
+      tl:{ name:"Pilay (Pulso / Bukong-bukong / Tuhod)", steps:[
+        "Painin ang tao at itigil kaagad ang paggalaw sa napilay na bahagi.",
+        "Maglagay ng cold pack (yelong nakabalot sa tela) sa bahagi nang mga 15-20 minuto; huwag idikit ang yelo direkta sa balat.",
+        "Balutin nang banayad ng compression bandage ang bahagi para mabawasan ang pamamaga; huwag masyadong higpitan.",
+        "Itaas ang napinsalang bahagi nang mas mataas sa puso kung maaari; humingi ng tulong medikal kung matindi ang pamamaga/sakit."
+      ]},
+      ms:{ name:"Terseliuh (Pergelangan Tangan / Buku Lali / Lutut)", steps:[
+        "Biarkan mangsa berehat dan berhenti menggerakkan bahagian yang tercedera dengan segera.",
+        "Sapukan ais berbalut kain pada bahagian tersebut selama 15-20 minit; jangan letakkan ais terus pada kulit.",
+        "Balut dengan lembut menggunakan pembalut mampatan di sekeliling bahagian itu untuk mengurangkan bengkak; jangan terlalu ketat.",
+        "Tinggikan bahagian yang cedera melebihi paras jantung jika boleh; dapatkan bantuan perubatan jika bengkak/sakit teruk."
+      ]},
+      zh:{ name:"扭伤(手腕/脚踝/膝盖)", steps:[
+        "让患者休息,立即停止活动受伤部位。",
+        "用布包裹冰块冷敷受伤部位约15-20分钟;切勿将冰块直接接触皮肤。",
+        "用绷带轻轻加压包扎该部位以减轻肿胀;不要绑得太紧。",
+        "如有可能,将受伤部位抬高至心脏以上;如果肿胀/疼痛严重,请寻求医疗帮助。"
+      ]},
+      ja:{ name:"捻挫(手首/足首/膝)", steps:[
+        "本人を休ませ、すぐに負傷部位を動かすのをやめさせてください。",
+        "布で包んだ氷を負傷部位に約15〜20分当ててください。氷を直接肌に当てないでください。",
+        "腫れを抑えるために患部を優しく圧迫包帯で巻いてください。きつく巻きすぎないでください。",
+        "可能であれば負傷部位を心臓より高く上げてください。腫れや痛みがひどい場合は医療機関を受診してください。"
+      ]},
+      ko:{ name:"염좌 (손목 / 발목 / 무릎)", steps:[
+        "환자를 쉬게 하고 다친 부위의 움직임을 즉시 멈추세요.",
+        "천으로 감싼 얼음찜질을 다친 부위에 약 15-20분간 대세요. 얼음을 피부에 직접 대지 마세요.",
+        "부기를 줄이기 위해 부위를 부드럽게 압박 붕대로 감으세요. 너무 조이지 않게 하세요.",
+        "가능하면 다친 부위를 심장보다 높게 올리세요. 부기/통증이 심하면 의료 도움을 받으세요."
+      ]},
+      np:{ name:"मोच (नाडी/कलाई / गोलीगाँठो / घुँडा)", steps:[
+        "व्यक्तिलाई आराम गर्न लगाउनुहोस् र चोटपटक भएको भाग तुरुन्तै चलाउन बन्द गर्नुहोस्।",
+        "कपडामा बेरिएको बरफ चोटपटक भएको ठाउँमा करिब १५-२० मिनेट राख्नुहोस्; बरफलाई सिधै छालामा नराख्नुहोस्।",
+        "सुन्निने कम गर्न त्यस ठाउँमा बिस्तारै पट्टी बाँध्नुहोस्; धेरै कसेर नबाँध्नुहोस्।",
+        "सम्भव भए चोटपटक भएको भाग हृदयभन्दा माथि उठाउनुहोस्; सुन्निने/दुखाइ गम्भीर भए चिकित्सा सहायता लिनुहोस्।"
+      ]},
+      is:{ name:"Tognun (Úlnliður / Ökkli / Hné)", steps:[
+        "Látið manneskjuna hvíla sig og hætta strax að hreyfa slasaða svæðið.",
+        "Setjið kalt bakstur (ís vafinn í klút) á svæðið í um 15-20 mínútur; setjið aldrei ís beint á húðina.",
+        "Vefjið mjúkum þrýstingsumbúðum um svæðið til að minnka bólgu; ekki vefja of þétt.",
+        "Lyftið slasaða svæðinu upp fyrir hjartahæð ef mögulegt er; leitið læknishjálpar ef bólga/verkur er alvarlegur."
+      ]},
+      ar:{ name:"الالتواء (المعصم / الكاحل / الركبة)", steps:[
+        "اجعل الشخص يرتاح ويتوقف عن تحريك المنطقة المصابة فوراً.",
+        "ضع كمادة باردة (ثلج ملفوف بقماش) على المنطقة لمدة 15-20 دقيقة تقريباً؛ لا تضع الثلج مباشرة على الجلد.",
+        "لف ضمادة ضاغطة بلطف حول المنطقة لتقليل التورم؛ لا تربطها بإحكام شديد.",
+        "ارفع المنطقة المصابة فوق مستوى القلب إن أمكن؛ اطلب المساعدة الطبية إذا كان التورم/الألم شديداً."
+      ]},
+      sw:{ name:"Kuteguka (Kiganja / Kifundo cha Mguu / Goti)", steps:[
+        "Mwache mtu apumzike na aache kutembeza sehemu iliyoumia mara moja.",
+        "Weka barafu iliyofungwa kitambaa kwenye sehemu hiyo kwa dakika 15-20 hivi; usiweke barafu moja kwa moja kwenye ngozi.",
+        "Funga bendeji ya kubana kwa upole kuzunguka sehemu hiyo ili kupunguza uvimbe; usifunge kwa nguvu sana.",
+        "Inua sehemu iliyoumia juu ya kiwango cha moyo ikiwezekana; tafuta msaada wa kitabibu ikiwa uvimbe/maumivu ni makali."
+      ]}
+    }
+  },
+  cramp: {
+    name: "Chuột rút",
+    tags: ["chuột rút","co rút cơ","vọp bẻ","cứng cơ đột ngột","co thắt cơ"],
+    icon: "💪",
+    steps: [
+      "Dừng vận động ngay và nhẹ nhàng kéo giãn cơ bị chuột rút theo hướng ngược lại.",
+      "Xoa bóp nhẹ nhàng vùng cơ bị co rút để giúp cơ thư giãn.",
+      "Uống nước hoặc dung dịch bù điện giải, vì chuột rút thường liên quan đến mất nước/muối khoáng.",
+      "Nếu chuột rút tái diễn liên tục, kèm đau dữ dội hoặc tê yếu, hãy tìm cơ sở y tế kiểm tra."
+    ],
+    translations: {
+      en:{ name:"Muscle Cramp", steps:[
+        "Stop the activity immediately and gently stretch the cramping muscle in the opposite direction.",
+        "Gently massage the cramping area to help the muscle relax.",
+        "Drink water or an electrolyte solution, as cramps are often linked to dehydration or mineral loss.",
+        "If cramps keep recurring, come with severe pain, or numbness/weakness, seek medical evaluation."
+      ]},
+      es:{ name:"Calambre Muscular", steps:[
+        "Detenga la actividad de inmediato y estire suavemente el músculo acalambrado en la dirección opuesta.",
+        "Masajee suavemente la zona acalambrada para ayudar al músculo a relajarse.",
+        "Beba agua o una solución de electrolitos, ya que los calambres suelen estar relacionados con la deshidratación.",
+        "Si los calambres se repiten continuamente, con dolor intenso o entumecimiento/debilidad, busque evaluación médica."
+      ]},
+      fr:{ name:"Crampe Musculaire", steps:[
+        "Arrêtez l'activité immédiatement et étirez doucement le muscle crampé dans la direction opposée.",
+        "Massez doucement la zone crampée pour aider le muscle à se détendre.",
+        "Buvez de l'eau ou une solution électrolytique, car les crampes sont souvent liées à la déshydratation.",
+        "Si les crampes reviennent continuellement, avec douleur intense ou engourdissement/faiblesse, cherchez une évaluation médicale."
+      ]},
+      lo:{ name:"ຕະຄິວ (ກ້າມຊີ້ນຫົດເກັງ)", steps:[
+        "ຢຸດເຄື່ອນໄຫວທັນທີ ແລະ ຄ່ອຍໆຢືດກ້າມຊີ້ນທີ່ເປັນຕະຄິວໄປໃນທິດທາງກົງກັນຂ້າມ.",
+        "ນວດເບົາໆບໍລິເວນທີ່ເປັນຕະຄິວເພື່ອຊ່ວຍໃຫ້ກ້າມຊີ້ນຄາຍຕົວ.",
+        "ດື່ມນ້ຳ ຫຼື ເຄື່ອງດື່ມທາດອິເລັກໂຕຣລາຍ ເພາະຕະຄິວມັກກ່ຽວຂ້ອງກັບການຂາດນ້ຳ.",
+        "ຫາກເປັນຕະຄິວຊ້ຳໆ ຮ່ວມກັບເຈັບຮຸນແຮງ ຫຼືຊາ/ອ່ອນແຮງ ໃຫ້ໄປພົບແພດ."
+      ]},
+      th:{ name:"ตะคริว", steps:[
+        "หยุดกิจกรรมทันทีและค่อยๆ ยืดกล้ามเนื้อที่เป็นตะคริวไปในทิศทางตรงข้าม",
+        "นวดเบาๆ บริเวณที่เป็นตะคริวเพื่อช่วยให้กล้ามเนื้อคลายตัว",
+        "ดื่มน้ำหรือเครื่องดื่มเกลือแร่ เนื่องจากตะคริวมักเกี่ยวข้องกับการขาดน้ำ",
+        "หากเป็นตะคริวซ้ำๆ ร่วมกับปวดรุนแรงหรือชา/อ่อนแรง ให้ไปพบแพทย์"
+      ]},
+      km:{ name:"ការឆន់សាច់ដុំ", steps:[
+        "ឈប់សកម្មភាពភ្លាមៗ ហើយបន្តិចម្តងទាញសាច់ដុំដែលកំពុងឆន់ទៅទិសផ្ទុយ។",
+        "ម៉ាស្សាបន្តិចម្តងកន្លែងឆន់ដើម្បីជួយសាច់ដុំសម្រាក។",
+        "ផឹកទឹក ឬសូលុយស្យុងអេឡិចត្រូលីត ព្រោះការឆន់ជាធម្មតាទាក់ទងនឹងការខះជាតិទឹក។",
+        "ប្រសិនបើការឆន់កើតឡើងម្តងហើយម្តងទៀត រួមជាមួយការឈឺយ៉ាងខ្លាំង សូមស្វែងរកការពិនិត្យពីគ្រូពេទ្យ។"
+      ]},
+      tl:{ name:"Pulikat (Muscle Cramp)", steps:[
+        "Itigil agad ang aktibidad at dahan-dahang i-stretch ang napulikat na kalamnan sa kabaligtarang direksyon.",
+        "Marahang masahehin ang bahaging napulikat para makatulong sa paglax ng kalamnan.",
+        "Uminom ng tubig o electrolyte solution, dahil ang pulikat ay kadalasang may kaugnayan sa dehydration.",
+        "Kung paulit-ulit ang pulikat, may kasamang matinding sakit, o pamamanhid/panghihina, humingi ng medikal na ebalwasyon."
+      ]},
+      ms:{ name:"Kekejangan Otot", steps:[
+        "Hentikan aktiviti dengan segera dan regangkan perlahan-lahan otot yang kejang ke arah bertentangan.",
+        "Urut dengan lembut bahagian yang kejang untuk membantu otot berehat.",
+        "Minum air atau larutan elektrolit, kerana kekejangan sering dikaitkan dengan dehidrasi.",
+        "Jika kekejangan berulang, disertai kesakitan teruk atau kebas/lemah, dapatkan pemeriksaan perubatan."
+      ]},
+      zh:{ name:"肌肉抽筋", steps:[
+        "立即停止活动,朝相反方向轻轻拉伸抽筋的肌肉。",
+        "轻轻按摩抽筋部位,帮助肌肉放松。",
+        "饮用水或电解质溶液,因为抽筋通常与脱水或矿物质流失有关。",
+        "如果抽筋反复发作,伴有剧烈疼痛或麻木无力,请就医检查。"
+      ]},
+      ja:{ name:"筋肉のけいれん(こむら返り)", steps:[
+        "すぐに動作を止め、けいれんしている筋肉を反対方向にゆっくり伸ばしてください。",
+        "けいれんしている部分を優しくマッサージして筋肉をリラックスさせてください。",
+        "水分や電解質を含む飲み物を飲んでください。けいれんは脱水と関係していることが多いです。",
+        "けいれんが繰り返し起こる、激しい痛みやしびれ・脱力を伴う場合は、医療機関を受診してください。"
+      ]},
+      ko:{ name:"근육 경련 (쥐)", steps:[
+        "즉시 활동을 멈추고 경련이 일어난 근육을 반대 방향으로 부드럽게 스트레칭하세요.",
+        "경련 부위를 부드럽게 마사지하여 근육을 이완시키세요.",
+        "물이나 전해질 용액을 마시세요. 경련은 흔히 탈수와 관련이 있습니다.",
+        "경련이 계속 반복되거나 심한 통증, 저림/무력감이 동반되면 의료 검진을 받으세요."
+      ]},
+      np:{ name:"मांसपेशी तानिनु (Cramp)", steps:[
+        "गतिविधि तुरुन्तै रोक्नुहोस् र तानिएको मांसपेशीलाई विपरीत दिशामा बिस्तारै तन्काउनुहोस्।",
+        "मांसपेशीलाई आराम दिन तानिएको ठाउँमा बिस्तारै मालिस गर्नुहोस्।",
+        "पानी वा इलेक्ट्रोलाइट घोल पिउनुहोस्, किनकि तानिने समस्या प्रायः निर्जलीकरणसँग सम्बन्धित हुन्छ।",
+        "यदि तानिने समस्या बारम्बार दोहोरिन्छ, गम्भीर दुखाइ वा सुन्निने/कमजोरी सँगै आउँछ भने, चिकित्सा जाँच गराउनुहोस्।"
+      ]},
+      is:{ name:"Vöðvakrampi", steps:[
+        "Hættið athöfninni strax og teygið varlega á krampavöðvanum í gagnstæða átt.",
+        "Nuddið krampasvæðið varlega til að hjálpa vöðvanum að slaka á.",
+        "Drekkið vatn eða saltlausn, því krampar tengjast oft vökvatapi eða steinefnaskorti.",
+        "Ef krampar koma ítrekað aftur, fylgja miklum verk eða dofa/slappleika, leitið læknisráðgjafar."
+      ]},
+      ar:{ name:"تشنج عضلي", steps:[
+        "توقف عن النشاط فوراً وقم بشد العضلة المتشنجة برفق في الاتجاه المعاكس.",
+        "دلّك منطقة التشنج برفق لمساعدة العضلة على الاسترخاء.",
+        "اشرب الماء أو محلول الإلكتروليت، لأن التشنجات غالباً ما ترتبط بالجفاف.",
+        "إذا تكررت التشنجات، أو صاحبها ألم شديد أو خدر/ضعف، اطلب تقييماً طبياً."
+      ]},
+      sw:{ name:"Mkakamao wa Misuli", steps:[
+        "Simamisha shughuli mara moja na kunyoosha kwa upole misuli iliyokakamaa kuelekea upande mwingine.",
+        "Piga masaji kwa upole eneo lililokakamaa ili kusaidia misuli kupumzika.",
+        "Kunywa maji au suluhisho la elektroliti, kwani mkakamao mara nyingi huhusiana na upungufu wa maji mwilini.",
+        "Ikiwa mkakamao unarudia mara kwa mara, ukiambatana na maumivu makali au ganzi/udhaifu, tafuta uchunguzi wa kitabibu."
+      ]}
+    }
+  }
+};
+/** Xây link tìm kiếm video hướng dẫn (mở khi có mạng) — không nhúng video cụ thể để tránh sai lệch nguồn */
+function videoSearchUrl(englishName){
+  return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(englishName + ' first aid tutorial');
+}
+
+/* --- Hình minh họa vector lũy tiến theo từng bước (mỗi bước thêm 1 chi tiết vào hình) --- */
+const IL_DARK="#2a323d", IL_BORDER="#3a4351", IL_TEAL="#2bb3a3", IL_ORANGE="#ff5a2b", IL_DANGER="#e0503a", IL_TAN="#8b6f47", IL_MUTED="#8992a0", IL_WATER="#4aa8ff";
+const illustrationRenderers = {
+  sprain(idx){
+    const joint = `<ellipse cx="100" cy="55" rx="22" ry="16" fill="${IL_DARK}" stroke="${IL_BORDER}"/><circle cx="100" cy="55" r="6" fill="${IL_DANGER}" opacity="0.8"/>`;
+    const rest = idx>=0 ? `<rect x="18" y="20" width="4" height="16" fill="${IL_TEAL}"/><rect x="26" y="20" width="4" height="16" fill="${IL_TEAL}"/>` : '';
+    const ice = idx>=1 ? `<rect x="150" y="20" width="34" height="20" rx="4" fill="#bfe4ff" opacity="0.85"/><text x="167" y="34" font-size="11" text-anchor="middle" fill="#14181e">❄</text>` : '';
+    const wrap = idx>=2 ? `<rect x="82" y="45" width="36" height="10" rx="5" fill="${IL_TEAL}" opacity="0.6"/>` : '';
+    const arrow = idx>=3 ? `<path d="M100,80 v14 m-5,-6 l5,6 l5,-6" stroke="${IL_ORANGE}" stroke-width="2" fill="none" transform="rotate(180 100 87)"/>` : '';
+    return joint+rest+ice+wrap+arrow;
+  },
+  cramp(idx){
+    const limb = `<rect x="30" y="45" width="160" height="22" rx="11" fill="${IL_DARK}" stroke="${IL_BORDER}"/>`;
+    const stretch = idx>=0 ? `<path d="M55,56 h-15 m5,-5 l-5,5 l5,5 M165,56 h15 m-5,-5 l5,5 l-5,5" stroke="${IL_ORANGE}" stroke-width="2" fill="none"/>` : '';
+    const massage = idx>=1 ? `<circle cx="95" cy="56" r="4" fill="${IL_TEAL}" opacity="0.5"/><circle cx="107" cy="56" r="4" fill="${IL_TEAL}" opacity="0.5"/><circle cx="119" cy="56" r="4" fill="${IL_TEAL}" opacity="0.5"/>` : '';
+    const glass = idx>=2 ? `<rect x="160" y="18" width="16" height="24" fill="none" stroke="${IL_TEAL}" stroke-width="2"/>` : '';
+    const warn = idx>=3 ? `<circle cx="190" cy="75" r="9" fill="none" stroke="${IL_DANGER}" stroke-width="2"/><text x="190" y="80" font-size="12" text-anchor="middle" fill="${IL_DANGER}">!</text>` : '';
+    return limb+stretch+massage+glass+warn;
+  },
+  bandage(idx){
+    let wraps=''; for(let i=0;i<=idx;i++){ wraps += `<rect x="${45+i*22}" y="35" width="14" height="40" fill="${IL_TEAL}" opacity="0.55"/>`; }
+    return `<rect x="20" y="35" width="180" height="40" rx="20" fill="${IL_DARK}" stroke="${IL_BORDER}"/>
+      <circle cx="70" cy="55" r="9" fill="${IL_DANGER}" opacity="0.8"/>${wraps}`;
+  },
+  splint(idx){
+    let rods='';
+    if(idx>=1) rods += `<rect x="35" y="38" width="150" height="6" rx="3" fill="${IL_TAN}"/><rect x="35" y="72" width="150" height="6" rx="3" fill="${IL_TAN}"/>`;
+    if(idx>=2) rods += `<rect x="60" y="30" width="10" height="55" fill="${IL_TEAL}" opacity="0.7"/><rect x="150" y="30" width="10" height="55" fill="${IL_TEAL}" opacity="0.7"/>`;
+    if(idx>=3) rods += `<circle cx="110" cy="56" r="4" fill="${IL_ORANGE}"/>`;
+    return `<rect x="30" y="45" width="160" height="22" rx="11" fill="${IL_DARK}" stroke="${IL_BORDER}"/>${rods}<circle cx="110" cy="20" r="5" fill="${IL_DANGER}" opacity="0.8"/>`;
+  },
+  burn(idx){
+    const drops = idx>=0 ? `<path d="M100,15 q4,8 0,12 q-4,-4 0,-12" fill="${IL_WATER}"/><path d="M115,10 q4,8 0,12 q-4,-4 0,-12" fill="${IL_WATER}"/>` : '';
+    const noJewel = idx>=1 ? `<circle cx="160" cy="55" r="7" fill="none" stroke="${IL_TEAL}" stroke-width="2"/><line x1="155" y1="50" x2="165" y2="60" stroke="${IL_DANGER}" stroke-width="2"/>` : '';
+    const gauze = idx>=2 ? `<rect x="85" y="42" width="35" height="26" rx="4" fill="#eae6df" opacity="0.92"/>` : '';
+    const warn = idx>=3 ? `<circle cx="190" cy="30" r="9" fill="none" stroke="${IL_DANGER}" stroke-width="2"/><text x="190" y="35" font-size="12" text-anchor="middle" fill="${IL_DANGER}">!</text>` : '';
+    return `<rect x="30" y="35" width="160" height="40" rx="18" fill="${IL_DARK}" stroke="${IL_BORDER}"/>
+      <ellipse cx="100" cy="55" rx="14" ry="12" fill="${idx>=2?'#eae6df':IL_ORANGE}" opacity="${idx>=2?0.9:0.85}"/>${drops}${noJewel}${gauze}${warn}`;
+  },
+  foodpoison(idx){
+    const waves = `<path d="M60,55 q10,-10 20,0 q10,10 20,0 q10,-10 20,0" stroke="${IL_DANGER}" stroke-width="2" fill="none" opacity="0.7"/>`;
+    const glass = idx>=1 ? `<rect x="150" y="40" width="16" height="24" fill="none" stroke="${IL_TEAL}" stroke-width="2"/><rect x="151" y="50" width="14" height="13" fill="${IL_TEAL}" opacity="0.5"/>` : '';
+    const zzz = idx>=2 ? `<text x="35" y="30" font-size="14" fill="${IL_MUTED}">Z z z</text>` : '';
+    const warn = idx>=3 ? `<circle cx="190" cy="75" r="9" fill="none" stroke="${IL_DANGER}" stroke-width="2"/><text x="190" y="80" font-size="12" text-anchor="middle" fill="${IL_DANGER}">!</text>` : '';
+    return `<circle cx="90" cy="55" r="30" fill="${IL_DARK}" stroke="${IL_BORDER}"/>${waves}${glass}${zzz}${warn}`;
+  },
+  heatstroke(idx){
+    const sun = `<circle cx="50" cy="40" r="16" fill="${IL_ORANGE}" opacity="${idx>=0?0.4:0.9}"/>`;
+    const shade = idx>=0 ? `<rect x="28" y="28" width="42" height="30" fill="${IL_DARK}" opacity="0.65"/>` : '';
+    const fan = idx>=1 ? `<path d="M108,45 q6,-6 12,0 q6,6 12,0" stroke="${IL_WATER}" stroke-width="2" fill="none"/>` : '';
+    const glass = idx>=2 ? `<rect x="160" y="40" width="16" height="24" fill="none" stroke="${IL_TEAL}" stroke-width="2"/>` : '';
+    const warn = idx>=3 ? `<circle cx="190" cy="70" r="9" fill="none" stroke="${IL_DANGER}" stroke-width="2"/><text x="190" y="75" font-size="12" text-anchor="middle" fill="${IL_DANGER}">!</text>` : '';
+    return `<rect x="10" y="75" width="200" height="12" fill="${IL_BORDER}" opacity="0.4"/>${sun}${shade}${fan}${glass}${warn}`;
+  },
+  bite(idx){
+    const limb = `<rect x="30" y="45" width="160" height="22" rx="11" fill="${IL_DARK}" stroke="${IL_BORDER}"/>`;
+    const mark = `<circle cx="100" cy="56" r="3" fill="${IL_DANGER}"/><circle cx="110" cy="56" r="3" fill="${IL_DANGER}"/>`;
+    const lock = idx>=0 ? `<rect x="18" y="22" width="14" height="10" rx="2" fill="none" stroke="${IL_TEAL}" stroke-width="2"/><path d="M21,22 v-4 a4,4 0 0 1 8,0 v4" fill="none" stroke="${IL_TEAL}" stroke-width="2"/>` : '';
+    const drop = idx>=1 ? `<path d="M155,15 q4,8 0,12 q-4,-4 0,-12" fill="${IL_WATER}"/>` : '';
+    const arrow = idx>=2 ? `<path d="M100,80 v14 m-5,-6 l5,6 l5,-6" stroke="${IL_ORANGE}" stroke-width="2" fill="none"/>` : '';
+    const warn = idx>=3 ? `<circle cx="190" cy="30" r="9" fill="none" stroke="${IL_DANGER}" stroke-width="2"/><text x="190" y="35" font-size="12" text-anchor="middle" fill="${IL_DANGER}">!</text>` : '';
+    return limb+mark+lock+drop+arrow+warn;
+  },
+  drowning(idx){
+    const wave = `<path d="M10,72 q15,-15 30,0 q15,15 30,0 q15,-15 30,0 q15,15 30,0 q15,-15 30,0 q15,15 30,0" stroke="${IL_WATER}" stroke-width="3" fill="none"/>`;
+    const arrowUp = idx>=0 ? `<path d="M110,40 v-14 m-5,6 l5,-6 l5,6" stroke="${IL_ORANGE}" stroke-width="2" fill="none"/>` : '';
+    const person = `<circle cx="110" cy="55" r="10" fill="${idx>=1?IL_TEAL:IL_ORANGE}"/>`;
+    const heart = idx>=1 ? `<text x="145" y="35" font-size="16">❤</text>` : '';
+    const recovery = idx>=2 ? `<ellipse cx="65" cy="30" rx="14" ry="7" fill="${IL_TEAL}" opacity="0.6"/>` : '';
+    const blanket = idx>=3 ? `<rect x="90" y="60" width="40" height="14" rx="4" fill="${IL_ORANGE}" opacity="0.6"/>` : '';
+    return wave+arrowUp+person+heart+recovery+blanket;
+  },
+  hypothermia(idx){
+    const snow = `<text x="30" y="35" font-size="18" fill="${IL_WATER}">❄</text>`;
+    const roof = idx>=0 ? `<path d="M80,25 l30,-15 l30,15" stroke="${IL_TEAL}" stroke-width="2" fill="none"/>` : '';
+    const person = `<circle cx="110" cy="55" r="12" fill="${idx>=1?IL_ORANGE:IL_WATER}" opacity="0.8"/>`;
+    const blanket = idx>=1 ? `<rect x="95" y="65" width="30" height="10" rx="3" fill="${IL_ORANGE}" opacity="0.6"/>` : '';
+    const cup = idx>=2 ? `<rect x="160" y="45" width="14" height="14" fill="none" stroke="${IL_TEAL}" stroke-width="2"/>` : '';
+    const warn = idx>=3 ? `<circle cx="190" cy="30" r="9" fill="none" stroke="${IL_DANGER}" stroke-width="2"/><text x="190" y="35" font-size="12" text-anchor="middle" fill="${IL_DANGER}">!</text>` : '';
+    return snow+roof+person+blanket+cup+warn;
+  },
+  anaphylaxis(idx){
+    const person = `<circle cx="90" cy="55" r="12" fill="${IL_DANGER}" opacity="0.7"/>`;
+    const injector = idx>=0 ? `<rect x="125" y="45" width="8" height="24" rx="3" fill="${IL_TEAL}"/>` : '';
+    const phone = idx>=1 ? `<text x="160" y="35" font-size="16">📞</text>` : '';
+    const recline = idx>=2 ? `<ellipse cx="55" cy="78" rx="20" ry="8" fill="${IL_TEAL}" opacity="0.5"/>` : '';
+    const monitor = idx>=3 ? `<path d="M150,70 h10 l4,-10 l6,20 l4,-10 h10" stroke="${IL_ORANGE}" stroke-width="2" fill="none"/>` : '';
+    return person+injector+phone+recline+monitor;
+  }
+};
+function renderIllustration(id, idx){
+  const svg = document.getElementById('faIllustration');
+  const renderer = illustrationRenderers[id];
+  svg.innerHTML = renderer ? renderer(idx) : '';
+}
+
+const primaryQuickChipIds = ["cpr","bandage","splint","sprain","cramp"];
+const secondaryQuickChipIds = Object.keys(firstAidDB).filter(id => !primaryQuickChipIds.includes(id));
+
+function initFirstAidUI(){
+  const chipsWrap = document.getElementById('quickChips'); chipsWrap.innerHTML='';
+  primaryQuickChipIds.forEach(id=>{
+    const b = document.createElement('button'); b.className='chip'; b.textContent = `${firstAidDB[id].icon||''} ${firstAidDB[id].name}`;
+    b.onclick = ()=> selectFirstAid(id);
+    chipsWrap.appendChild(b);
+  });
+  const moreWrap = document.getElementById('quickChipsMore'); moreWrap.innerHTML='';
+  secondaryQuickChipIds.forEach(id=>{
+    const b = document.createElement('button'); b.className='chip'; b.textContent = `${firstAidDB[id].icon||''} ${firstAidDB[id].name}`;
+    b.onclick = ()=> selectFirstAid(id);
+    moreWrap.appendChild(b);
+  });
+}
+/** Bấm nút mũi tên để mở rộng/thu gọn xem toàn bộ chấn thương thường gặp */
+function toggleQuickChips(){
+  const moreWrap = document.getElementById('quickChipsMore');
+  const btn = document.getElementById('quickChipsToggle');
+  const isHidden = moreWrap.style.display === 'none';
+  moreWrap.style.display = isHidden ? 'flex' : 'none';
+  btn.textContent = isHidden ? 'Thu gọn' : 'Xem tất cả chấn thương thường gặp';
+}
+
+function renderSearchResults(){
+  const q = document.getElementById('faSearch').value.trim().toLowerCase();
+  const resultsWrap = document.getElementById('searchResults'); resultsWrap.innerHTML='';
+  if(!q) return;
+  const matches = Object.keys(firstAidDB).filter(id=>{
+    const entry = firstAidDB[id];
+    return entry.name.toLowerCase().includes(q) || entry.tags.some(t=>t.toLowerCase().includes(q));
+  });
+  if(matches.length===0){
+    resultsWrap.innerHTML = '<span class="desc" style="margin:0;">Không tìm thấy — thử từ khóa khác (vd: "gãy", "bỏng", "dị ứng"...).</span>';
+    return;
+  }
+  matches.forEach(id=>{
+    const b = document.createElement('button'); b.className='chip'; b.textContent = `${firstAidDB[id].icon||''} ${firstAidDB[id].name}`;
+    b.onclick = ()=> selectFirstAid(id);
+    resultsWrap.appendChild(b);
+  });
+}
+
+function selectFirstAid(id){
+  const entry = firstAidDB[id];
+  document.getElementById('faEmpty').style.display = 'none';
+  document.getElementById('fa-cpr').style.display = 'none';
+  document.getElementById('fa-generic').style.display = 'none';
+  if(entry.special === 'cpr'){
+    document.getElementById('fa-cpr').style.display = 'block';
+    renderCprLocalization();
+  } else {
+    genericState.id = id; genericState.step = 0;
+    document.getElementById('fa-generic').style.display = 'block';
+    renderGenericStep();
+  }
+  queueSync();
+}
+/** Cập nhật tiêu đề/chú thích CPR theo quốc gia đang chọn (fallback English nếu thiếu) */
+function renderCprLocalization(){
+  const entry = firstAidDB.cpr;
+  const countryCode = findCountryCode(document.getElementById('faCountry').value);
+  const lang = countryToLang[countryCode] || 'en';
+  const t = (lang!=='vi' && entry.translations[lang]) ? entry.translations[lang] : (lang!=='vi' ? entry.translations.en : null);
+  document.getElementById('cprTitle').textContent = t ? `NHỊP ÉP TIM MÔ PHỎNG — ${t.name.toUpperCase()}` : 'NHỊP ÉP TIM MÔ PHỎNG (~110 LẦN/PHÚT)';
+  document.getElementById('cprCaption').textContent = t ? t.caption : 'Ép giữa ngực, sâu ~5cm, để lồng ngực nảy lại hoàn toàn giữa các lần ép. Gọi cấp cứu trước khi bắt đầu nếu có thể.';
+  document.getElementById('cprVideoLink').href = videoSearchUrl(entry.translations.en.name);
+}
+/** Gọi khi người dùng đổi quốc gia trong MOD.06 — cập nhật panel đang hiển thị (generic hoặc CPR) */
+function onFaCountryChange(){
+  if(document.getElementById('fa-cpr').style.display === 'block'){ renderCprLocalization(); }
+  else { renderGenericStep(); }
+}
+
+// --- Bộ hiển thị bước dùng chung (generic step viewer), hỗ trợ đa ngôn ngữ ---
+const genericState = { id:null, step:0 };
+const faLangNames = { vi:"Tiếng Việt", en:"English", es:"Español", fr:"Français", zh:"中文", ja:"日本語", ko:"한국어", th:"ไทย", lo:"ລາວ", km:"ខ្មែរ", tl:"Filipino", ms:"Bahasa Melayu", np:"नेपाली", is:"Íslenska", ar:"العربية", sw:"Kiswahili" };
+/** Lấy tên + các bước theo ngôn ngữ đang chọn. Nếu chưa có gói dịch, dùng English làm dự phòng
+ *  và báo rõ cho người dùng biết (thay vì âm thầm hiển thị tiếng Việt gây hiểu nhầm). */
+function getLocalizedEntry(entry, lang){
+  if(lang==='vi') return { name:entry.name, steps:entry.steps, usedFallback:false };
+  if(entry.translations && entry.translations[lang] && entry.translations[lang].steps){
+    const t = entry.translations[lang];
+    return { name:t.name, steps:t.steps, usedFallback:false };
+  }
+  // Dự phòng: dùng English nếu có, nếu không thì tiếng Việt gốc
+  if(entry.translations && entry.translations.en && entry.translations.en.steps){
+    return { name:entry.translations.en.name, steps:entry.translations.en.steps, usedFallback:true };
+  }
+  return { name:entry.name, steps:entry.steps, usedFallback:true };
+}
+function renderGenericStep(){
+  if(!genericState.id) return;
+  const entry = firstAidDB[genericState.id];
+  const countryCode = findCountryCode(document.getElementById('faCountry').value);
+  const lang = countryToLang[countryCode] || 'en';
+  const loc = getLocalizedEntry(entry, lang);
+  const idx = genericState.step;
+  document.getElementById('faGenericIcon').textContent = entry.icon || '🩹';
+  document.getElementById('faGenericTitle').textContent = loc.name.toUpperCase();
+  document.getElementById('faGenericText').textContent = `${idx+1}/${loc.steps.length}: ${loc.steps[idx]}`;
+  renderIllustration(genericState.id, idx);
+  const dotsWrap = document.getElementById('faGenericDots'); dotsWrap.innerHTML = '';
+  loc.steps.forEach((_,i)=>{ const d=document.createElement('div'); d.className='step-dot'+(i<=idx?' on':''); dotsWrap.appendChild(d); });
+  document.getElementById('faVideoLink').href = videoSearchUrl(entry.translations && entry.translations.en ? entry.translations.en.name : entry.name);
+  const noteEl = document.getElementById('faLangFallbackNote');
+  if(!countryCode){
+    noteEl.style.display = 'block';
+    noteEl.textContent = '⚠ Không nhận diện được quốc gia này — đang hiển thị tạm bằng English. Hãy gõ đúng tên hoặc chọn từ danh sách gợi ý.';
+  } else if(loc.usedFallback && lang!=='vi'){
+    noteEl.style.display = 'block';
+    noteEl.textContent = `🌐 Gói dịch chi tiết cho ${faLangNames[lang]||lang} đang được bổ sung — đang hiển thị tạm bằng English.`;
+  } else {
+    noteEl.style.display = 'none';
+  }
+}
+function nextGenericStep(){
+  const entry = firstAidDB[genericState.id];
+  const countryCode = findCountryCode(document.getElementById('faCountry').value);
+  const lang = countryToLang[countryCode] || 'en';
+  const loc = getLocalizedEntry(entry, lang);
+  if(genericState.step < loc.steps.length-1){ genericState.step++; renderGenericStep(); }
+}
+function prevGenericStep(){
+  if(genericState.step > 0){ genericState.step--; renderGenericStep(); }
+}
+
+// --- Nhận diện giọng nói (Web Speech API) ---
+function startVoiceSearch(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const statusEl = document.getElementById('voiceStatus');
+  if(!SpeechRecognition){
+    statusEl.textContent = 'Trình duyệt này không hỗ trợ nhận diện giọng nói. Hãy nhập từ khóa thủ công.';
+    return;
+  }
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'vi-VN';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  statusEl.textContent = '🎙️ Đang nghe... hãy nói tên chấn thương.';
+  recognition.start();
+  recognition.onresult = (e)=>{
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('faSearch').value = transcript;
+    statusEl.textContent = `Đã nghe: "${transcript}"`;
+    renderSearchResults();
+  };
+  recognition.onerror = ()=>{ statusEl.textContent = 'Không nhận diện được giọng nói, hãy thử lại hoặc nhập tay.'; };
+  recognition.onend = ()=>{ if(statusEl.textContent.includes('Đang nghe')) statusEl.textContent=''; };
+}
+
+// --- CPR (đặc biệt: hoạt ảnh + đếm giờ + âm thanh) ---
+let cprInterval=null, cprAudioCtx=null, cprTimeLeft=30, cprCount=0;
+function beep(){
+  if(!cprAudioCtx) return;
+  const osc = cprAudioCtx.createOscillator(), gain = cprAudioCtx.createGain();
+  osc.frequency.value = 880; osc.connect(gain); gain.connect(cprAudioCtx.destination);
+  gain.gain.setValueAtTime(0.15, cprAudioCtx.currentTime);
+  osc.start(); osc.stop(cprAudioCtx.currentTime + 0.08);
+}
+function startCPR(){
+  if(cprInterval) return;
+  cprAudioCtx = cprAudioCtx || new (window.AudioContext||window.webkitAudioContext)();
+  cprTimeLeft = 30; cprCount = 0;
+  document.getElementById('cprHands').style.animationPlayState = 'running';
+  updateCprUI();
+  cprInterval = setInterval(()=>{
+    cprCount++; beep(); cprTimeLeft -= 0.545;
+    if(cprTimeLeft <= 0){ stopCPR(true); }
+    updateCprUI();
+  }, 545);
+}
+function stopCPR(done){
+  clearInterval(cprInterval); cprInterval = null;
+  document.getElementById('cprHands').style.animationPlayState = 'paused';
+  if(done) queueSync();
+}
+function updateCprUI(){
+  document.getElementById('cprTimer').textContent = Math.max(0, Math.ceil(cprTimeLeft)) + 's';
+  document.getElementById('cprCount').textContent = cprCount;
+}
+initFirstAidUI();
+updateCloudBadge();
+</script>
+</body>
+</html>
